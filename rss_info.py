@@ -33,13 +33,6 @@ def get_all_channel_data(channel):
     channel_data = list()
     video_feed = feedparser.parse(channel.xmlUrl)
 
-    # thumbnails= video_feed['entries'][0]['media_thumbnail']
-    # date = video_feed['entries'][0]['published'] -> format: '2020-11-27T17:30:02+00:00'
-    # description = video_feed['entries'][0]['summary']
-    # rating 1-5 = video_feed['entries'][0]['media_starrating']
-    # video_url = video_feed['entries'][0]['link']
-    # views = video_feed['entries'][0]['media_statistics']
-    
     for entry in video_feed['entries']:
         for key, item in entry.items():
             print(key, item)
@@ -51,13 +44,6 @@ def get_channel_data(channel):
 
     channel_data = list()
     video_feed = feedparser.parse(channel.xmlUrl)
-
-    # thumbnails= video_feed['entries'][0]['media_thumbnail']
-    # date = video_feed['entries'][0]['published'] -> format: '2020-11-27T17:30:02+00:00'
-    # description = video_feed['entries'][0]['summary']
-    # rating 1-5 = video_feed['entries'][0]['media_starrating']
-    # video_url = video_feed['entries'][0]['link']
-    # views = video_feed['entries'][0]['media_statistics']
     
     for entry in video_feed['entries']:
         thumbnail = entry['media_thumbnail']
@@ -102,8 +88,6 @@ class GetData:
             t.join()
             all_channels[t.channel_name] = t.data
         
-        # json_object = json.dumps(all_channels, indent = 4)
-        # json_object = json.
 
         return all_channels
 
