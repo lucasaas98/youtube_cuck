@@ -1,0 +1,176 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+    <title>Youtube Cuck</title>
+    <meta name="description" content="Bootleg Garbagio Youtube">
+    <meta name="author" content="Repi Gamer">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <style>
+        * {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .viewer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .div_info {
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        .info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .title{
+            width: 70%;
+            color: white;
+            text-align: left;
+        }
+        .views {
+            width: 15%;
+            color:rgb(162, 162, 162);
+            text-align: right;
+        }
+
+        .description {
+            padding-top: 15px;
+            color:white;
+            text-align: justify;
+            text-justify: inter-word;
+            width: 100%;
+        }
+
+        .date {
+            width: 20%;
+            color:white;
+            text-align: right;
+        }
+        
+        .channel_name {
+            width: 80%;
+            color: white;
+            text-align: left;
+        }
+
+        .rating{
+            width: 15%;
+            color:rgb(162, 162, 162);
+            text-align: right;
+        }
+        .channel_a {
+            color: white;
+        }
+    </style>
+</head>
+
+
+<!-- CREATE TABLE 'downloaded_videos' (
+    0 id INTEGER PRIMARY KEY AUTOINCREMENT,
+    1 vid_url VARCHAR(1000) UNIQUE,
+    2 thumb_url VARCHAR(1000),
+    3 vid_path VARCHAR(1000),
+    4 thumb_path VARCHAR(1000),
+    5 pub_date INTEGER,
+    6 pub_date_human VARCHAR(1000),
+    7 rating REAL,
+    8 title VARCHAR(1000),
+    9 views INTEGER,
+    10 description TEXT, 
+    11 channel VARCHAR(1000)
+); -->
+
+<body style="background-color:#1E1F1C;">
+    <div class="viewer">
+
+        <video id="video_player" width="80%" controls>
+            <source src="/static/videos/{{data[3]}}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    <div class="div_info">
+        <div class="info">
+            <h2 class="title">{{data[8]}}</h2>
+            <p class="views">{{data[9]}} views</p>
+            <p class="rating">{{data[7]}}/5</p>
+        </div>
+        <div class="info">
+            <h4 class="channel_name"><a class="channel_a" href="../channel/{{data[11]}}">{{data[11]}}</a></h4>
+            <p class="date">{{data[6]}}</p>
+        </div>
+        <div class="info">
+            <div class="description">{{data[10]}}</div>
+        </div>
+    </div>
+    <script>
+
+        window.onload = function () {
+            var playing = false;
+            var player = document.getElementById('video_player');
+
+            // f = 70;l = 76;k = 75;j = 74;down_arrow = 40;up_arrow = 38;left_arrow = 37;right_arrow = 39;space_bar = 32;
+            window.onkeydown = function (gfg) {
+                gfg.preventDefault();
+                switch (gfg.keyCode) {
+                    case 32:
+                    case 75:
+                        if (!player.paused) {
+                            player.pause();
+                        } else {
+                            player.play();
+                        };
+                        break;
+                    case 39:
+                        player.currentTime = player.currentTime + 5
+                        console.log("+5 secs");
+                        break;
+                    case 37:
+                        player.currentTime = player.currentTime - 5
+                        console.log("-5 secs");
+                        break;
+                    case 74:
+                        player.currentTime = player.currentTime - 10
+                        console.log("-10 secs");
+                        break;
+                    case 76:
+                        player.currentTime = player.currentTime + 10
+                        console.log("+10 secs");
+                        break;
+                    case 70:
+                        if (!document.fullscreenElement) {
+                            player.requestFullscreen();
+                            console.log("Fullscreen");
+                        } else {
+                            document.exitFullscreen();
+                            console.log("Not fullscreen");
+                        }
+                        break;
+                    case 38:
+                        if (player.volume <= 0.95) {
+                            player.volume = player.volume + 0.05;
+                        }
+                        break;
+                    case 40:
+                        if (player.volume >= 0.05) {
+                            player.volume = player.volume - 0.05;
+                        }
+                        break;
+                }
+            };
+        };
+
+    </script>
+</body>
+
+</html>

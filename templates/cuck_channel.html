@@ -1,0 +1,129 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+    <title>Youtube Cuck</title>
+    <meta name="description" content="Bootleg Garbagio Youtube">
+    <meta name="author" content="Repi Gamer">
+    <link rel="shortcut icon" href="../static/favicon.ico">
+    <style>
+        * {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        
+        body {
+            background-color: #1E1F1C;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            grid-gap: 20px;
+
+        }
+
+        .card {
+            border: 1px solid #000000;
+            border-radius: .25rem;
+            background-color: rgb(49, 49, 49);
+
+        }
+
+        .content {
+            padding: 15px;
+        }
+
+        .center-div {
+            display: flex;
+            justify-content: center;
+        }
+
+        button {
+            background-color: rgb(85, 85, 85);
+            border: none;
+            color: rgb(255, 255, 255);
+            padding: 10px 25px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+
+        }
+
+        h3 {
+            color: white;
+            width: 100%;
+        }
+
+        h4 {
+            color: white;
+            width: 100%;
+        }
+
+        p {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: white;
+            width: 100%;
+        }
+
+        .views{
+            color:rgb(162, 162, 162)
+        }
+
+        h1 {
+            color: white;
+            width: 100%;
+            text-align: center;
+        }
+
+        .channel_a {
+            color: white;
+        }
+        
+    </style>
+</head>
+
+<body>
+    <h1>Channel: {{data[0]}}</h1>
+    <div class="grid-container">
+        {% for row in data[1] %}
+        <div class="card">
+            <div class="center-div">
+                <div
+                    style="background-size: cover; background-position: center; background-image: url('../static/thumbnails/{{row[4]}}'); width: 360px; height: 270px;">
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="center-div">
+                    <h3>{{row[8]}}</h3>
+                </div>
+
+                <div class="center-div">
+                    <h4><a class="channel_a" href="../channel/{{row[11]}}">{{row[11]}}</a></h4>
+
+                </div>
+                <div class="center-div">
+                    <p class="views">{{row[9]}} views</p>
+                </div>
+
+                <div class="center-div">
+                    <p>{{row[10]}}</p>
+                </div>
+
+                <div class="center-div">
+                    <button onclick="window.location.href='../video/{{row[0]}}'">Watch</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</body>
+
+</html>
