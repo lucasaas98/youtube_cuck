@@ -19,24 +19,7 @@ conn.execute('''
     );
 ''')
 
-# conn.execute('''
-#     CREATE TABLE 'downloading' (
-#         id INTEGER PRIMARY KEY AUTOINCREMENT,
-#         vid_url VARCHAR(1000) UNIQUE
-#     );
-# ''')
 
 print("Table created successfully")
 
 conn.close()
-
-
-
-#to insert use
-# conn.execute("INSERT INTO downloaded_videos (vid_url,thumb_url,vid_path,thumb_path, pub_date) 
-#   VALUES ('VID_URL', 'THUMB_URL', 'VID_PATH', 'THUMB_PATH', 'PUB_DATE')"
-
-
-# to select
-# cursor = conn.execute(
-# "SELECT vid_url,thumb_url,vid_path,thumb_path from downloaded_videos where vid_url='VID_URL')

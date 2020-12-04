@@ -74,10 +74,9 @@ def channel_video_watch(channel_name):
     data = [channel_name, data]
     return render_template('cuck_channel.html', data=data)
 
-# This function is used to update the json file with the most recent videos
+
+# This function is used to update the json with the most recent videos
 # directly from the RSS feed
-
-
 def get_rss_feed():
     with app.app_context():
         date = datetime.now()
@@ -92,7 +91,6 @@ def get_rss_feed():
 
 # This function is used to get the videos and thumbnails to the program and it also
 # inserts all the relevant data to the database
-# it needs to check if the video has been downloaded yet... obviously...
 def get_video():
     with app.app_context():
         print("Downloading videos!")
