@@ -37,3 +37,4 @@ This was a quick and dirty python project that is proving to be very useful. The
 ### Known problems
 - The RSS feed includes livestreams and I can't seem to find a way to use the flag is_live in the __--match-filter__ option from youtube-dl. 
 - __Add channel__ and __Subscriptions__ tabs in the nav bar do nothing.
+- __get_video()__ get's called more than once at a time, causing problems and simultaneous downloads which is undesirable. 
