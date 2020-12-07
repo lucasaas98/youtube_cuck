@@ -8,7 +8,7 @@
     <title>Youtube Cuck</title>
     <meta name="description" content="Bootleg Garbagio Youtube">
     <meta name="author" content="Repi Gamer">
-    <link rel="shortcut icon" href="../static/favicon.ico">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <style>
         * {
             font-family: Arial, Helvetica, sans-serif;
@@ -16,73 +16,6 @@
 
         body {
             background-color: #1E1F1C;
-        }
-
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-            grid-gap: 20px;
-
-        }
-
-        .card {
-            border: 1px solid #000000;
-            border-radius: .25rem;
-            background-color: rgb(49, 49, 49);
-
-        }
-
-        .content {
-            padding: 15px;
-        }
-
-        .center-div {
-            display: flex;
-            justify-content: center;
-        }
-
-        button {
-            background-color: rgb(85, 85, 85);
-            border: none;
-            color: rgb(255, 255, 255);
-            padding: 10px 25px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 14px;
-
-        }
-
-        h3 {
-            color: white;
-            width: 100%;
-        }
-
-        h4 {
-            color: white;
-            width: 100%;
-        }
-
-        p {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            color: white;
-            width: 100%;
-        }
-
-        .views {
-            color: rgb(162, 162, 162)
-        }
-
-        h1 {
-            color: white;
-            width: 100%;
-            text-align: center;
-        }
-
-        .channel_a {
-            color: white;
         }
 
         .nav_bar {
@@ -164,54 +97,68 @@
 
         .close:hover,
         .close:focus {
-            color: black;
+            color: white;
             text-decoration: none;
             cursor: pointer;
+        }
+
+        #channels {
+            font-family: Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        #channels td,
+        #channels th {
+            border: 1px solid rgb(0, 0, 0);
+            padding: 8px;
+        }
+
+        #channels tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        #channels tr:hover {
+            background-color: #ddd;
+        }
+
+        #channels th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: rgb(49, 49, 49);
+            color: white;
+        }
+
+        .channel {
+            color: white;
         }
     </style>
 </head>
 
 <body>
     <ul class="nav_bar">
-        <li><a class="active" href="../">Home</a></li>
+        <li><a class="active" href="/">Home</a></li>
         <li><a id="add">Add Channel</a></li>
-        <li><a href="../subs">Subscriptions</a></li>
+        <li><a href="/subs">Subscriptions</a></li>
     </ul>
-    <h1>Channel: {{data[0]}}</h1>
     <div class="grid-container">
-        {% for row in data[1] %}
-        <div class="card">
-            <div class="center-div">
-                <div
-                    style="background-size: cover; background-position: center; background-image: url('../static/thumbnails/{{row[4]}}'); width: 360px; height: 270px;">
-                </div>
-            </div>
+        <table id="channels">
+            <tr>
+                <th>Channel Name</th>
+                <th>Channel ID</th>
+            </tr>
+            {% for row in data %}
+            <tr>
+                <th><a class="channel" href="/channel/{{row[0]}}">{{row[0]}}</a></th>
+                <th>{{row[1]}}</th>
+            </tr>
+            {% endfor %}
+        </table>
 
-            <div class="content">
-                <div class="center-div">
-                    <h3>{{row[8]}}</h3>
-                </div>
-
-                <div class="center-div">
-                    <h4><a class="channel_a" href="../channel/{{row[11]}}">{{row[11]}}</a></h4>
-
-                </div>
-                <div class="center-div">
-                    <p class="views">{{row[9]}} views</p>
-                </div>
-
-                <div class="center-div">
-                    <p>{{row[10]}}</p>
-                </div>
-
-                <div class="center-div">
-                    <button onclick="window.location.href='../video/{{row[0]}}'">Watch</button>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
         <!-- The Modal -->
         <div id="myModal" class="modal">
+
             <!-- Modal content -->
             <div class="modal-content">
                 <span class="close">&times;</span>
@@ -223,7 +170,10 @@
                     <input type="submit" value="Submit">
                 </form>
             </div>
+
         </div>
+
+
     </div>
     <script>
         // Get the modal
@@ -254,7 +204,7 @@
 
 
         function formSubmit(event) {
-            var url = "../add";
+            var url = "/add";
             var request = new XMLHttpRequest();
             request.open('POST', url, true);
             request.onload = function () { // request successful
@@ -263,14 +213,13 @@
             };
 
             request.onerror = function () {
-                //alert("There was an error adding that channel, make sure the channel ID is correct.");
+
             };
 
             request.send(new FormData(event.target)); // create FormData from form that triggered event
             event.preventDefault();
         }
 
-        // and you can attach form submit event like this for example
         function attachFormSubmitEvent(formId) {
             document.getElementById(formId).addEventListener("submit", formSubmit);
         }

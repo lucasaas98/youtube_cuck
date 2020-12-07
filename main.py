@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, make_response, g
-from rss_info import GetData
+from rss_info import GetData, is_valid_url, get_all_channels
 import json
 import os
 from subprocess import Popen, PIPE
@@ -75,7 +75,35 @@ def channel_video_watch(channel_name):
     return render_template('cuck_channel.html', data=data)
 
 
-# This function is used to update the json with the most recent videos
+@app.route("/subs")
+def get_subs():
+    data = get_all_channels()
+    sorted_by_second = sorted(data, key=lambda tup: tup[0].strip())
+    return render_template('subs.html', data=sorted_by_second)
+
+
+@app.route('/add', methods = ['POST'])
+def add_channel():
+    form_data = request.form
+    channel_name = form_data['channel_name']
+    channel_id = form_data['channel_id']
+    feed_url = f'https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}'
+    if is_valid_url(feed_url):
+        fi = open('subscription_manager', 'r')
+        sub_data = fi.readlines()
+        fi.close()
+        fo = open('subscription_manager', 'w')
+        data = sub_data[0]
+        data += sub_data[1].split("</outline></body></opml>")[0]
+        data += f'<outline text="{channel_name}" title="{channel_name}" type="rss" xmlUrl="{feed_url}" />'
+        data += "</outline></body></opml>"
+        fo.write(data)
+        fo.close()
+        return make_response("Channel Added.", 200)
+    else:
+        return make_response("There was an error adding that channel, make sure the channel ID is correct.", 400)
+
+# This function is used to update the json file with the most recent videos
 # directly from the RSS feed
 def get_rss_feed():
     with app.app_context():
@@ -91,6 +119,7 @@ def get_rss_feed():
 
 # This function is used to get the videos and thumbnails to the program and it also
 # inserts all the relevant data to the database
+# it needs to check if the video has been downloaded yet... obviously...
 def get_video():
     with app.app_context():
         print("Downloading videos!")
