@@ -53,25 +53,38 @@ def get_json():
 @app.route('/')
 def index():
     data = get_recent_videos(0)
-    data = (data, 0)
+    real_data = list()
+    for video in data:
+        real_data.append([x if idx != 9 else place_value(x) for idx, x in enumerate(video)])
+    data = (real_data, 0)
     return render_template('yt_cuck.html', data=data)
+
 
 @app.route('/page/<page>')
 def next_page(page):
     data = get_recent_videos(page)
-    data = (data, int(page))
+    real_data = list()
+    for video in data:
+        real_data.append([x if idx != 9 else place_value(x) for idx, x in enumerate(video)])
+    data = (real_data, int(page))
     return render_template('yt_cuck_page.html', data=data)
+
 
 @app.route("/video/<identifier>")
 def video_watch(identifier):
     data = get_db_video(identifier)
-    return render_template('cuck_video.html', data=data[0])
+    data = list(data[0])
+    data[9] = place_value(data[9])
+    return render_template('cuck_video.html', data=data)
 
 
 @app.route("/channel/<channel_name>")
 def channel_video_watch(channel_name):
     data = get_db_channel_video(channel_name)
-    data = [channel_name, data]
+    real_data = list()
+    for video in data:
+        real_data.append([x if idx != 9 else place_value(x) for idx, x in enumerate(video)])
+    data = [channel_name, real_data]
     return render_template('cuck_channel.html', data=data)
 
 
@@ -82,7 +95,7 @@ def get_subs():
     return render_template('subs.html', data=sorted_by_second)
 
 
-@app.route('/add', methods = ['POST'])
+@app.route('/add', methods=['POST'])
 def add_channel():
     form_data = request.form
     channel_name = form_data['channel_name']
@@ -102,6 +115,11 @@ def add_channel():
         return make_response("Channel Added.", 200)
     else:
         return make_response("There was an error adding that channel, make sure the channel ID is correct.", 400)
+
+
+def place_value(number): 
+    return ("{:,}".format(number)) 
+
 
 # This function is used to update the json file with the most recent videos
 # directly from the RSS feed
@@ -139,7 +157,8 @@ def get_video():
                         continue
                     file_name = url.split('=')[1]
                     if not download_video(url, file_name):
-                        print("There was an error with the download, trying again later")
+                        print(
+                            "There was an error with the download, trying again later")
                         continue
                     print("Video downloaded successfully")
                     thumb_url = video['thumbnail']
@@ -167,7 +186,8 @@ def get_video():
 # This function calls youtube-dl to download a video. Might replace with the python wrapper.
 def download_video(url, filename):
     try:
-        p = Popen([f"youtube-dl -f 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080]mp4' {url} -o static/videos/{filename}"], shell=True, stdout=PIPE, stderr=PIPE)
+        p = Popen(
+            [f"youtube-dl -f 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080]mp4' {url} -o static/videos/{filename}"], shell=True, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()
         str_check = "does not pass filter islive != true"
         if str_check in str(output) or str_check in str(err):
@@ -194,8 +214,8 @@ def remove_old_videos():
         min_pub_date = time.time() - four_days
         records = get_expired_videos(min_pub_date)
         for expired_video in records:
-            file_path = os.path.join("static/videos",expired_video[1] )
-            thumb_path = os.path.join("static/thumbnails",expired_video[2] )
+            file_path = os.path.join("static/videos", expired_video[1])
+            thumb_path = os.path.join("static/thumbnails", expired_video[2])
             os.remove(file_path)
             os.remove(thumb_path)
             expire_video(expired_video[0])
