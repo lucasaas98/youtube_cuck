@@ -34,6 +34,11 @@ To keep the size of the folders smaller, videos older than 4 days are automatica
 ### The idea
 This was a quick and dirty python project that is proving to be very useful. The best part for me is the fact that the load times are absolutelly phenomenal, which makes sense since everything is found locally and there are no external livraries in the HTML files.
 
+### What is to come
+Currently working on: 
+- Playlist download, creation and edition;
+- Music system that downloads the videos in a lower quality thus saving space.
+
 ### Known problems
 - The RSS feed includes livestreams and I can't seem to find a way to use the flag is_live in the __--match-filter__ option from youtube-dl. 
 - __get_video()__ get's called more than once at a time, causing problems and simultaneous downloads which is undesirable. 
