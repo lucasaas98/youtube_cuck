@@ -37,7 +37,7 @@ This was a quick and dirty python project that is proving to be very useful. The
 ### What is to come
 Currently working on: 
 - Playlist download, creation and edition;
-- Music system that downloads the videos in a lower quality thus saving space.
+- System that downloads the videos in a lower quality thus saving space. Useful for videos where the audio is the major component.
 
 ### Known problems
 - The RSS feed includes livestreams and I can't seem to find a way to use the flag is_live in the __--match-filter__ option from youtube-dl. 
