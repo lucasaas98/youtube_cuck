@@ -189,6 +189,7 @@
         <li><a class="active" href="/">Home</a></li>
         <li><a id="add">Add Channel</a></li>
         <li><a href="/subs">Subscriptions</a></li>
+        <li style="float:right"><a id="rss_ref" onclick="refresh_rss()">Last Refresh - {{data[2]}}</a></li>
     </ul>
     <div class="grid-container">
         {% for row in data[0] %}
@@ -303,7 +304,29 @@
             document.getElementById(formId).addEventListener("submit", formSubmit);
         }
 
+        function refresh_rss() {
+            but = document.getElementById("rss_ref");
+            but.classList.add("active");
+            var url = "/refresh_rss";
+            var request = new XMLHttpRequest();
+            request.open('POST', url, true);
+            request.onload = function () { // request successful
+                if(request.responseText == "True"){
+                    window.location.reload(true);
+                }
+                but.classList.remove("active");
+            };
+            request.onerror = function () {
+                //alert("There was an error adding that channel, make sure the channel ID is correct.");
+            };
+            request.send();
+
+        }
+
         attachFormSubmitEvent("channel_form");
+
+
+        //window.location.reload(false)
     </script>
 </body>
 
