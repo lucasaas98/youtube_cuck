@@ -62,9 +62,9 @@ def close_conn():
     conn.close()
 
 if __name__ == "__main__":
-    #create_tables()
+    create_tables()
     #create_videos_table()
-    create_rss_table()
-    create_json_table()
-    create_video_flag_table()
+    #create_rss_table()
+    #create_json_table()
+    #create_video_flag_table()
     close_conn()
