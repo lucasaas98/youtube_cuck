@@ -8,8 +8,11 @@ This is a **Flask** project and **youtube-dl** is used to proceed with the downl
 
 ### Requirements
 You will need to have **Docker** or **Docker** with **Minikube** installed. Any other kubernetes instance will also work.
+
 To install **Docker** follow the instructions [here](https://docs.docker.com/engine/install/).
+
 To install **minikube** after installing Docker follow the instructions [here](https://minikube.sigs.k8s.io/docs/start/). 
+
 You might also need to install **kubectl** and in the Minikube website there are some instructions on how to do that.
 
 
