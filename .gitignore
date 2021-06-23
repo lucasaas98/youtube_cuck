@@ -1,0 +1,4 @@
+flask_backend/docker_build_and_push.sh
+flask_frontend/docker_build_and_push.sh
+nginx_server/docker_build_and_push.sh
+
