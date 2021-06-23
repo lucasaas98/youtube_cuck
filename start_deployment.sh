@@ -16,9 +16,4 @@ kubectl cp nginx_server/subscription_manager $nice:/data
 echo " -> Create dirs inside volume"
 kubectl exec $nice -- mkdir /data/thumbnails
 kubectl exec $nice -- mkdir /data/videos
-
-sleep 20
-service_ip=$(minikube service yt-cuck-nginx --url=true)
-echo $service_ip > ip.txt
-kubectl cp ip.txt $nice:/data
 echo " -> Deployment created"

@@ -17,7 +17,7 @@ from Model import get_db_access
 from Model import YoutubeVideo, JsonData, VideoFlag, RSSFeedDate, Playlist, PlaylistVideo
 
 
-app = Flask(__name__)
+application = Flask(__name__)
 
 
 # Don't download videos older than:
@@ -27,7 +27,7 @@ delay_time = 172800 / 4
 remove_date = delay_time * 2
 
 
-@app.route('/api/refresh_rss', methods=['POST'])
+@application.route('/api/refresh_rss', methods=['POST'])
 def refresh_rss():
     response, thread = get_rss_feed()
     if response:
@@ -35,7 +35,7 @@ def refresh_rss():
     return make_response(str(response), 200)
 
 
-@app.route('/api/startup', methods=['POST'])
+@application.route('/api/startup', methods=['POST'])
 def startup():
     activate_schedule()
     return make_response("Server is now starting", 200)
@@ -56,7 +56,6 @@ def activate_schedule():
 
 
 def remove_old_videos():
-    # with app.app_context():
     min_pub_date = time.time() - remove_date
     records = get_expired_videos(min_pub_date)
     for expired_video in records:
@@ -74,7 +73,6 @@ def remove_old_videos():
 # This function is used to update the json file with the most recent videos
 # directly from the RSS feed
 def get_rss_feed():
-    # with app.app_context():
     date = datetime.now()
     date_str = datetime.strftime(date, "%d/%m/%Y, %H:%M:%S GMT")
     print(f"[{date_str}] Getting RSS feed!")
@@ -424,4 +422,4 @@ def insert_video_flag(flag):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=5020)
+    application.run(host='0.0.0.0',port=5020)

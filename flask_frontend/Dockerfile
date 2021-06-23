@@ -1,5 +1,5 @@
 #Download Python from DockerHub and use it
-FROM python:3.8
+FROM python:3.8-slim-buster
 
 #Set the working directory in the Docker container
 WORKDIR /code
@@ -8,11 +8,13 @@ WORKDIR /code
 COPY requirements.txt .
 
 #Install the dependencies
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip --no-cache-dir install -r requirements.txt \
+    && pip --no-cache-dir install gunicorn
 
 #Copy the Flask app code to the working directory
 COPY . .
 
 EXPOSE 5010
 #Run the container
-CMD [ "python", "./main.py" ]
+CMD ["gunicorn", "-b", "0.0.0.0:5010", "main"]

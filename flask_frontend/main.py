@@ -8,40 +8,35 @@ import threading
 import os
 
 # Flask APP
-app = Flask(__name__)
+application = Flask(__name__)
 
-service_url = ""
 backend_ip = os.getenv("YT_CUCK_BACKEND_SERVICE_HOST")
 backend_port = os.getenv("YT_CUCK_BACKEND_SERVICE_PORT")
 
 # The landing page
-@app.route('/')
+@application.route('/')
 def index():
     data = get_recent_videos(0)
     data = ([[youtube_video.id, youtube_video.vid_url, youtube_video.thumb_url,
               youtube_video.vid_path, youtube_video.thumb_path, youtube_video.pub_date,
               youtube_video.pub_date_human, youtube_video.rating, youtube_video.title,
               place_value(youtube_video.views), youtube_video.description, youtube_video.channel] for youtube_video in data], 0, get_rss_date().date_human if get_rss_date else "DateForHumans" )
-    return render_template('yt_cuck.html', data=data, service_url=service_url)
+    return render_template('yt_cuck.html', data=data)
 
 
-@app.route('/page/<page>')
+@application.route('/page/<page>')
 def next_page(page):
     data = get_recent_videos(page)
     data = ([[youtube_video.id, youtube_video.vid_url, youtube_video.thumb_url,
               youtube_video.vid_path, youtube_video.thumb_path, youtube_video.pub_date,
               youtube_video.pub_date_human, youtube_video.rating, youtube_video.title,
               place_value(youtube_video.views), youtube_video.description, youtube_video.channel] for youtube_video in data], int(page), get_rss_date().date_human if get_rss_date else "DateForHumans")
-    return render_template('yt_cuck_page.html', data=data, service_url=service_url)
+    return render_template('yt_cuck_page.html', data=data)
 
 
-@app.route("/video/<identifier>")
+@application.route("/video/<identifier>")
 def video_watch(identifier):
     youtube_video = get_db_video(identifier)
-    # data = [list(youtube_video.id), youtube_video.vid_url, youtube_video.thumb_url,
-    #         youtube_video.vid_path, youtube_video.thumb_path, youtube_video.pub_date,
-    #         youtube_video.pub_date_human, youtube_video.rating, youtube_video.title,
-    #         place_value(youtube_video.views), youtube_video.description.split("\n"), youtube_video.channel]
     data = {
         'title': youtube_video.title,
         'views': place_value(youtube_video.views),
@@ -51,27 +46,27 @@ def video_watch(identifier):
         'date': youtube_video.pub_date_human,
         'description': youtube_video.description.split("\n")
     }
-    return render_template('cuck_video.html', data=data, length=len(data['description']), service_url=service_url)
+    return render_template('cuck_video.html', data=data, length=len(data['description']))
 
 
-@app.route("/channel/<channel_name>")
+@application.route("/channel/<channel_name>")
 def channel_video_watch(channel_name):
     data = get_db_channel_video(channel_name)
     data = [channel_name, [[youtube_video.id, youtube_video.vid_url, youtube_video.thumb_url,
                             youtube_video.vid_path, youtube_video.thumb_path, youtube_video.pub_date,
                             youtube_video.pub_date_human, youtube_video.rating, youtube_video.title,
                             place_value(youtube_video.views), youtube_video.description, youtube_video.channel] for youtube_video in data]]
-    return render_template('cuck_channel.html', data=data, service_url=service_url)
+    return render_template('cuck_channel.html', data=data)
 
 
-@app.route("/subs")
+@application.route("/subs")
 def get_subs():
     data = get_all_channels()
     sorted_by_second = sorted(data, key=lambda tup: tup[0].strip())
     return render_template('cuck_subs.html', data=sorted_by_second)
 
 
-@app.route('/add', methods=['POST'])
+@application.route('/add', methods=['POST'])
 def add_channel():
     form_data = request.form
     channel_name = form_data['channel_name']
@@ -93,7 +88,7 @@ def add_channel():
         return make_response("There was an error adding that channel, make sure the channel ID is correct.", 400)
 
 
-@app.route('/refresh_rss', methods=['POST'])
+@application.route('/refresh_rss', methods=['POST'])
 def refresh_rss():
     response, thread = get_rss_feed()
     if response:
@@ -101,11 +96,8 @@ def refresh_rss():
     return make_response("True", 200)
 
 
-@app.before_first_request
+@application.before_first_request
 def ready_up_server():
-    global service_url
-    service_url = open("/data/ip.txt","r").readline().strip()
-
     Base.metadata.create_all(engine)
     t1 = threading.Thread(target=ready_up_request)
     t1.start()
@@ -193,4 +185,4 @@ def is_valid_url(feed_url):
         return False
         
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=5010)
+    application.run(host='0.0.0.0',port=5010)
