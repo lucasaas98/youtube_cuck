@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yt-nginx
+  labels:
+    app: yt-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yt-nginx
+  template:
+    metadata:
+      labels:
+        app: yt-nginx
+    spec:
+      containers:
+        - name: yt-nginx
+          image: lucasaas/yt_cuck_fileserver
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: youtube-cuck-persistent-storage
+              mountPath: /data
+      volumes:
+        - name: youtube-cuck-persistent-storage
+          persistentVolumeClaim:
+            claimName: youtube-cuck-pv-claim
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: yt-cuck-nginx
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: yt-nginx
+  type: NodePort
