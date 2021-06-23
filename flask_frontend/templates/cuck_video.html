@@ -19,6 +19,7 @@
             justify-content: center;
             align-items: center;
             width: 100%;
+            height: 100%;
         }
 
         .div_info {
@@ -161,47 +162,37 @@
     </style>
 </head>
 
-
-<!-- CREATE TABLE 'downloaded_videos' (
-    0 id INTEGER PRIMARY KEY AUTOINCREMENT,
-    1 vid_url VARCHAR(1000) UNIQUE,
-    2 thumb_url VARCHAR(1000),
-    3 vid_path VARCHAR(1000),
-    4 thumb_path VARCHAR(1000),
-    5 pub_date INTEGER,
-    6 pub_date_human VARCHAR(1000),
-    7 rating REAL,
-    8 title VARCHAR(1000),
-    9 views INTEGER,
-    10 description TEXT, 
-    11 channel VARCHAR(1000)
-); -->
-
 <body style="background-color:#1E1F1C;">
     <ul class="nav_bar">
         <li><a class="active" href="../">Home</a></li>
         <li><a id="add">Add Channel</a></li>
         <li><a href="../subs">Subscriptions</a></li>
+        <li><a href="../playlist">Playlists</a></li>
     </ul>
     <div class="viewer">
 
         <video id="video_player" width="80%" controls>
-            <source src="/static/videos/{{data[3]}}" type="video/mp4">
+
+            <source src="{{service_url}}/videos/{{data['vid_path']}}" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
     <div class="div_info">
         <div class="info">
-            <h2 class="title">{{data[8]}}</h2>
-            <p class="views">{{data[9]}} views</p>
-            <p class="rating">{{data[7]}}/5</p>
+            <h2 class="title">{{data['title']}}</h2>
+            <p class="views">{{data['views']}} views</p>
+            <p class="rating">{{data['rating']}}/5</p>
         </div>
         <div class="info">
-            <h4 class="channel_name"><a class="channel_a" href="../channel/{{data[11]}}">{{data[11]}}</a></h4>
-            <p class="date">{{data[6]}}</p>
+            <h4 class="channel_name"><a class="channel_a" href="../channel/{{data['channel']}}">{{data['channel']}}</a></h4>
+            <p class="date">{{data['date']}}</p>
         </div>
         <div class="info">
-            <div class="description">{{data[10]}}</div>
+            <div class="description">
+                {% for i in range(0, length)%}
+                    {{data['description'][i]}}<br>
+                {% endfor %}
+            </div>
         </div>
     </div>
     <!-- The Modal -->

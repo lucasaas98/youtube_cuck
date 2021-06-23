@@ -189,6 +189,7 @@
         <li><a class="active" href="/">Home</a></li>
         <li><a id="add">Add Channel</a></li>
         <li><a href="/subs">Subscriptions</a></li>
+        <li><a href="/playlist">Playlists</a></li>
         <li style="float:right"><a id="rss_ref" onclick="refresh_rss()">Last Refresh - {{data[2]}}</a></li>
     </ul>
     <div class="grid-container">
@@ -196,7 +197,7 @@
         <div class="card">
             <div class="center-div-video">
                 <div
-                    style="background-size: cover; background-position: center; background-image: url('../static/thumbnails/{{row[4]}}'); width: 360px; height: 270px;">
+                    style="background-size: cover; background-position: center; background-image: url('{{service_url}}/thumbnails/{{row[4]}}'); width: 360px; height: 270px;">
                 </div>
             </div>
 
