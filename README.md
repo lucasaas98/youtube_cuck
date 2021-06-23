@@ -7,9 +7,10 @@ The program is now designed with microsservices in mind.
 This is a **Flask** project and **youtube-dl** is used to proceed with the download. All the important data is stored in a **MySQL** database. **NGINX** is being used as a file server for the frontend. 
 
 ### Requirements
-You will need to have **Docker** or **Docker** with **Minikube** installed.
+You will need to have **Docker** or **Docker** with **Minikube** installed. Any other kubernetes instance will also work.
 To install **Docker** follow the instructions [here](https://docs.docker.com/engine/install/).
-To install **minikube** after installing Docker follow the instructions [here](https://minikube.sigs.k8s.io/docs/start/). You might also need to install **kubectl** and in the Minikube website there are some instructions on how to do that.
+To install **minikube** after installing Docker follow the instructions [here](https://minikube.sigs.k8s.io/docs/start/). 
+You might also need to install **kubectl** and in the Minikube website there are some instructions on how to do that.
 
 
 ### How to run
@@ -23,9 +24,11 @@ You can check whether the pods are ready with:
 
 The interface can be obtained with the command:
 
-`minikube service yt-cuck-fronted`
+`minikube service yt-cuck-frontend`
+
 or
-`minikube service yt-cuck-fronted --url=true`
+
+`minikube service yt-cuck-frontend --url=true`
 
 if you only need the URL.
 
