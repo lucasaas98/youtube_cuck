@@ -8,12 +8,4 @@ kubectl apply -f mysql-deployment.yml
 sleep 30
 kubectl apply -f yt-backend-deployment.yml
 kubectl apply -f yt-frontend-deployment.yml
-
-sleep 10
-echo " -> Copying subscription file to volume"
-nice=$(kubectl get pods --selector=app=yt-nginx -o jsonpath='{.items[0].metadata.name}')
-kubectl cp nginx_server/subscription_manager $nice:/data
-echo " -> Create dirs inside volume"
-kubectl exec $nice -- mkdir /data/thumbnails
-kubectl exec $nice -- mkdir /data/videos
 echo " -> Deployment created"

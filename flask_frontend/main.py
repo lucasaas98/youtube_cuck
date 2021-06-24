@@ -10,8 +10,8 @@ import os
 # Flask APP
 application = Flask(__name__)
 
-backend_ip = os.getenv("YT_CUCK_BACKEND_SERVICE_HOST")
-backend_port = os.getenv("YT_CUCK_BACKEND_SERVICE_PORT")
+# backend_ip = os.getenv("YT_CUCK_BACKEND_SERVICE_HOST")
+# backend_port = os.getenv("YT_CUCK_BACKEND_SERVICE_PORT")
 
 # The landing page
 @application.route('/')
@@ -98,6 +98,15 @@ def refresh_rss():
 
 @application.before_first_request
 def ready_up_server():
+    try:
+        os.system("mkdir -p /data/videos/")
+        os.system("mkdir -p /data/thumbnails/")
+    except Exception as e:
+        print("Unable to create folders")
+    try:
+        os.system('cp subscription_manager /data/subscription_manager')
+    except Exception as e:
+        print("Unable to copy subscription_manager")
     Base.metadata.create_all(engine)
     t1 = threading.Thread(target=ready_up_request)
     t1.start()
@@ -109,10 +118,10 @@ def get_rss_feed():
     return True, t1
 
 def send_request_rss():
-    return requests.post(f'http://{backend_ip}:{backend_port}/api/refresh_rss')
+    return requests.post(f'http://yt-cuck-backend:5020/api/refresh_rss')
 
 def ready_up_request():
-    return requests.post(f'http://{backend_ip}:{backend_port}/api/startup')
+    return requests.post(f'http://yt-cuck-backend:5020/api/startup')
 
 
 def place_value(number):
