@@ -1,6 +1,6 @@
-kubectl delete deployment --all
-kubectl delete svc --all
-kubectl delete po --all
-kubectl delete pvc --all
-kubectl delete pv --all
-kubectl delete secrets yt-cuck-secrets
+microk8s kubectl delete deployment --all
+microk8s kubectl delete svc --all
+microk8s kubectl delete po --all
+microk8s kubectl delete pvc --all
+microk8s kubectl delete pv --all
+microk8s kubectl delete secrets yt-cuck-secrets

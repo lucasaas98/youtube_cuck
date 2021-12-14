@@ -69,6 +69,10 @@ class PlaylistVideo(Base):
     title = Column(String(1000))
     playlist_name = Column(String(1000))
 
+class ThreadPool(Base):
+    __tablename__ = 'thread_pool'
+    id = Column(Integer, primary_key=True)
+    count = Column(Integer)
 
 def get_db_access():
     factory = sessionmaker(bind=engine)

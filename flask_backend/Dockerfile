@@ -24,4 +24,4 @@ COPY . .
 EXPOSE 5020
 
 #Run the container
-CMD ["gunicorn", "-b", "0.0.0.0:5020", "ParseAndConfuse"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5020", "ParseAndConfuse", "--timeout", "300"]

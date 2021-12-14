@@ -8,7 +8,6 @@ import requests
 import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 import threading
-from tqdm import tqdm
 import feedparser
 import opml
 import dateutil.parser as date_parser
@@ -19,9 +18,14 @@ from Model import YoutubeVideo, JsonData, VideoFlag, RSSFeedDate, Playlist, Play
 
 application = Flask(__name__)
 
+if __name__ == '__main__':
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    application.logger.handlers = gunicorn_logger.handlers
+    application.logger.setLevel(gunicorn_logger.level)
+
 
 # Don't download videos older than:
-delay_time = 172800 / 4
+delay_time = 24*3600*5
 
 # Remove videos older than:
 remove_date = delay_time * 2
@@ -44,9 +48,9 @@ def startup():
 def activate_schedule():
     scheduler = BackgroundScheduler()
     # Schedule to remove videos older than X time
-    scheduler.add_job(func=remove_old_videos, trigger="interval", seconds=3600)
-    # Schedule to get RSS feed automatically
-    scheduler.add_job(func=get_rss_feed, trigger="interval", seconds=600)
+    scheduler.add_job(func=remove_old_videos, trigger="interval", seconds=7200)
+    # Schedule to get RSS feed automatically -- This is currently not good since it should have a random delay, it's easier to just do it manually from time to time.
+    # scheduler.add_job(func=get_rss_feed, trigger="interval", seconds=600)
     scheduler.start()
 
     # Shut down the scheduler when exiting the app
@@ -171,51 +175,24 @@ def get_video():
     print("Downloading videos!")
     update_video_flag(1)
     try:
+        insert_thread_pool()
         data = get_db_access().query(YoutubeVideo).all()
         down_vid_urls = [x.vid_url for x in data]
         min_date = time.time() - delay_time
         json_video_data = json.loads(get_json())
-        for channel in tqdm(json_video_data.keys()):
+        for channel in json_video_data.keys():
             for video in json_video_data[channel]:
+                while get_thread_pool() > 8:
+                    continue
                 url = video['video_url']
                 if url in down_vid_urls:
                     update_view_count(video)
                     continue
                 if float(video['epoch_date']) < min_date:
                     continue
-                file_name = url.split('=')[1]
-                if not download_video(url, file_name):
-                    print(
-                        "There was an error with the download, trying again later")
-                    continue
-                print("Video downloaded successfully")
-                thumb_url = video['thumbnail']
-                download_thumbnail(thumb_url, file_name)
-
-                pub_date = int(video['epoch_date'])
-                human_date = video['human_date']
-                channel_name = channel
-                rating = float(video['rating'])
-                title = video['title']
-                views = int(video['views'])
-                description = video['description']
-                video_path = f"{file_name}.mp4"
-                thumb_path = f"{file_name}.jpg"
+                thread = video_download_thread(idx, video, channel)
+                thread.start()
                 
-                session = get_db_access()
-                session.add(YoutubeVideo(vid_url=url,
-                                            vid_path=video_path,
-                                            thumb_url=thumb_url,
-                                            thumb_path=thumb_path,
-                                            pub_date=pub_date,
-                                            pub_date_human=human_date,
-                                            rating=rating,
-                                            title=title,
-                                            views=views,
-                                            description=description,
-                                            channel=channel_name))
-
-                session.commit()
     except Exception as e:
         e.with_traceback()
     finally:
@@ -223,11 +200,54 @@ def get_video():
         print("Videos Downloaded!")
 
 
-# This function calls youtube-dl to download a video. Might replace with the python wrapper.
+class video_download_thread(threading.Thread):
+    def __init__(self, video, channel):
+        threading.Thread.__init__(self)
+        self.video = video
+        self.channel = channel
+
+    def run(self):
+        update_thread_pool(1)
+        file_name = video['video_url'].split('=')[1]
+        if not download_video(video['video_url'], file_name):
+            app.logger.info(f"Video - {video['title']} from channel {channel} is unable to be downloaded.")
+            return
+        thumb_url = video['thumbnail']
+        download_thumbnail(thumb_url, file_name)
+
+        pub_date = int(video['epoch_date'])
+        human_date = video['human_date']
+        channel_name = channel
+        rating = float(video['rating'])
+        title = video['title']
+        views = int(video['views'])
+        description = video['description']
+        video_path = f"{file_name}.mp4"
+        thumb_path = f"{file_name}.jpg"
+        
+        session = get_db_access()
+        session.add(YoutubeVideo(vid_url=video['video_url'],
+                                    vid_path=video_path,
+                                    thumb_url=thumb_url,
+                                    thumb_path=thumb_path,
+                                    pub_date=pub_date,
+                                    pub_date_human=human_date,
+                                    rating=rating,
+                                    title=title,
+                                    views=views,
+                                    description=description,
+                                    channel=channel_name))
+
+        session.commit()
+        app.logger.info(f"Video - {video['title']} from channel {channel} was added.")
+        update_thread_pool(-1)
+
+# This function calls yt-dlp to download a video. Might replace with the python wrapper.
 def download_video(url, filename):
+    
     try:
         p = Popen(
-            [f"youtube-dl -f 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080]mp4' {url} -o /data/videos/{filename}"], shell=True, stdout=PIPE, stderr=PIPE)
+            [f"yt-dlp -f 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080]mp4' {url} -o /data/videos/{filename}"], shell=True, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()
         str_check = "does not pass filter islive != true"
         if str_check in str(output) or str_check in str(err):
@@ -409,7 +429,7 @@ def update_video_flag(flag):
             data[0].flag = flag
             session.commit()
     except Exception as error:
-        print("Failed to update json_data table", error)
+        print("Failed to update video_flag table", error)
 
 
 def insert_video_flag(flag):
@@ -420,6 +440,38 @@ def insert_video_flag(flag):
     except Exception as error:
         print("Failed to insert flag into video_flag table", error)
 
+def get_thread_pool():
+    try:
+        session = get_db_access()
+        data = session.query(ThreadPool).order_by(ThreadPool.id.desc()).limit(1).all()
+        if data == []:
+            insert_thread_pool()
+            return get_thread_pool()
+        return data[0].count
+    except Exception as error:
+        print("Failed to select from thread_pool table", error)
+        return 0
+
+def update_thread_pool(inc):
+    try:
+        session = get_db_access()
+        data = session.query(ThreadPool).order_by(ThreadPool.id.desc()).limit(1).all()
+        if data == []:
+            insert_thread_pool()
+            return update_thread_pool(inc)
+        data[0].count += inc
+        session.commit()
+    except Exception as error:
+        print("Failed to update thread_pool table", error)
+
+
+def insert_thread_pool():
+    try:
+        session = get_db_access()
+        session.add(ThreadPool(count=0))
+        session.commit()
+    except Exception as error:
+        print("Failed to insert count into thread_pool table", error)
 
 if __name__ == '__main__':
     application.run(host='0.0.0.0',port=5020)
