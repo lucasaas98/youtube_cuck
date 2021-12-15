@@ -23,7 +23,7 @@ Base = declarative_base()
 class YoutubeVideo(Base):
     __tablename__ = 'youtube_video'
     id = Column(Integer, primary_key=True)
-    vid_url = Column(String(1000))
+    vid_url = Column(String(1000), unique=True)
     vid_path = Column(String(1000))
     thumb_url = Column(String(1000))
     thumb_path = Column(String(1000))
@@ -68,6 +68,10 @@ class PlaylistVideo(Base):
     title = Column(String(1000))
     playlist_name = Column(String(1000))
 
+class ThreadPool(Base):
+    __tablename__ = 'thread_pool'
+    id = Column(Integer, primary_key=True)
+    count = Column(Integer)
 
 def get_db_access():
     factory = sessionmaker(bind=engine)

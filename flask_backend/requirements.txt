@@ -7,4 +7,4 @@ feedparser
 python-dateutil
 SQLAlchemy
 yt-dlp
-mysql-connector-python==8.0.25
+mysql-connector-python

@@ -3,4 +3,4 @@ feedparser
 requests
 Flask
 SQLAlchemy
-mysql-connector-python==8.0.25
+mysql-connector-python

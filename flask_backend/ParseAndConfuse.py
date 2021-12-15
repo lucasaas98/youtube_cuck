@@ -13,7 +13,7 @@ import opml
 import dateutil.parser as date_parser
 
 from Model import get_db_access
-from Model import YoutubeVideo, JsonData, VideoFlag, RSSFeedDate, Playlist, PlaylistVideo
+from Model import YoutubeVideo, JsonData, VideoFlag, RSSFeedDate, Playlist, PlaylistVideo, ThreadPool
 
 
 application = Flask(__name__)
@@ -173,7 +173,7 @@ def are_there_new_videos(new_json, old_json):
 # inserts all the relevant data to the database
 def get_video():
     print("Downloading videos!")
-    update_video_flag(1)
+    # update_video_flag(1)
     try:
         insert_thread_pool()
         data = get_db_access().query(YoutubeVideo).all()
@@ -190,13 +190,13 @@ def get_video():
                     continue
                 if float(video['epoch_date']) < min_date:
                     continue
-                thread = video_download_thread(idx, video, channel)
+                thread = video_download_thread(video, channel)
                 thread.start()
                 
     except Exception as e:
         e.with_traceback()
     finally:
-        update_video_flag(0)
+        # update_video_flag(0)
         print("Videos Downloaded!")
 
 
@@ -208,25 +208,25 @@ class video_download_thread(threading.Thread):
 
     def run(self):
         update_thread_pool(1)
-        file_name = video['video_url'].split('=')[1]
-        if not download_video(video['video_url'], file_name):
-            app.logger.info(f"Video - {video['title']} from channel {channel} is unable to be downloaded.")
+        file_name = self.video['video_url'].split('=')[1]
+        if not download_video(self.video['video_url'], file_name):
+            application.logger.info(f"Video - {self.video['title']} from channel {self.channel} is unable to be downloaded.")
             return
-        thumb_url = video['thumbnail']
+        thumb_url = self.video['thumbnail']
         download_thumbnail(thumb_url, file_name)
 
-        pub_date = int(video['epoch_date'])
-        human_date = video['human_date']
-        channel_name = channel
-        rating = float(video['rating'])
-        title = video['title']
-        views = int(video['views'])
-        description = video['description']
+        pub_date = int(self.video['epoch_date'])
+        human_date = self.video['human_date']
+        channel_name = self.channel
+        rating = float(self.video['rating'])
+        title = self.video['title']
+        views = int(self.video['views'])
+        description = self.video['description']
         video_path = f"{file_name}.mp4"
         thumb_path = f"{file_name}.jpg"
         
         session = get_db_access()
-        session.add(YoutubeVideo(vid_url=video['video_url'],
+        session.add(YoutubeVideo(vid_url=self.video['video_url'],
                                     vid_path=video_path,
                                     thumb_url=thumb_url,
                                     thumb_path=thumb_path,
@@ -239,7 +239,7 @@ class video_download_thread(threading.Thread):
                                     channel=channel_name))
 
         session.commit()
-        app.logger.info(f"Video - {video['title']} from channel {channel} was added.")
+        application.logger.info(f"Video - {self.video['title']} from channel {self.channel} was added.")
         update_thread_pool(-1)
 
 # This function calls yt-dlp to download a video. Might replace with the python wrapper.

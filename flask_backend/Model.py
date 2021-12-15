@@ -24,7 +24,7 @@ Base = declarative_base()
 class YoutubeVideo(Base):
     __tablename__ = 'youtube_video'
     id = Column(Integer, primary_key=True)
-    vid_url = Column(String(1000))
+    vid_url = Column(String(1000), unique=True)
     vid_path = Column(String(1000))
     thumb_url = Column(String(1000))
     thumb_path = Column(String(1000))
