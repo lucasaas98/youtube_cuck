@@ -1,18 +1,19 @@
 import atexit
-from concurrent.futures import ThreadPoolExecutor
 import logging as _logging
 
-from apscheduler.schedulers.background import BackgroundScheduler
-
 import uvicorn
+from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 
-
 from backend.engine import close_engine
+from backend.env_vars import PORT
 from backend.logging import logging
-from backend.utils import get_rss_feed, remove_old_videos, get_queue_size, video_download_thread
-from backend.env_vars import PORT, DATA_FOLDER
-import os
+from backend.utils import (
+    download_old_livestreams,
+    get_queue_size,
+    get_rss_feed,
+    remove_old_videos,
+)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(_logging.INFO)
@@ -42,14 +43,17 @@ def activate_schedule():
     scheduler = BackgroundScheduler()
     # Schedule to remove videos older than X time
     scheduler.add_job(func=remove_old_videos, trigger="interval", seconds=3600)
+    scheduler.add_job(func=download_old_livestreams, trigger="interval", seconds=3600)
     # Schedule to get RSS feed automatically
     # scheduler.add_job(func=get_rss_feed, trigger="interval", seconds=600)
     scheduler.start()
 
     # Shut down the scheduler when exiting the app
     atexit.register(scheduler.shutdown)
+    # Shut down the scheduler when exiting the app
     atexit.register(close_engine)
     remove_old_videos()
+    download_old_livestreams()
     get_rss_feed()
 
 

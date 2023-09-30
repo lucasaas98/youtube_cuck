@@ -4,13 +4,7 @@ from contextlib import contextmanager
 from sqlalchemy.future.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 
-from .env_vars import (
-    DB_HOST,
-    DB_NAME,
-    DB_PASS,
-    DB_USER
-)
-
+from frontend.env_vars import DB_HOST, DB_NAME, DB_PASS, DB_USER
 
 engine = create_engine(
     f"mysql+mysqlconnector://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}",

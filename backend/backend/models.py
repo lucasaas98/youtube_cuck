@@ -1,6 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql.schema import Column
-from sqlalchemy.types import Integer, String, Text, Boolean, JSON
+from sqlalchemy.types import JSON, Boolean, Integer, String, Text
 
 Base = declarative_base()
 
@@ -22,6 +22,7 @@ class YoutubeVideo(Base):
     livestream = Column(Boolean)
     progress_seconds = Column(Integer)
     inserted_at = Column(Integer)
+    downloaded_at = Column(Integer)
 
 
 class JsonData(Base):

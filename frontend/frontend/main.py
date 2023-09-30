@@ -1,34 +1,25 @@
 import threading
-import os
 
 import feedparser
 import opml
 import requests
-
 import uvicorn
-from fastapi import FastAPI, Request, Response, Form
-from fastapi.templating import Jinja2Templates
+from fastapi import FastAPI, Form, Request, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from typing_extensions import Annotated
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+from typing_extensions import Annotated
 
-from .repo import (
-    get_recent_shorts,
-    get_video_by_id,
+from frontend.env_vars import BACKEND_PORT, BACKEND_URL, DATA_FOLDER, PORT
+from frontend.repo import (
     get_channel_videos,
+    get_recent_shorts,
     get_recent_videos,
     get_rss_date,
-    update_video_progress
+    get_video_by_id,
+    update_video_progress,
 )
-
-from .env_vars import (
-    PORT, 
-    BACKEND_PORT,
-    BACKEND_URL,
-    DATA_FOLDER
-)
-
 
 app = FastAPI()
 
@@ -45,18 +36,18 @@ async def index(request: Request):
     data = (
         [
             {
-                'id': youtube_video.id,
-                'vid_url': youtube_video.vid_url,
-                'thumb_url': youtube_video.thumb_url,
-                'vid_path': youtube_video.vid_path,
-                'thumb_path': youtube_video.thumb_path,
-                'pub_date': youtube_video.pub_date,
-                'pub_date_human': youtube_video.pub_date_human,
-                'rating': None,
-                'title': youtube_video.title,
-                'views': place_value(youtube_video.views),
-                'description': youtube_video.description,
-                'channel': youtube_video.channel
+                "id": youtube_video.id,
+                "vid_url": youtube_video.vid_url,
+                "thumb_url": youtube_video.thumb_url,
+                "vid_path": youtube_video.vid_path,
+                "thumb_path": youtube_video.thumb_path,
+                "pub_date": youtube_video.pub_date,
+                "pub_date_human": youtube_video.pub_date_human,
+                "rating": None,
+                "title": youtube_video.title,
+                "views": place_value(youtube_video.views),
+                "description": youtube_video.description,
+                "channel": youtube_video.channel,
             }
             for youtube_video in data
         ],
@@ -79,18 +70,18 @@ async def get_shorts(request: Request):
     data = (
         [
             {
-                'id': youtube_video.id,
-                'vid_url': youtube_video.vid_url,
-                'thumb_url': youtube_video.thumb_url,
-                'vid_path': youtube_video.vid_path,
-                'thumb_path': youtube_video.thumb_path,
-                'pub_date': youtube_video.pub_date,
-                'pub_date_human': youtube_video.pub_date_human,
-                'rating': None,
-                'title': youtube_video.title,
-                'views': place_value(youtube_video.views),
-                'description': youtube_video.description,
-                'channel': youtube_video.channel
+                "id": youtube_video.id,
+                "vid_url": youtube_video.vid_url,
+                "thumb_url": youtube_video.thumb_url,
+                "vid_path": youtube_video.vid_path,
+                "thumb_path": youtube_video.thumb_path,
+                "pub_date": youtube_video.pub_date,
+                "pub_date_human": youtube_video.pub_date_human,
+                "rating": None,
+                "title": youtube_video.title,
+                "views": place_value(youtube_video.views),
+                "description": youtube_video.description,
+                "channel": youtube_video.channel,
             }
             for youtube_video in data
         ],
@@ -113,18 +104,18 @@ async def next_page(page, request: Request):
     data = (
         [
             {
-                'id': youtube_video.id,
-                'vid_url': youtube_video.vid_url,
-                'thumb_url': youtube_video.thumb_url,
-                'vid_path': youtube_video.vid_path,
-                'thumb_path': youtube_video.thumb_path,
-                'pub_date': youtube_video.pub_date,
-                'pub_date_human': youtube_video.pub_date_human,
-                'rating': None,
-                'title': youtube_video.title,
-                'views': place_value(youtube_video.views),
-                'description': youtube_video.description,
-                'channel': youtube_video.channel
+                "id": youtube_video.id,
+                "vid_url": youtube_video.vid_url,
+                "thumb_url": youtube_video.thumb_url,
+                "vid_path": youtube_video.vid_path,
+                "thumb_path": youtube_video.thumb_path,
+                "pub_date": youtube_video.pub_date,
+                "pub_date_human": youtube_video.pub_date_human,
+                "rating": None,
+                "title": youtube_video.title,
+                "views": place_value(youtube_video.views),
+                "description": youtube_video.description,
+                "channel": youtube_video.channel,
             }
             for youtube_video in videos
         ],
@@ -150,7 +141,7 @@ async def video_watch(request: Request, identifier: str):
         "date": youtube_video.pub_date_human,
         "description": youtube_video.description.split("\n"),
         "id": youtube_video.id,
-        "progress": youtube_video.progress_seconds or 0
+        "progress": youtube_video.progress_seconds or 0,
     }
     return templates.TemplateResponse(
         "cuck_video.html",
@@ -165,18 +156,18 @@ async def channel_video_watch(request: Request, channel_name: str):
         channel_name,
         [
             {
-                'id': youtube_video.id,
-                'vid_url': youtube_video.vid_url,
-                'thumb_url': youtube_video.thumb_url,
-                'vid_path': youtube_video.vid_path,
-                'thumb_path': youtube_video.thumb_path,
-                'pub_date': youtube_video.pub_date,
-                'pub_date_human': youtube_video.pub_date_human,
-                'rating': None,
-                'title': youtube_video.title,
-                'views': place_value(youtube_video.views),
-                'description': youtube_video.description,
-                'channel': youtube_video.channel
+                "id": youtube_video.id,
+                "vid_url": youtube_video.vid_url,
+                "thumb_url": youtube_video.thumb_url,
+                "vid_path": youtube_video.vid_path,
+                "thumb_path": youtube_video.thumb_path,
+                "pub_date": youtube_video.pub_date,
+                "pub_date_human": youtube_video.pub_date_human,
+                "rating": None,
+                "title": youtube_video.title,
+                "views": place_value(youtube_video.views),
+                "description": youtube_video.description,
+                "channel": youtube_video.channel,
             }
             for youtube_video in data
         ],
@@ -189,7 +180,10 @@ async def channel_video_watch(request: Request, channel_name: str):
 @app.get("/subs", response_class=HTMLResponse)
 async def get_subs(request: Request):
     data = get_all_channels()
-    sorted_by_lowercase_name = [{'title': x[0], 'id': x[1]} for x in sorted(data, key=lambda tup: tup[0].strip().lower())]
+    sorted_by_lowercase_name = [
+        {"title": x[0], "id": x[1]}
+        for x in sorted(data, key=lambda tup: tup[0].strip().lower())
+    ]
     return templates.TemplateResponse(
         "cuck_subs.html", {"request": request, "data": sorted_by_lowercase_name}
     )
@@ -253,7 +247,9 @@ def ready_up_request():
 
 
 def get_queue_size():
-    data = requests.get(f"http://{BACKEND_URL}:{BACKEND_PORT}/api/working_threads").json()
+    data = requests.get(
+        f"http://{BACKEND_URL}:{BACKEND_PORT}/api/working_threads"
+    ).json()
     return (data["size"], data["still_fetching"])
 
 
@@ -282,10 +278,10 @@ def is_valid_url(feed_url):
         return False
 
 
-@app.on_event("startup")
-async def ready_up_server():
-    t1 = threading.Thread(target=ready_up_request)
-    t1.start()
+# @app.on_event("startup")
+# async def ready_up_server():
+#     t1 = threading.Thread(target=ready_up_request)
+#     t1.start()
 
 
 if __name__ == "__main__":

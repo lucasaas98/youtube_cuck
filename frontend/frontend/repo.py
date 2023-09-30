@@ -1,8 +1,8 @@
 import logging as _logging
 
-from .engine import engine, session_scope
-from .models import Base, RSSFeedDate, YoutubeVideo
-from .logging import logging
+from frontend.engine import session_scope
+from frontend.logging import logging
+from frontend.models import RSSFeedDate, YoutubeVideo
 
 logger = logging.getLogger(__name__)
 logger.setLevel(_logging.INFO)
@@ -45,32 +45,24 @@ def get_recent_videos(page, inserted_at_sort=False):
             initial_query = (
                 session.query(YoutubeVideo)
                 .filter(YoutubeVideo.vid_path != "NA")
-                .filter(YoutubeVideo.short.is_(False)) 
-                .filter(YoutubeVideo.livestream.is_(False))
+                .filter(YoutubeVideo.short.is_(False))
             )
             ordered_query = None
             if inserted_at_sort:
-                ordered_query = (
-                    initial_query.order_by(YoutubeVideo.inserted_at.desc())
+                ordered_query = initial_query.order_by(
+                    YoutubeVideo.downloaded_at.desc()
                 )
             else:
-                ordered_query = (
-                    initial_query.order_by(YoutubeVideo.pub_date.desc())
-                )
+                ordered_query = initial_query.order_by(YoutubeVideo.pub_date.desc())
 
-            data = (
-                ordered_query
-                .limit(35)
-                .offset(selection - 35)
-                .all()
-            )
+            data = ordered_query.limit(35).offset(selection - 35).all()
             return data
     except Exception as error:
         logger.warn(
             "Failed to select recent videos from downloaded_videos table", error
         )
         return []
-    
+
 
 def get_recent_shorts(page):
     try:
@@ -108,9 +100,7 @@ def get_rss_date():
             else:
                 return RSSFeedDate()
     except Exception as error:
-        logger.warn(
-            "Failed to select recent videos from rss_feed_date table", error
-        )
+        logger.warn("Failed to select recent videos from rss_feed_date table", error)
         return []
 
 
@@ -121,6 +111,4 @@ def update_video_progress(id, progress):
             updated_rec.progress_seconds = progress
             session.commit()
     except Exception as error:
-        logger.error(
-            f"Failed to update downloaded_videos table with id={id}", error
-        )
+        logger.error(f"Failed to update downloaded_videos table with id={id}", error)

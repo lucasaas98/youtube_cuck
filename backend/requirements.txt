@@ -10,3 +10,5 @@ mysql-connector-python
 python-dotenv
 uvicorn
 alembic
+black
+isort

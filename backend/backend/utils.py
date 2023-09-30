@@ -14,21 +14,21 @@ import requests
 import yt_dlp
 from yt_dlp.utils import DownloadError
 
-from .constants import DELAY, REMOVAL_DELAY
-from .engine import session_scope
-from .logging import logging
-from .models import YoutubeVideo
-from .repo import (
+from backend.constants import DELAY, REMOVAL_DELAY
+from backend.engine import session_scope
+from backend.env_vars import DATA_FOLDER
+from backend.logging import logging
+from backend.models import YoutubeVideo
+from backend.repo import (
     expire_video,
+    get_downloaded_video_urls,
     get_expired_videos,
     get_json,
+    get_livestream_videos,
     update_json,
     update_rss_date,
     update_view_count,
-    get_downloaded_video_urls
 )
-from .env_vars import DATA_FOLDER
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(_logging.INFO)
@@ -37,7 +37,7 @@ video_executor = ThreadPoolExecutor(max_workers=4)
 update_count_executor = ThreadPoolExecutor(max_workers=32)
 
 
-def get_rss_data():    
+def get_rss_data():
     """
     Parse the OPML file containing YouTube channel subscriptions and fetch channel data.
 
@@ -80,7 +80,9 @@ def remove_old_videos():
             logger.error(f"Failed to delete video at path: {file_path}")
 
         try:
-            thumb_path = os.path.join(f"{DATA_FOLDER}/thumbnails", expired_video.thumb_path)
+            thumb_path = os.path.join(
+                f"{DATA_FOLDER}/thumbnails", expired_video.thumb_path
+            )
             os.remove(thumb_path)
             logger.info(f"Delete thumbnail at path: {thumb_path}")
         except:
@@ -158,7 +160,9 @@ def get_video():
             for video in json_video_data[channel]:
                 url = video["video_url"]
                 if url in down_vid_urls:
-                    futures.append(update_count_executor.submit(update_view_count, video))
+                    futures.append(
+                        update_count_executor.submit(update_view_count, video)
+                    )
                     continue
                 if float(video["epoch_date"]) < min_date:
                     continue
@@ -174,6 +178,7 @@ def get_video():
     finally:
         logger.info("Videos Downloaded!")
 
+
 def video_type(video_url):
     """
     Determine the type of a video (livestream, premiere, short, or regular video).
@@ -184,17 +189,17 @@ def video_type(video_url):
     :rtype: str
     """
     ydl_opts = {}
-    
+
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             video_info = ydl.extract_info(video_url, download=False)
     except DownloadError as error:
         logger.error(f"Failed to get new videos", error)
         return "premiere"
-    
-    if video_info['is_live']:
+
+    if video_info["is_live"]:
         return "livestream"
-    elif video_info['duration'] is not None and video_info['duration'] < 62:
+    elif video_info["duration"] is not None and video_info["duration"] < 62:
         return "short"
     else:
         return "regular video"
@@ -213,60 +218,64 @@ def video_download_thread(video, channel):
         type = video_type(video["video_url"])
 
         video_object = None
-        if type in ['livestream', 'premiere']:
+        time = int(time())
+        if type in ["livestream", "premiere"]:
             video_object = YoutubeVideo(
-                        vid_url=video["video_url"],
-                        thumb_url=video["thumbnail"],
-                        pub_date=int(video["epoch_date"]),
-                        pub_date_human=video["human_date"],
-                        title=video["title"],
-                        views=int(video["views"]),
-                        description=video["description"],
-                        channel=channel,
-                        livestream=True,
-                        short=False,
-                        inserted_at=int(time())
-                    )
+                vid_url=video["video_url"],
+                thumb_url=video["thumbnail"],
+                pub_date=int(video["epoch_date"]),
+                pub_date_human=video["human_date"],
+                title=video["title"],
+                views=int(video["views"]),
+                description=video["description"],
+                channel=channel,
+                livestream=True,
+                short=False,
+                inserted_at=time,
+            )
         else:
             file_name = video["video_url"].split("=")[1]
 
             download_video(video["video_url"], file_name)
-            
+
             if not confirm_video_name(file_name):
-                
                 return
-        
+
             download_thumbnail(video["thumbnail"], file_name)
 
             video_object = YoutubeVideo(
-                        vid_url=video["video_url"],
-                        vid_path=f"{file_name}.mp4",
-                        thumb_url=video["thumbnail"],
-                        thumb_path=f"{file_name}.jpg",
-                        pub_date=int(video["epoch_date"]),
-                        pub_date_human=video["human_date"],
-                        title=video["title"],
-                        views=int(video["views"]),
-                        description=video["description"],
-                        channel=channel,
-                        livestream=False,
-                        short=type=='short',
-                        inserted_at=int(time())
-                    )
+                vid_url=video["video_url"],
+                vid_path=f"{file_name}.mp4",
+                thumb_url=video["thumbnail"],
+                thumb_path=f"{file_name}.jpg",
+                pub_date=int(video["epoch_date"]),
+                pub_date_human=video["human_date"],
+                title=video["title"],
+                views=int(video["views"]),
+                description=video["description"],
+                channel=channel,
+                livestream=False,
+                short=type == "short",
+                inserted_at=int(time()),
+                downloaded_at=time,
+            )
 
         with session_scope() as session:
             try:
                 session.add(video_object)
                 session.commit()
-                logger.info(f"Video - {video['title']} from channel {channel} was added.")
+                logger.info(
+                    f"Video - {video['title']} from channel {channel} was added."
+                )
             except Exception as error:
                 logger.error(
-                    "Failed to insert the Youtube video into the YoutubeVideo table", error
+                    "Failed to insert the Youtube video into the YoutubeVideo table",
+                    error,
                 )
     except Exception as error:
         logger.error(
-                    "Failed at some point in the video_download_thread function", error
-                )
+            "Failed at some point in the video_download_thread function", error
+        )
 
 
 def download_video(url, filename):
@@ -307,3 +316,62 @@ def download_thumbnail(url, filename):
 
 def get_queue_size():
     return video_executor._work_queue.qsize()
+
+
+def download_old_livestreams():
+    futures = []
+    old_livestreams = [x[0] for x in get_livestream_videos()]
+    print(old_livestreams)
+    for livestream in old_livestreams:
+        try:
+            futures.append(
+                video_executor.submit(livestream_download_thread, livestream)
+            )
+        except Exception as error:
+            logger.error(
+                f"Failed to download old livestream {livestream.vid_url}", error
+            )
+    for future in futures:
+        future.result()
+
+
+def livestream_download_thread(video):
+    """
+    Download a livestream and its thumbnail and update the database.
+
+    :param video: A YoutubeVideo object continaing all livestream data.
+    :type video: YoutubeVideo
+    """
+    file_name = video.vid_url.split("=")[1]
+
+    if download_video(video.vid_url, file_name) == 0:
+        logger.info(f"Downloaded video {file_name} from {video.vid_url}")
+    else:
+        logger.error(f"Failed to download video {file_name} from {video.vid_url}")
+        return
+
+    if not confirm_video_name(file_name):
+        return
+
+    download_thumbnail(video.thumb_url, file_name)
+
+    video.vid_path = f"{file_name}.mp4"
+    video.thumb_path = f"{file_name}.jpg"
+
+    with session_scope() as session:
+        try:
+            # Update the video record in the database.
+            session.query(YoutubeVideo).filter(YoutubeVideo.id == video.id).update(
+                {
+                    "vid_path": video.vid_path,
+                    "thumb_path": video.thumb_path,
+                    "downloaded_at": int(time()),
+                }
+            )
+            session.commit()
+            logger.info(f"Livestream - {video.title} was updated.")
+        except Exception as error:
+            logger.error(
+                "Failed to update the Youtube Livestream",
+                error,
+            )

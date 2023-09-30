@@ -1,11 +1,13 @@
 import json
 import logging as _logging
+from time import time
 
 from sqlalchemy import select
 
-from .engine import session_scope
-from .logging import logging
-from .models import JsonData, RSSFeedDate, YoutubeVideo
+from backend.constants import DELAY
+from backend.engine import session_scope
+from backend.logging import logging
+from backend.models import JsonData, RSSFeedDate, YoutubeVideo
 
 logger = logging.getLogger(__name__)
 logger.setLevel(_logging.INFO)
@@ -120,9 +122,29 @@ def insert_json(json_data):
 def get_downloaded_video_urls():
     try:
         with session_scope() as session:
-            down_vid_urls = [res[0] for res in session.execute(select(YoutubeVideo.vid_url)).all()]
+            down_vid_urls = [
+                res[0] for res in session.execute(select(YoutubeVideo.vid_url)).all()
+            ]
             return down_vid_urls
     except Exception as error:
-        logger.error("Failed to insert flag into video_flag table", error)
+        logger.error("Failed to get downloaded video urls", error)
         return []
 
+
+def get_livestream_videos():
+    # we want to get the livestream videos that are not downloaded and are older than 24 hours and are less than DELAY old
+
+    time_now = int(time())
+    try:
+        with session_scope() as session:
+            data = session.execute(
+                select(YoutubeVideo)
+                .where(YoutubeVideo.livestream)
+                .where(YoutubeVideo.downloaded_at.is_(None))
+                .where(YoutubeVideo.pub_date < time_now - 86400)
+                .where(YoutubeVideo.pub_date > time_now - DELAY)
+            ).all()
+            return data
+    except Exception as error:
+        logger.error("Failed to get livestreams to download", error)
+        return []

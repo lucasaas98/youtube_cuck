@@ -9,3 +9,5 @@ jinja2
 uvicorn
 fastapi
 python-multipart
+black
+isort

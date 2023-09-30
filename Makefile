@@ -14,6 +14,10 @@ migrate-dev:
 	echo "Migrating to last version"
 	cd backend && source .venv/bin/activate && ENV_FILE=.dev.env alembic upgrade head 
 
+downgrade-dev:
+	echo "Downgrading to last version"
+	cd backend && source .venv/bin/activate && ENV_FILE=.dev.env alembic downgrade -1
+
 build-dev:
 	docker compose -f docker-compose.dev.yml build
 
@@ -47,9 +51,17 @@ create-data:
 remove-data:
 	rm -rf data
 
+format: 
+	echo "Formatting Backend"
+	cd backend && source .venv/bin/activate && black . && isort .
+	echo "Formatting Frontend"
+	cd frontend && source .venv/bin/activate && black . && isort .
+
+	
 # prod
 build-prod:
-	docker compose -f docker-compose.prod.yml build
+	docker compose -f docker-compose.prod.yml build yt_mysql yt_frontend yt_backend
+	SERVER_IP=yt_frontend docker compose -f docker-compose.prod.yml build yt_nginx 
 
 build-prod-nginx:
 	SERVER_IP=yt_frontend docker compose -f docker-compose.prod.yml build yt_nginx 
@@ -62,4 +74,4 @@ run-prod:
 
 migrate-prod:
 	echo "Migrating to last version"
-	cd backend && source .venv/bin/activate && ENV_FILE=.prod.env alembic upgrade head 
+	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env alembic upgrade head 
