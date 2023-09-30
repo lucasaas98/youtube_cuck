@@ -278,10 +278,10 @@ def is_valid_url(feed_url):
         return False
 
 
-# @app.on_event("startup")
-# async def ready_up_server():
-#     t1 = threading.Thread(target=ready_up_request)
-#     t1.start()
+@app.on_event("startup")
+async def ready_up_server():
+    t1 = threading.Thread(target=ready_up_request)
+    t1.start()
 
 
 if __name__ == "__main__":
