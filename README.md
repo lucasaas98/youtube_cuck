@@ -21,19 +21,27 @@ To run the program you will need to use the **make** file!
 
 1. Get the deps
 
-```make deps```
+```sh
+make deps
+```
 
 2. Running the DB and migrating
 
-```make run-prod-db```
+```sh
+make run-prod-db
+```
 
 3. You can now build the backend, the frontend and the nginx images
 
-```make build-prod```
+```sh
+make build-prod
+```
 
 4. You can now run everything
 
-```make run-prod```
+```sh
+make run-prod
+```
 
 You should 100% take a look at the **Makefile** to see all the possible commands.
 
