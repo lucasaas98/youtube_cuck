@@ -1,5 +1,5 @@
 #Download Python from DockerHub and use it
-FROM python:3.8-slim-buster
+FROM python:3-alpine
 
 #Set the working directory in the Docker container
 WORKDIR /code

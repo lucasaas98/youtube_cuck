@@ -1,5 +1,5 @@
 #Download Python from DockerHub and use it
-FROM python:3.8-slim-buster
+FROM python:3-alpine
 
 #Set the working directory in the Docker container
 WORKDIR /code
@@ -12,10 +12,8 @@ RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
 #Plus FFMPEG for youtube-dl
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk update \
+    && apk add ffmpeg 
 
 #Copy the Flask app code to the working directory
 COPY . .
