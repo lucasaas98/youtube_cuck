@@ -1,0 +1,8 @@
+addReviewers: false
+
+addAssignees: true
+
+reviewers:
+  - lucasaas98
+
+numberOfReviewers: 0
