@@ -3,37 +3,45 @@
 This program is designed to download videos from Youtube based on the RSS feed provided by Youtube themselves.
 
 ### Specifications
-The program is now designed with microsservices in mind.
-This is a **Flask** project and **youtube-dl** is used to proceed with the download. All the important data is stored in a **MySQL** database. **NGINX** is being used as a file server for the frontend. 
+The program is designed with microsservices in mind.
+This is a **FastAPI** project and **yt-dlp** is used to proceed with the download. All the important data is stored in a **MySQL** database. **NGINX** is being used as a file server for the frontend. 
 
 ### Requirements
-You will need to have **Docker** or **Docker** with **Minikube** installed. Any other kubernetes instance will also work.
+You will need to have **Docker** and **docker compose** .
 
 To install **Docker** follow the instructions [here](https://docs.docker.com/engine/install/).
 
-To install **minikube** after installing Docker follow the instructions [here](https://minikube.sigs.k8s.io/docs/start/). 
-
-You might also need to install **kubectl** and in the Minikube website there are some instructions on how to do that.
+To install **docker compose** after installing Docker follow the instructions [here](https://docs.docker.com/compose/install/). 
 
 
-### How to run
-To run the program all you need to do is run the deployment script:
+### Starting
+Start by making sure the **docker-compose** files look good for you. To run the production version we will map folders to volumes and currently, they are the mappings from my server. Yours will surely be different. 
 
-`./start_deployment.sh`
+To run the program you will need to use the **make** file!
 
-You can check whether the pods are ready with:
+1. Get the deps
 
-`minikube dashboard`
+```make deps```
 
-The interface can be obtained with the command:
+2. Running the DB and migrating
 
-`minikube service yt-cuck-frontend`
+```make run-prod-db```
 
-or
+3. You can now build the backend, the frontend and the nginx images
 
-`minikube service yt-cuck-frontend --url=true`
+```make build-prod```
 
-if you only need the URL.
+4. You can now run everything
+
+```make run-prod```
+
+You should 100% take a look at the **Makefile** to see all the possible commands.
+
+### Customization
+You can add new channels by using the **Add Channel** button right in the frontend. You can also manually modify the subscription_manager file. 
+
+Development is also easy if you want to customize anything else, just check the dev part of the **Makefile**
+
 
 ### How it works
 When you enter the interface for the first time the frontend will tell the backend that it should look for new videos. 
@@ -42,14 +50,17 @@ If there are new videos to download the backend will download them to the persis
 
 These videos will then be accessible to the frontend via the NGINX server. 
 
-For each channel multiple video urls will be returned. Only the videos more recent than a certain date threshold (2 days, currently) are downloaded. 
+For each channel multiple video urls will be returned. Only the videos more recent than a certain date threshold (30 days, currently) are downloaded. 
 
-To keep the size of the folders smaller, videos older than 4 days are automatically removed. 
+To keep the size of the folders smaller, videos older than 10 days are automatically removed. 
+
+All these values can be modified by changing the values in **youtube_cuck/backend/backend/constants.py**
 
 ### The idea
-This was a quick and dirty python project that is proving to be very useful. The best part for me is the fact that the load times are absolutelly phenomenal, which makes sense since everything is found locally and there are no external livraries in the HTML files.
+This was a quick and dirty python project that is proving to be very useful. 
+The best part for me is the fact that the load times are absolutelly phenomenal, which makes sense since everything is found locally and there are no external libraries in the HTML/JS files.
 
-Now that the kubernetes environment is ready it is also very easy to setup in new machines. The only thing that is really needed is to transfer my real **subscription_manager** file to the **nginx_server** folder and I'm golden.
+Now that the development and production environments are pretty well defined it's easier than ever to add new features.
 
 ### What is to come
 Currently working on: 

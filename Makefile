@@ -60,7 +60,7 @@ format:
 	
 # prod
 build-prod:
-	docker compose -f docker-compose.prod.yml build yt_mysql yt_frontend yt_backend
+	docker compose -f docker-compose.prod.yml build yt_frontend yt_backend
 	SERVER_IP=yt_frontend docker compose -f docker-compose.prod.yml build yt_nginx 
 
 build-prod-nginx:
@@ -70,8 +70,13 @@ run-prod-nginx:
 	docker compose -f docker-compose.prod.yml up -d yt_nginx
 
 run-prod:
-	docker compose -f docker-compose.prod.yml up -d
+	docker compose -f docker-compose.prod.yml up -d yt_backend yt_frontend yt_nginx
 
 migrate-prod:
 	echo "Migrating to last version"
 	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env alembic upgrade head 
+
+run-prod-db:
+	docker compose -f docker-compose.prod.yml up -d yt_mysql
+	sleep 10
+	$(MAKE) migrate-prod
