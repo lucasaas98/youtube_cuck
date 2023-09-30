@@ -1,4 +1,4 @@
-# youtube_cuck
+# Youtube Cuck
 
 This program is designed to download videos from Youtube based on the RSS feed provided by Youtube themselves.
 
