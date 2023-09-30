@@ -1,0 +1,11 @@
+opml
+feedparser
+requests
+Flask
+SQLAlchemy
+mysql-connector-python
+python-dotenv
+jinja2
+uvicorn
+fastapi
+python-multipart

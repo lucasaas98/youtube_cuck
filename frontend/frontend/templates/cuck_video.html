@@ -1,0 +1,70 @@
+<!doctype html>
+
+<html lang="en">
+    <head>
+        <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+        <meta content="utf-8" http-equiv="encoding">
+        <title>Youtube Cuck</title>
+        <meta name="description" content="Bootleg Garbagio Youtube">
+        <meta name="author" content="Repi Gamer">
+        <link rel="shortcut icon" href="../static/favicon.ico">
+        <link rel="stylesheet" href="../static/cuck_video.css">
+    </head>
+
+    <body style="background-color:#1E1F1C;">
+        <ul class="nav_bar">
+            <li><a href="../">Home</a></li>
+            <li><a href="../shorts">Shorts</a></li>
+            <li><a href="../subs">Subscriptions</a></li>
+            <li><a href="../playlist">Playlists</a></li>
+            <li style="float:right"><a id="add">Add Channel</a></li>
+        </ul>
+
+        <div class="viewer">
+            <video id="video_player" width="80%" controls>
+                <source src="../videos/{{data['vid_path']}}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+
+        <div class="div_info">
+            <div class="info">
+                <h2 class="title">{{data['title']}}</h2>
+                <p class="views">{{data['views']}} views</p>
+            </div>
+            <div class="info">
+                <h4 class="channel_name"><a class="channel_a"
+                        href="../channel/{{data['channel_name']}}">{{data['channel_name']}}</a></h4>
+                <p class="date">{{data['date']}}</p>
+            </div>
+            <div class="info">
+                <div class="description">
+                    {% for i in range(0, length)%}
+                    {{data['description'][i]}}<br>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div id="myModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <form id="channel_form">
+                    <label for="channel_name" style="color:white;">Channel name:</label>
+                    <input type="text" id="channel_name" name="channel_name"><br><br>
+                    <label for="channel_id" style="color:white;">Channel ID:</label>
+                    <input type="text" id="channel_id" name="channel_id"><br><br>
+                    <input type="submit" value="Submit">
+                </form>
+            </div>
+        </div>
+
+        <script src="../static/add_channel_modal.js"></script>
+        <script src="../static/video_player.js"></script>
+        <script>
+            add_progress_listener("{{ data['id'] }}")
+            start_at({{ data['progress'] }})
+        </script>
+    </body>
+
+</html>

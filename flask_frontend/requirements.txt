@@ -1,6 +1,0 @@
-opml
-feedparser
-requests
-Flask
-SQLAlchemy
-mysql-connector-python

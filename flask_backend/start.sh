@@ -1,1 +1,0 @@
-docker run --name yt_backend_flask --mount source=youtube_cuck_data,destination=/data -d -p 5020:5020 yt_backend

@@ -1,0 +1,78 @@
+version: '3.7'
+
+services:
+    yt_nginx:
+        container_name: yt_nginx
+        restart: unless-stopped
+        build: 
+            context: ./nginx_server
+            args:
+                - SERVER_IP=yt_frontend
+                - PORT=5010
+        ports:
+            - 55055:80
+        expose:
+            - 80
+        volumes:
+            - /youtube/cuck/data:/data
+        networks:
+            - cuck
+        depends_on:
+            - yt_frontend
+            - yt_backend
+
+    yt_mysql:
+        container_name: yt_mysql
+        image: mysql:latest
+        restart: unless-stopped
+        ports:
+            - 3307:3306
+        expose:
+            - 3306
+        cap_add:
+            - SYS_NICE
+        environment:
+            MYSQL_DATABASE: youtube_cuck
+            MYSQL_ROOT_PASSWORD: password123
+        volumes:
+            - /youtube/cuck/mysql:/var/lib/mysql
+        networks:
+            - cuck
+
+    yt_frontend:
+        container_name: yt_frontend
+        restart: unless-stopped
+        build: ./frontend
+        ports:
+            - 5010:5010
+        expose:
+            - 5010
+        environment:
+            ENV_FILE: .prod.env
+        volumes:
+            - /youtube/cuck/data:/data
+        networks:
+            - cuck
+        depends_on:
+            - yt_mysql
+            - yt_backend
+
+    yt_backend:
+        container_name: yt_backend
+        restart: unless-stopped
+        build: ./backend
+        ports:
+            - 5020
+        expose:
+            - 5020
+        environment:
+            ENV_FILE: .prod.env
+        volumes:
+            - /youtube/cuck/data:/data
+        networks:
+            - cuck
+        depends_on:
+            - yt_mysql
+
+networks:
+    cuck:

@@ -1,1 +1,0 @@
-docker run --name yt_fileserver --mount source=youtube_cuck_data,destination=/data -d -p 8080:80 yt_nginx

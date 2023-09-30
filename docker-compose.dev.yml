@@ -1,0 +1,29 @@
+version: '3.7'
+
+services:
+    yt_nginx_dev:
+        container_name: yt_nginx_dev
+        restart: unless-stopped
+        build: 
+            context: ./nginx_server
+            args:
+                - SERVER_IP=$SERVER_IP
+                - PORT=11013
+        ports:
+            - 11011:80
+        volumes:
+            - ./data/data:/data
+
+    yt_mysql_dev:
+        container_name: yt_mysql_dev
+        image: mysql:latest
+        restart: unless-stopped
+        ports:
+            - 11012:3306
+        cap_add:
+            - SYS_NICE
+        environment:
+            MYSQL_DATABASE: youtube_cuck
+            MYSQL_ROOT_PASSWORD: password123
+        volumes:
+            - ./data/mysql:/var/lib/mysql

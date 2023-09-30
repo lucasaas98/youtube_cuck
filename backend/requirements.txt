@@ -1,0 +1,12 @@
+fastapi
+requests
+APScheduler
+opml
+feedparser
+python-dateutil
+SQLAlchemy
+yt-dlp
+mysql-connector-python
+python-dotenv
+uvicorn
+alembic

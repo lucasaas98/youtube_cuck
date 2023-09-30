@@ -1,0 +1,10 @@
+<opml version="1.1">
+    <body>
+    <outline text="Subscrições do YouTube" title="Subscrições do YouTube">
+        <outline text="Marques Brownlee" title="Marques Brownlee" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ" />
+        <outline text="Applied Science" title="Applied Science" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCivA7_KLKWo43tFcCkFvydw" />
+        <outline text="The Thought Emporium" title="The Thought Emporium" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCV5vCi3jPJdURZwAOO_FNfQ" />
+        <outline text="Linus Tech Tips" title="Linus Tech Tips" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCXuqSBlHAE6Xw-yeJA0Tunw" />
+    </outline>
+    </body>
+</opml>
