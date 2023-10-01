@@ -1,3 +1,4 @@
+from sqlalchemy import Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.types import JSON, Boolean, Integer, String, Text
@@ -9,7 +10,7 @@ class YoutubeVideo(Base):
     __tablename__ = "youtube_video"
     id = Column(Integer, primary_key=True)
     vid_url = Column(String(300), unique=True)
-    vid_path = Column(String(1000))
+    vid_path = Column(String(255))
     thumb_url = Column(String(1000))
     thumb_path = Column(String(1000))
     pub_date = Column(Integer)
@@ -23,6 +24,11 @@ class YoutubeVideo(Base):
     progress_seconds = Column(Integer)
     inserted_at = Column(Integer)
     downloaded_at = Column(Integer)
+
+    # Add composite index
+    index_pub_date = Index("idx_pub_date", pub_date)
+    index_downloaded_at = Index("idx_downloaded_at", downloaded_at)
+    composite_index = Index("idx_filter_conditions", vid_path, short)
 
 
 class JsonData(Base):

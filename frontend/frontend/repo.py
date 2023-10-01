@@ -1,4 +1,5 @@
 import logging as _logging
+from time import time
 
 from frontend.engine import session_scope
 from frontend.logging import logging
@@ -15,7 +16,7 @@ def get_video_by_id(identifier):
             return data
     except Exception as error:
         logger.warn(
-            "Failed to select videos from downloaded_videos table with id={identifier}",
+            f"Failed to select videos from downloaded_videos table with id={identifier}",
             error,
         )
         return []
