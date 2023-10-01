@@ -214,11 +214,12 @@ def video_download_thread(video, channel):
     :param channel: The name of the YouTube channel.
     :type channel: str
     """
+    now = int(time())
     try:
         type = video_type(video["video_url"])
 
         video_object = None
-        time = int(time())
+
         if type in ["livestream", "premiere"]:
             video_object = YoutubeVideo(
                 vid_url=video["video_url"],
@@ -231,7 +232,7 @@ def video_download_thread(video, channel):
                 channel=channel,
                 livestream=True,
                 short=False,
-                inserted_at=time,
+                inserted_at=now,
             )
         else:
             file_name = video["video_url"].split("=")[1]
@@ -256,8 +257,8 @@ def video_download_thread(video, channel):
                 channel=channel,
                 livestream=False,
                 short=type == "short",
-                inserted_at=int(time()),
-                downloaded_at=time,
+                inserted_at=now,
+                downloaded_at=now,
             )
 
         with session_scope() as session:
@@ -321,7 +322,6 @@ def get_queue_size():
 def download_old_livestreams():
     futures = []
     old_livestreams = [x[0] for x in get_livestream_videos()]
-    print(old_livestreams)
     for livestream in old_livestreams:
         try:
             futures.append(
