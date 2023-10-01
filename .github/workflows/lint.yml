@@ -27,6 +27,6 @@ jobs:
           cd backend && black --check .
           isort --check .
           cd ..
-          echo "BLACK - Running for frontend"
+          echo "Running for frontend"
           cd frontend && black --check .
           isort --check .

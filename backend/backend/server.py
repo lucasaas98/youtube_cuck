@@ -21,6 +21,10 @@ logger.setLevel(_logging.INFO)
 app = FastAPI()
 
 
+
+
+
+
 @app.post("/api/refresh_rss")
 def refresh_rss():
     get_rss_feed()
