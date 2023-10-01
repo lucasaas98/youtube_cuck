@@ -1,0 +1,24 @@
+ci:
+- .github/**
+- backend/Dockerfile
+- frontend/Dockerfile
+- nginx_server/Dockerfile
+- docker-compose.dev.yml
+- docker-compose.prod.yml
+
+backend:
+- backend/**
+
+frontend:
+- frontend/**
+
+nginx_server:
+- nginx_server/**
+
+docs:
+- README.md
+- backend/alembic/README
+
+deps:
+- backend/requirements.txt
+- frontend/requirements.txt
