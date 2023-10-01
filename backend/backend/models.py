@@ -1,8 +1,7 @@
+from sqlalchemy import Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.types import JSON, Boolean, Integer, String, Text
-from sqlalchemy import Index
-
 
 Base = declarative_base()
 
