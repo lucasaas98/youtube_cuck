@@ -5,11 +5,16 @@ import opml
 import requests
 import uvicorn
 from fastapi import FastAPI, Form, Request, Response
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from typing_extensions import Annotated
+from frontend.cache import (
+    cache_videos,
+    fetch_video_from_cache,
+    is_video_cached,
+)
 
 from frontend.env_vars import BACKEND_PORT, BACKEND_URL, DATA_FOLDER, PORT
 from frontend.repo import (
@@ -132,11 +137,16 @@ async def next_page(page, request: Request):
 @app.get("/video/{identifier}", response_class=HTMLResponse)
 async def video_watch(request: Request, identifier: str):
     youtube_video = get_video_by_id(identifier)
+    file_url = f"../videos/{youtube_video.vid_path}"
+
+    if is_video_cached(int(identifier)):
+        file_url = f"../cached-video/{identifier}"
+
     data = {
         "title": youtube_video.title,
         "views": place_value(youtube_video.views),
         "rating": None,
-        "vid_path": youtube_video.vid_path,
+        "file_url": file_url,
         "channel_name": youtube_video.channel,
         "date": youtube_video.pub_date_human,
         "description": youtube_video.description.split("\n"),
@@ -147,6 +157,12 @@ async def video_watch(request: Request, identifier: str):
         "cuck_video.html",
         {"request": request, "data": data, "length": len(data["description"])},
     )
+
+
+@app.get("/cached-video/{identifier}")
+async def serve_video(identifier: str):
+    video = fetch_video_from_cache(int(identifier))
+    return StreamingResponse(video)
 
 
 @app.get("/channel/{channel_name}", response_class=HTMLResponse)
@@ -282,6 +298,8 @@ def is_valid_url(feed_url):
 async def ready_up_server():
     t1 = threading.Thread(target=ready_up_request)
     t1.start()
+    # start caching videos
+    cache_videos(20)
 
 
 if __name__ == "__main__":

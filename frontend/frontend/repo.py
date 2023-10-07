@@ -1,5 +1,4 @@
 import logging as _logging
-from time import time
 
 from frontend.engine import session_scope
 from frontend.logging import logging
@@ -113,3 +112,19 @@ def update_video_progress(id, progress):
             session.commit()
     except Exception as error:
         logger.error(f"Failed to update downloaded_videos table with id={id}", error)
+
+
+def get_last_videos(number_of_videos):
+    try:
+        with session_scope() as session:
+            data = (
+                session.query(YoutubeVideo)
+                .order_by(YoutubeVideo.downloaded_at.desc())
+                .limit(number_of_videos)
+                .all()
+            )
+            return data
+    except Exception as error:
+        logger.error(
+            f"Failed to select {number_of_videos} recently downloaded videos", error
+        )

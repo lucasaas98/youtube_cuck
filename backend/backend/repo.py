@@ -132,8 +132,6 @@ def get_downloaded_video_urls():
 
 
 def get_livestream_videos():
-    # we want to get the livestream videos that are not downloaded and are older than 24 hours and are less than DELAY old
-
     time_now = int(time())
     try:
         with session_scope() as session:
