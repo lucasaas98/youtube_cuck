@@ -141,8 +141,8 @@ def get_livestream_videos():
                 select(YoutubeVideo)
                 .where(YoutubeVideo.livestream)
                 .where(YoutubeVideo.downloaded_at.is_(None))
-                .where(YoutubeVideo.pub_date < time_now - 86400)
-                .where(YoutubeVideo.pub_date > time_now - DELAY)
+                .where(YoutubeVideo.inserted_at < time_now - 86400)
+                .where(YoutubeVideo.inserted_at > time_now - DELAY)
             ).all()
             return data
     except Exception as error:

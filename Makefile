@@ -61,7 +61,7 @@ format:
 # prod
 build-prod:
 	docker compose -f docker-compose.prod.yml build yt_frontend yt_backend
-	SERVER_IP=yt_frontend docker compose -f docker-compose.prod.yml build yt_nginx 
+	$(MAKE) build-prod-nginx
 
 build-prod-nginx:
 	SERVER_IP=yt_frontend docker compose -f docker-compose.prod.yml build yt_nginx 
@@ -80,3 +80,6 @@ run-prod-db:
 	docker compose -f docker-compose.prod.yml up -d yt_mysql
 	sleep 10
 	$(MAKE) migrate-prod
+
+stop-prod:
+	docker compose -f docker-compose.prod.yml down
