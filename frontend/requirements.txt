@@ -11,3 +11,4 @@ fastapi
 python-multipart
 black
 isort
+djlint

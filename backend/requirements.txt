@@ -12,3 +12,4 @@ uvicorn
 alembic
 black
 isort
+djlint

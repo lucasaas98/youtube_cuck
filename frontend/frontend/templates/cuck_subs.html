@@ -1,53 +1,64 @@
-<!doctype html>
-
+<!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
-    <meta content="utf-8" http-equiv="encoding">
-    <title>Youtube Cuck</title>
-    <meta name="description" content="Bootleg Garbagio Youtube">
-    <meta name="author" content="Repi Gamer">
-    <link rel="shortcut icon" href="../static/favicon.ico">
-    <link rel="stylesheet" href="../static/cuck_subs.css">
-</head>
-
-<body>
-    <ul class="nav_bar">
-        <li><a href="../">Home</a></li>
-        <li><a href="../shorts">Shorts</a></li>
-        <li><a class="active" href="../subs">Subscriptions</a></li>
-        <li><a href="../playlist">Playlists</a></li>
-        <li style="float:right"><a id="add">Add Channel</a></li>
-    </ul>
-    <div class="grid-container">
-        <table id="channels">
-            <tr>
-                <th>Channel Name</th>
-                <th>Channel ID</th>
-            </tr>
-            {% for row in data %}
-            <tr>
-                <th><a class="channel" href="../channel/{{row['title']}}">{{row['title']}}</a></th>
-                <th>{{row['id']}}</th>
-            </tr>
-            {% endfor %}
-        </table>
-
-        <div id="myModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <form id="channel_form">
-                    <label for="channel_name" style="color:white;">Channel name:</label>
-                    <input type="text" id="channel_name" name="channel_name"><br><br>
-                    <label for="channel_id" style="color:white;">Channel ID:</label>
-                    <input type="text" id="channel_id" name="channel_id"><br><br>
-                    <input type="submit" value="Submit">
-                </form>
+    <head>
+        <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+        <meta content="utf-8" http-equiv="encoding">
+        <title>Youtube Cuck</title>
+        <meta name="description" content="Bootleg Garbagio Youtube">
+        <meta name="author" content="Repi Gamer">
+        <link rel="shortcut icon" href="../static/favicon.ico">
+        <link rel="stylesheet" href="../static/cuck_subs.css">
+    </head>
+    <body>
+        <ul class="nav_bar">
+            <li>
+                <a href="../">Home</a>
+            </li>
+            <li>
+                <a href="../shorts">Shorts</a>
+            </li>
+            <li>
+                <a class="active" href="../subs">Subscriptions</a>
+            </li>
+            <li>
+                <a href="../playlist">Playlists</a>
+            </li>
+            <li style="float:right">
+                <a id="add">Add Channel</a>
+            </li>
+        </ul>
+        <div class="grid-container">
+            <table id="channels">
+                <tr>
+                    <th>Channel Name</th>
+                    <th>Channel ID</th>
+                </tr>
+                {% for row in data %}
+                    <tr>
+                        <th>
+                            <a class="channel" href="../channel/{{ row['title'] }}">{{ row['title'] }}</a>
+                        </th>
+                        <th>{{ row['id'] }}</th>
+                    </tr>
+                {% endfor %}
+            </table>
+            <div id="myModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <form id="channel_form">
+                        <label for="channel_name" style="color:white;">Channel name:</label>
+                        <input type="text" id="channel_name" name="channel_name">
+                        <br>
+                        <br>
+                        <label for="channel_id" style="color:white;">Channel ID:</label>
+                        <input type="text" id="channel_id" name="channel_id">
+                        <br>
+                        <br>
+                        <input type="submit" value="Submit">
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
-    <script src="../static/add_channel_modal.js"></script>
-</body>
-
+        <script src="../static/add_channel_modal.js"></script>
+    </body>
 </html>

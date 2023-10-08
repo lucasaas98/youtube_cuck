@@ -1,3 +1,4 @@
+import datetime
 import threading
 
 import feedparser
@@ -33,6 +34,9 @@ async def index(request: Request):
     rss_date = get_rss_date()
     (queue_size, queue_fetching) = get_queue_size()
 
+    def progress_percentage(youtube_video):
+        return (youtube_video.progress_seconds / youtube_video.size * 100) if youtube_video.progress_seconds and youtube_video.size else 0
+
     data = (
         [
             {
@@ -48,6 +52,8 @@ async def index(request: Request):
                 "views": place_value(youtube_video.views),
                 "description": youtube_video.description,
                 "channel": youtube_video.channel,
+                "progress_percentage": progress_percentage(youtube_video),
+                "size": str(datetime.timedelta(seconds=youtube_video.size)),
             }
             for youtube_video in data
         ],
