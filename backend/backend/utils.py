@@ -371,6 +371,8 @@ def livestream_download_thread(video):
     if not confirm_video_name(file_name):
         return
 
+    size = get_video_size(video.vid_url)
+
     download_thumbnail(video.thumb_url, file_name)
 
     video.vid_path = f"{file_name}.mp4"
@@ -384,6 +386,7 @@ def livestream_download_thread(video):
                     "vid_path": video.vid_path,
                     "thumb_path": video.thumb_path,
                     "downloaded_at": int(time()),
+                    "size": size,
                 }
             )
             session.commit()
