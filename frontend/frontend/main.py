@@ -34,9 +34,6 @@ async def index(request: Request):
     rss_date = get_rss_date()
     (queue_size, queue_fetching) = get_queue_size()
 
-    def progress_percentage(youtube_video):
-        return (youtube_video.progress_seconds / youtube_video.size * 100) if youtube_video.progress_seconds and youtube_video.size else 0
-
     data = (
         [
             {
@@ -106,9 +103,6 @@ async def next_page(page, request: Request):
     videos = get_recent_videos(page, True)
     rss_date = get_rss_date()
     (queue_size, queue_fetching) = get_queue_size()
-
-    def progress_percentage(youtube_video):
-        return (youtube_video.progress_seconds / youtube_video.size * 100) if youtube_video.progress_seconds and youtube_video.size else 0
 
     data = (
         [
@@ -287,6 +281,14 @@ def is_valid_url(feed_url):
         return True
     else:
         return False
+
+
+def progress_percentage(youtube_video):
+    return (
+        (youtube_video.progress_seconds / youtube_video.size * 100)
+        if youtube_video.progress_seconds and youtube_video.size
+        else 0
+    )
 
 
 @app.on_event("startup")
