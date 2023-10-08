@@ -53,9 +53,9 @@ remove-data:
 
 format: 
 	echo "Formatting Backend"
-	cd backend && source .venv/bin/activate && black . && isort .
+	cd backend && source .venv/bin/activate && black . && isort . && djlint . --reformat --format-css --format-js
 	echo "Formatting Frontend"
-	cd frontend && source .venv/bin/activate && black . && isort .
+	cd frontend && source .venv/bin/activate && black . && isort . && djlint . --reformat --format-css --format-js
 
 shell:
 	cd backend && source .venv/bin/activate && ENV_FILE=.dev.env python3
@@ -85,3 +85,12 @@ run-prod-db:
 
 stop-prod:
 	docker compose -f docker-compose.prod.yml down
+
+shell-prod:
+	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env python3
+
+deploy:
+	$(MAKE) stop-prod
+	$(MAKE) run-prod-db
+	$(MAKE) build-prod
+	$(MAKE) run-prod

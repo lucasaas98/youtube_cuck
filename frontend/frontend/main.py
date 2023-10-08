@@ -1,3 +1,4 @@
+import datetime
 import threading
 
 import feedparser
@@ -48,6 +49,8 @@ async def index(request: Request):
                 "views": place_value(youtube_video.views),
                 "description": youtube_video.description,
                 "channel": youtube_video.channel,
+                "progress_percentage": progress_percentage(youtube_video),
+                "size": str(datetime.timedelta(seconds=youtube_video.size)),
             }
             for youtube_video in data
         ],
@@ -116,6 +119,8 @@ async def next_page(page, request: Request):
                 "views": place_value(youtube_video.views),
                 "description": youtube_video.description,
                 "channel": youtube_video.channel,
+                "progress_percentage": progress_percentage(youtube_video),
+                "size": str(datetime.timedelta(seconds=youtube_video.size)),
             }
             for youtube_video in videos
         ],
@@ -276,6 +281,14 @@ def is_valid_url(feed_url):
         return True
     else:
         return False
+
+
+def progress_percentage(youtube_video):
+    return (
+        (youtube_video.progress_seconds / youtube_video.size * 100)
+        if youtube_video.progress_seconds and youtube_video.size
+        else 0
+    )
 
 
 @app.on_event("startup")
