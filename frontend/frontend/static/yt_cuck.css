@@ -195,9 +195,12 @@ li a:hover {
     position: absolute;
     bottom: 20px;
     left: 10px;
-    background-color: #808080;
+    background-color: rgb(49, 49, 49);
     padding: 5px;
     border-radius: 5px;
     color: #ffffff;
     font-size: 12px;
-  }
+    border-width: 1px;
+    border-color: #888;
+    border-style: solid;
+}
