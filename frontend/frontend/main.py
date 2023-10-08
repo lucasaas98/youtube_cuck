@@ -19,6 +19,7 @@ from frontend.repo import (
     get_recent_videos,
     get_rss_date,
     get_video_by_id,
+    most_recent_video,
     update_video_progress,
 )
 
@@ -218,6 +219,26 @@ async def add_channel(
         return {
             "text": "There was an error adding that channel, make sure the channel ID is correct."
         }
+
+
+@app.get("/most_recent_video", response_class=HTMLResponse)
+async def most_recent_video_watch(request: Request):
+    video = get_video_by_id(most_recent_video().vid_id)
+    data = {
+        "title": video.title,
+        "views": place_value(video.views),
+        "rating": None,
+        "vid_path": video.vid_path,
+        "channel_name": video.channel,
+        "date": video.pub_date_human,
+        "description": video.description.split("\n"),
+        "id": video.id,
+        "progress": video.progress_seconds or 0,
+    }
+    return templates.TemplateResponse(
+        "cuck_video.html",
+        {"request": request, "data": data, "length": len(data["description"])},
+    )
 
 
 @app.post("/refresh_rss", status_code=200)

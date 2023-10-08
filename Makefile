@@ -53,9 +53,9 @@ remove-data:
 
 format: 
 	echo "Formatting Backend"
-	cd backend && source .venv/bin/activate && black . && isort . && djlint . --reformat --format-css --format-js
+	cd backend && source .venv/bin/activate && black . && isort . && djlint . --reformat --format-css --format-js --profile=jinja
 	echo "Formatting Frontend"
-	cd frontend && source .venv/bin/activate && black . && isort . && djlint . --reformat --format-css --format-js
+	cd frontend && source .venv/bin/activate && black . && isort . && djlint . --reformat --format-css --format-js --profile=jinja
 
 shell:
 	cd backend && source .venv/bin/activate && ENV_FILE=.dev.env python3

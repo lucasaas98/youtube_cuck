@@ -8,7 +8,7 @@ Base = declarative_base()
 
 class YoutubeVideo(Base):
     __tablename__ = "youtube_video"
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     vid_url = Column(String(300), unique=True)
     vid_path = Column(String(255))
     thumb_url = Column(String(1000))
@@ -57,3 +57,10 @@ class PlaylistVideo(Base):
     vid_path = Column(String(1000))
     title = Column(String(1000))
     playlist_name = Column(String(1000))
+
+
+class MostRecentVideo(Base):
+    __tablename__ = "most_recent_video"
+    id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
+    vid_id = Column(Integer, unique=True)
+    updated_at = Column(Integer)
