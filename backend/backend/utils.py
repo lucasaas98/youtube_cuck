@@ -305,24 +305,6 @@ def video_download_thread(video, channel):
         )
 
 
-def download_video(url, filename):
-    try:
-        p = Popen(
-            [
-                f"yt-dlp -f 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080]mp4' --fixup force {url} -o {DATA_FOLDER}/videos/{filename}.mp4"
-            ],
-            shell=True,
-            stdout=PIPE,
-            stderr=PIPE,
-        )
-        _output, _err = p.communicate()
-        return p.returncode
-    except Exception as error:
-        logger.error(
-            f"Failed to fetch new video {filename} at {url} with yt-dlp", error
-        )
-
-
 def confirm_video_name(filename):
     path = f"{DATA_FOLDER}/videos/{filename}.mp4"
     if os.path.exists(path):
@@ -346,8 +328,17 @@ def get_queue_size():
 
 
 def download_old_livestreams():
-    futures = []
+    """
+    Downloads old livestreams and their thumbnails and updates the database.
+
+    This function retrieves a list of old livestreams from the database and downloads each one using the
+    `livestream_download_thread` function. It also logs any errors that occur during the download process.
+
+    :return: None
+    """
+    logger.info("Starting download of old livestreams...")
     old_livestreams = [x[0] for x in get_livestream_videos()]
+    futures = []
     for livestream in old_livestreams:
         try:
             futures.append(
@@ -359,6 +350,7 @@ def download_old_livestreams():
             )
     for future in futures:
         future.result()
+    logger.info("Download of old livestreams complete.")
 
 
 def livestream_download_thread(video):
@@ -434,3 +426,18 @@ def get_video_size(video_path):
     )
 
     return int(float(output.split("duration=")[1].split("\n")[0]))
+
+
+def download_video(url, filename):
+    options = {
+        "format": "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]",
+        "outtmpl": f"{DATA_FOLDER}/videos/{filename}.mp4",
+        "quiet": True,
+    }
+    try:
+        with yt_dlp.YoutubeDL(options) as ydl:
+            ydl.download([url])
+    except Exception as error:
+        logger.error(
+            f"Failed to fetch new video {filename} at {url} with yt-dlp", error
+        )
