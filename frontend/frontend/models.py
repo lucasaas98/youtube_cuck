@@ -24,6 +24,7 @@ class YoutubeVideo(Base):
     progress_seconds = Column(Integer)
     inserted_at = Column(Integer)
     downloaded_at = Column(Integer)
+    size = Column(Integer)
 
     # Add composite index
     index_pub_date = Index("idx_pub_date", pub_date)
