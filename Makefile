@@ -57,7 +57,9 @@ format:
 	echo "Formatting Frontend"
 	cd frontend && source .venv/bin/activate && black . && isort .
 
-	
+shell:
+	cd backend && source .venv/bin/activate && ENV_FILE=.dev.env python3
+
 # prod
 build-prod:
 	docker compose -f docker-compose.prod.yml build yt_frontend yt_backend
