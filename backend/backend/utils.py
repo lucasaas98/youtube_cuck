@@ -4,7 +4,7 @@ import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from subprocess import PIPE, Popen
+from subprocess import DEVNULL, PIPE, Popen, check_output
 from time import time
 
 import dateutil.parser as date_parser
@@ -21,6 +21,7 @@ from backend.logging import logging
 from backend.models import YoutubeVideo
 from backend.repo import (
     expire_video,
+    get_all_videos,
     get_downloaded_video_urls,
     get_expired_videos,
     get_json,
@@ -179,30 +180,48 @@ def get_video():
         logger.info("Videos Downloaded!")
 
 
-def video_type(video_url):
+def video_type(video_info):
     """
-    Determine the type of a video (livestream, premiere, short, or regular video).
+    Determines the type of video based on its information.
 
-    :param video_url: The URL of the video.
-    :type video_url: str
-    :return: The type of the video as a string.
-    :rtype: str
+    Args:
+        video_info (dict): A dictionary containing information about the video.
+
+    Returns:
+        str: A string representing the type of video. Possible values are "premiere", "livestream", "short", and "regular video".
     """
-    ydl_opts = {}
 
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            video_info = ydl.extract_info(video_url, download=False)
-    except DownloadError as error:
-        logger.error(f"Failed to get new videos", error)
+    if video_info is None:
         return "premiere"
-
-    if video_info["is_live"]:
+    elif video_info["is_live"]:
         return "livestream"
     elif video_info["duration"] is not None and video_info["duration"] < 62:
         return "short"
     else:
         return "regular video"
+
+
+def extract_video_info(video_url):
+    """
+    Extracts video information from a given YouTube video URL using the youtube-dl library.
+
+    Args:
+        video_url (str): The URL of the YouTube video to extract information from.
+
+    Returns:
+        tuple: A tuple containing a boolean indicating whether the extraction was successful and the extracted video information.
+               If the extraction was unsuccessful, the boolean value will be False and the video information will be None.
+    """
+
+    ydl_opts = {}
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            video_info = ydl.extract_info(video_url, download=False)
+            return video_info
+    except DownloadError as error:
+        logger.error(f"Failed to extract video info for {video_url}", error)
+        return None
 
 
 def video_download_thread(video, channel):
@@ -214,9 +233,10 @@ def video_download_thread(video, channel):
     :param channel: The name of the YouTube channel.
     :type channel: str
     """
-    now = int(time())
     try:
-        type = video_type(video["video_url"])
+        video_info = extract_video_info(video["video_url"])
+
+        type = video_type(video_info)
 
         video_object = None
 
@@ -232,21 +252,26 @@ def video_download_thread(video, channel):
                 channel=channel,
                 livestream=True,
                 short=False,
-                inserted_at=now,
+                inserted_at=int(time()),
             )
         else:
             file_name = video["video_url"].split("=")[1]
 
             download_video(video["video_url"], file_name)
 
+            now = int(time())
+
             if not confirm_video_name(file_name):
                 return
 
             download_thumbnail(video["thumbnail"], file_name)
 
+            vid_path = f"{file_name}.mp4"
+            size = get_video_size(vid_path)
+
             video_object = YoutubeVideo(
                 vid_url=video["video_url"],
-                vid_path=f"{file_name}.mp4",
+                vid_path=vid_path,
                 thumb_url=video["thumbnail"],
                 thumb_path=f"{file_name}.jpg",
                 pub_date=int(video["epoch_date"]),
@@ -259,6 +284,7 @@ def video_download_thread(video, channel):
                 short=type == "short",
                 inserted_at=now,
                 downloaded_at=now,
+                size=size,
             )
 
         with session_scope() as session:
@@ -375,3 +401,36 @@ def livestream_download_thread(video):
                 "Failed to update the Youtube Livestream",
                 error,
             )
+
+
+def update_size_for_old_videos():
+    """
+    TEMP: because we added the size column to the database, we need to update the size column for all videos
+    """
+    logger.info("Updating size for old videos")
+    all_videos = get_all_videos()
+    for video in [x[0] for x in all_videos]:
+        try:
+            video_size = get_video_size(video.vid_path)
+            with session_scope() as session:
+                session.query(YoutubeVideo).filter(YoutubeVideo.id == video.id).update(
+                    {"size": video_size}
+                )
+                session.commit()
+            logger.info(f"Video size for {video.title} was updated with {video_size}s")
+        except Exception as error:
+            logger.error(
+                f"Failed to update size for video {video.title} at path {video.vid_path}",
+                error,
+            )
+
+
+def get_video_size(video_path):
+    output = check_output(
+        f"ffprobe {DATA_FOLDER}/videos/{video_path} -show_format",
+        shell=True,
+        universal_newlines=True,
+        stderr=DEVNULL,
+    )
+
+    return int(float(output.split("duration=")[1].split("\n")[0]))

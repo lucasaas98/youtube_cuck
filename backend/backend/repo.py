@@ -2,7 +2,7 @@ import json
 import logging as _logging
 from time import time
 
-from sqlalchemy import select
+from sqlalchemy import and_, select
 
 from backend.constants import DELAY
 from backend.engine import session_scope
@@ -147,4 +147,20 @@ def get_livestream_videos():
             return data
     except Exception as error:
         logger.error("Failed to get livestreams to download", error)
+        return []
+
+
+def get_all_videos():
+    try:
+        with session_scope() as session:
+            data = session.execute(
+                select(YoutubeVideo)
+                .where(
+                    and_(YoutubeVideo.vid_path != "NA", YoutubeVideo.vid_path != None)
+                )
+                .where(YoutubeVideo.size.is_(None))
+            ).all()
+            return data
+    except Exception as error:
+        logger.error("Failed to get all videos", error)
         return []
