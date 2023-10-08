@@ -88,3 +88,9 @@ stop-prod:
 
 shell-prod:
 	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env python3
+
+deploy:
+	$(MAKE) stop-prod
+	$(MAKE) run-prod-db
+	$(MAKE) build-prod
+	$(MAKE) run-prod
