@@ -121,3 +121,7 @@ li a:hover {
 .channel {
     color: white;
 }
+
+.right {
+    margin-left: auto;
+}

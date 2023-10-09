@@ -20,6 +20,7 @@ from frontend.repo import (
     get_rss_date,
     get_video_by_id,
     most_recent_video,
+    most_recent_videos,
     update_video_progress,
 )
 
@@ -45,7 +46,6 @@ async def index(request: Request):
                 "thumb_path": youtube_video.thumb_path,
                 "pub_date": youtube_video.pub_date,
                 "pub_date_human": youtube_video.pub_date_human,
-                "rating": None,
                 "title": youtube_video.title,
                 "views": place_value(youtube_video.views),
                 "description": youtube_video.description,
@@ -81,11 +81,12 @@ async def get_shorts(request: Request):
                 "thumb_path": youtube_video.thumb_path,
                 "pub_date": youtube_video.pub_date,
                 "pub_date_human": youtube_video.pub_date_human,
-                "rating": None,
                 "title": youtube_video.title,
                 "views": place_value(youtube_video.views),
                 "description": youtube_video.description,
                 "channel": youtube_video.channel,
+                "progress_percentage": progress_percentage(youtube_video),
+                "size": str(datetime.timedelta(seconds=youtube_video.size)),
             }
             for youtube_video in data
         ],
@@ -115,7 +116,6 @@ async def next_page(page, request: Request):
                 "thumb_path": youtube_video.thumb_path,
                 "pub_date": youtube_video.pub_date,
                 "pub_date_human": youtube_video.pub_date_human,
-                "rating": None,
                 "title": youtube_video.title,
                 "views": place_value(youtube_video.views),
                 "description": youtube_video.description,
@@ -141,7 +141,6 @@ async def video_watch(request: Request, identifier: str):
     data = {
         "title": youtube_video.title,
         "views": place_value(youtube_video.views),
-        "rating": None,
         "vid_path": youtube_video.vid_path,
         "channel_name": youtube_video.channel,
         "date": youtube_video.pub_date_human,
@@ -169,11 +168,12 @@ async def channel_video_watch(request: Request, channel_name: str):
                 "thumb_path": youtube_video.thumb_path,
                 "pub_date": youtube_video.pub_date,
                 "pub_date_human": youtube_video.pub_date_human,
-                "rating": None,
                 "title": youtube_video.title,
                 "views": place_value(youtube_video.views),
                 "description": youtube_video.description,
                 "channel": youtube_video.channel,
+                "progress_percentage": progress_percentage(youtube_video),
+                "size": str(datetime.timedelta(seconds=youtube_video.size)),
             }
             for youtube_video in data
         ],
@@ -227,7 +227,6 @@ async def most_recent_video_watch(request: Request):
     data = {
         "title": video.title,
         "views": place_value(video.views),
-        "rating": None,
         "vid_path": video.vid_path,
         "channel_name": video.channel,
         "date": video.pub_date_human,
@@ -238,6 +237,42 @@ async def most_recent_video_watch(request: Request):
     return templates.TemplateResponse(
         "cuck_video.html",
         {"request": request, "data": data, "length": len(data["description"])},
+    )
+
+
+@app.get("/most_recent_videos", response_class=HTMLResponse)
+async def most_recent_videos_page(request: Request):
+    data = most_recent_videos()
+    data = [get_video_by_id(video.vid_id) for video in data]
+    rss_date = get_rss_date()
+    (queue_size, queue_fetching) = get_queue_size()
+
+    data = (
+        [
+            {
+                "id": youtube_video.id,
+                "vid_url": youtube_video.vid_url,
+                "thumb_url": youtube_video.thumb_url,
+                "vid_path": youtube_video.vid_path,
+                "thumb_path": youtube_video.thumb_path,
+                "pub_date": youtube_video.pub_date,
+                "pub_date_human": youtube_video.pub_date_human,
+                "title": youtube_video.title,
+                "views": place_value(youtube_video.views),
+                "description": youtube_video.description,
+                "channel": youtube_video.channel,
+                "progress_percentage": progress_percentage(youtube_video),
+                "size": str(datetime.timedelta(seconds=youtube_video.size)),
+            }
+            for youtube_video in data
+        ],
+        0,
+        rss_date.date_human,
+        queue_size,
+        queue_fetching,
+    )
+    return templates.TemplateResponse(
+        "yt_cuck.html", {"request": request, "data": data, "is_short": True}
     )
 
 

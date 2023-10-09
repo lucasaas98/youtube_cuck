@@ -12,19 +12,28 @@
     <body>
         <ul class="nav_bar">
             <li>
-                <a {% if not is_short %}class="active"{% endif %} href="../">Home</a>
+                <a {% if request.url.path.endswith('/') %}class="active"{% endif %}
+                   href="../">Home</a>
             </li>
             <li>
-                <a {% if is_short %}class="active"{% endif %} href="../shorts">Shorts</a>
+                <a {% if request.url.path.endswith('shorts') %}class="active"{% endif %}
+                   href="../shorts">Shorts</a>
             </li>
             <li>
-                <a href="../most_recent_video">Continue</a>
+                <a {% if request.url.path.endswith('most_recent_video') %}class="active"{% endif %}
+                   href="../most_recent_video">Continue</a>
             </li>
             <li>
-                <a href="../subs">Subscriptions</a>
+                <a {% if request.url.path.endswith('most_recent_videos') %}class="active"{% endif %}
+                   href="../most_recent_videos">History</a>
             </li>
             <li>
-                <a href="../playlist">Playlists</a>
+                <a {% if request.url.path.endswith('subs') %}class="active"{% endif %}
+                   href="../subs">Subscriptions</a>
+            </li>
+            <li>
+                <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
+                   href="../playlist">Playlists</a>
             </li>
             <li class="right">
                 <a id="add">Add Channel</a>

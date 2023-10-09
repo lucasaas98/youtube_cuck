@@ -12,19 +12,28 @@
     <body>
         <ul class="nav_bar">
             <li>
-                <a {% if not is_short %}class="active"{% endif %} href="/">Home</a>
+                <a {% if request.url.path.endswith('/') %}class="active"{% endif %}
+                   href="/">Home</a>
             </li>
             <li>
-                <a {% if is_short %}class="active"{% endif %} href="shorts">Shorts</a>
+                <a {% if request.url.path.endswith('shorts') %}class="active"{% endif %}
+                   href="shorts">Shorts</a>
             </li>
             <li>
-                <a href="../most_recent_video">Continue</a>
+                <a {% if request.url.path.endswith('most_recent_video') %}class="active"{% endif %}
+                   href="most_recent_video">Continue</a>
             </li>
             <li>
-                <a href="subs">Subscriptions</a>
+                <a {% if request.url.path.endswith('most_recent_videos') %}class="active"{% endif %}
+                   href="most_recent_videos">History</a>
             </li>
             <li>
-                <a href="playlist">Playlists</a>
+                <a {% if request.url.path.endswith('subs') %}class="active"{% endif %}
+                   href="subs">Subscriptions</a>
+            </li>
+            <li>
+                <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
+                   href="playlist">Playlists</a>
             </li>
             <li class="right">
                 <a id="add">Add Channel</a>
@@ -42,20 +51,22 @@
         <div class="grid-container">
             {% for row in data[0] %}
                 <div class="card">
-                    <div class="center-div-video">
-                        <div style="background-size: cover;
-                                    background-position: center;
-                                    background-image: url('thumbnails/{{ row['thumb_path'] }}');
-                                    width: 360px;
-                                    height: 270px;
-                                    position: relative">
-                            <div class="video-duration" style="left: 10px;">{{ row['size'] }}</div>
-                            <div class="progress-bar">
-                                <div class="progress-fill"
-                                     style="width: {{ row['progress_percentage'] }}%"></div>
+                    <a href="video/{{ row['id'] }}">
+                        <div class="center-div-video">
+                            <div style="background-size: cover;
+                                        background-position: center;
+                                        background-image: url('thumbnails/{{ row['thumb_path'] }}');
+                                        width: 360px;
+                                        height: 200px;
+                                        position: relative">
+                                <div class="video-duration" style="left: 10px;">{{ row['size'] }}</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill"
+                                         style="width: {{ row['progress_percentage'] }}%"></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </a>
                     <div class="content">
                         <div class="center-div-title">
                             <h3>{{ row['title'] }}</h3>
@@ -67,14 +78,6 @@
                         </div>
                         <div class="center-div">
                             <p class="views">{{ row['views'] }} views</p>
-                        </div>
-                        <div class="center-div">
-                            <p>{{ row['description'] }}</p>
-                        </div>
-                        <div class="center-div-button">
-                            <a href="video/{{ row['id'] }}">
-                                <button>Watch</button>
-                            </a>
                         </div>
                     </div>
                 </div>
