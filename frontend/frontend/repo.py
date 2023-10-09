@@ -153,3 +153,23 @@ def most_recent_video():
             "Failed to select most recent video from most_recent_videos table", error
         )
         return []
+
+
+def most_recent_videos():
+    try:
+        with session_scope() as session:
+            data = (
+                session.query(MostRecentVideo)
+                .order_by(MostRecentVideo.updated_at.desc())
+                .limit(35)
+                .all()
+            )
+            if data:
+                return data
+            else:
+                return None
+    except Exception as error:
+        logger.warn(
+            "Failed to select most recent videos from most_recent_videos table", error
+        )
+        return []

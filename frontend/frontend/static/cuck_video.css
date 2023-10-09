@@ -141,3 +141,7 @@ li a:hover {
   text-decoration: none;
   cursor: pointer;
 }
+
+.right {
+  margin-left: auto;
+}
