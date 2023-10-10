@@ -101,6 +101,7 @@ async def video_watch(request: Request, identifier: str):
         "description": video.description.split("\n"),
         "id": video.id,
         "progress": video.progress_seconds or 0,
+        "player_width": "25" if video.short else "80",
     }
     return templates.TemplateResponse(
         "cuck_video.html",
@@ -170,6 +171,7 @@ async def most_recent_video_watch(request: Request):
         "description": video.description.split("\n"),
         "id": video.id,
         "progress": video.progress_seconds or 0,
+        "player_width": "25" if video.short else "80",
     }
     return templates.TemplateResponse(
         "cuck_video.html",
