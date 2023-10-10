@@ -86,5 +86,5 @@ def prepare_for_template(video):
         "description": video.description,
         "channel": video.channel,
         "progress_percentage": progress_percentage(video),
-        "size": format_video_size(video)
+        "size": format_video_size(video),
     }
