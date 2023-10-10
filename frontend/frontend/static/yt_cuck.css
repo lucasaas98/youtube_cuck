@@ -22,7 +22,8 @@ body {
 
 .center-div {
     justify-content: center;
-    padding: 0px 10px 0px 10px;
+    padding: 0px 10px 10px 10px;
+    display: flex;
 }
 
 .center-div-title {
@@ -52,14 +53,22 @@ p {
     text-overflow: ellipsis;
     color: white;
     width: 100%;
+    margin: 0px;
 }
 
 .views {
-    color: rgb(162, 162, 162)
+    color: rgb(162, 162, 162);
+    font-size: 13px;
+    display: flex;
+    justify-content: right;
 }
 
 .channel_a {
     color: white;
+}
+
+.channel_name {
+    font-size: 15px;
 }
 
 .nav_bar {
