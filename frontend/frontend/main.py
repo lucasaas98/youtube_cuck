@@ -1,18 +1,13 @@
-import datetime
 import threading
 
-import feedparser
-import opml
-import requests
 import uvicorn
 from fastapi import FastAPI, Form, Request, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
 from typing_extensions import Annotated
 
-from frontend.env_vars import BACKEND_PORT, BACKEND_URL, DATA_FOLDER, PORT
+from frontend.env_vars import DATA_FOLDER, PORT
 from frontend.repo import (
     get_channel_videos,
     get_recent_shorts,
@@ -22,6 +17,16 @@ from frontend.repo import (
     most_recent_video,
     most_recent_videos,
     update_video_progress,
+)
+from frontend.utils import (
+    Progress,
+    get_all_channels,
+    get_queue_size,
+    get_rss_feed,
+    is_valid_url,
+    place_value,
+    prepare_for_template,
+    ready_up_request,
 )
 
 app = FastAPI()
@@ -37,24 +42,7 @@ async def index(request: Request):
     (queue_size, queue_fetching) = get_queue_size()
 
     data = (
-        [
-            {
-                "id": youtube_video.id,
-                "vid_url": youtube_video.vid_url,
-                "thumb_url": youtube_video.thumb_url,
-                "vid_path": youtube_video.vid_path,
-                "thumb_path": youtube_video.thumb_path,
-                "pub_date": youtube_video.pub_date,
-                "pub_date_human": youtube_video.pub_date_human,
-                "title": youtube_video.title,
-                "views": place_value(youtube_video.views),
-                "description": youtube_video.description,
-                "channel": youtube_video.channel,
-                "progress_percentage": progress_percentage(youtube_video),
-                "size": str(datetime.timedelta(seconds=youtube_video.size)),
-            }
-            for youtube_video in data
-        ],
+        [prepare_for_template(youtube_video) for youtube_video in data],
         0,
         rss_date.date_human,
         queue_size,
@@ -72,24 +60,7 @@ async def get_shorts(request: Request):
     (queue_size, queue_fetching) = get_queue_size()
 
     data = (
-        [
-            {
-                "id": youtube_video.id,
-                "vid_url": youtube_video.vid_url,
-                "thumb_url": youtube_video.thumb_url,
-                "vid_path": youtube_video.vid_path,
-                "thumb_path": youtube_video.thumb_path,
-                "pub_date": youtube_video.pub_date,
-                "pub_date_human": youtube_video.pub_date_human,
-                "title": youtube_video.title,
-                "views": place_value(youtube_video.views),
-                "description": youtube_video.description,
-                "channel": youtube_video.channel,
-                "progress_percentage": progress_percentage(youtube_video),
-                "size": str(datetime.timedelta(seconds=youtube_video.size)),
-            }
-            for youtube_video in data
-        ],
+        [prepare_for_template(video) for video in data],
         0,
         rss_date.date_human,
         queue_size,
@@ -107,24 +78,7 @@ async def next_page(page, request: Request):
     (queue_size, queue_fetching) = get_queue_size()
 
     data = (
-        [
-            {
-                "id": youtube_video.id,
-                "vid_url": youtube_video.vid_url,
-                "thumb_url": youtube_video.thumb_url,
-                "vid_path": youtube_video.vid_path,
-                "thumb_path": youtube_video.thumb_path,
-                "pub_date": youtube_video.pub_date,
-                "pub_date_human": youtube_video.pub_date_human,
-                "title": youtube_video.title,
-                "views": place_value(youtube_video.views),
-                "description": youtube_video.description,
-                "channel": youtube_video.channel,
-                "progress_percentage": progress_percentage(youtube_video),
-                "size": str(datetime.timedelta(seconds=youtube_video.size)),
-            }
-            for youtube_video in videos
-        ],
+        [prepare_for_template(video) for video in data],
         int(page),
         rss_date.date_human,
         queue_size,
@@ -137,16 +91,16 @@ async def next_page(page, request: Request):
 
 @app.get("/video/{identifier}", response_class=HTMLResponse)
 async def video_watch(request: Request, identifier: str):
-    youtube_video = get_video_by_id(identifier)
+    video = get_video_by_id(identifier)
     data = {
-        "title": youtube_video.title,
-        "views": place_value(youtube_video.views),
-        "vid_path": youtube_video.vid_path,
-        "channel_name": youtube_video.channel,
-        "date": youtube_video.pub_date_human,
-        "description": youtube_video.description.split("\n"),
-        "id": youtube_video.id,
-        "progress": youtube_video.progress_seconds or 0,
+        "title": video.title,
+        "views": place_value(video.views),
+        "vid_path": video.vid_path,
+        "channel_name": video.channel,
+        "date": video.pub_date_human,
+        "description": video.description.split("\n"),
+        "id": video.id,
+        "progress": video.progress_seconds or 0,
     }
     return templates.TemplateResponse(
         "cuck_video.html",
@@ -159,24 +113,7 @@ async def channel_video_watch(request: Request, channel_name: str):
     data = get_channel_videos(channel_name)
     data = [
         channel_name,
-        [
-            {
-                "id": youtube_video.id,
-                "vid_url": youtube_video.vid_url,
-                "thumb_url": youtube_video.thumb_url,
-                "vid_path": youtube_video.vid_path,
-                "thumb_path": youtube_video.thumb_path,
-                "pub_date": youtube_video.pub_date,
-                "pub_date_human": youtube_video.pub_date_human,
-                "title": youtube_video.title,
-                "views": place_value(youtube_video.views),
-                "description": youtube_video.description,
-                "channel": youtube_video.channel,
-                "progress_percentage": progress_percentage(youtube_video),
-                "size": str(datetime.timedelta(seconds=youtube_video.size)),
-            }
-            for youtube_video in data
-        ],
+        [prepare_for_template(video) for video in data],
     ]
     return templates.TemplateResponse(
         "cuck_channel.html", {"request": request, "data": data}
@@ -248,24 +185,7 @@ async def most_recent_videos_page(request: Request):
     (queue_size, queue_fetching) = get_queue_size()
 
     data = (
-        [
-            {
-                "id": youtube_video.id,
-                "vid_url": youtube_video.vid_url,
-                "thumb_url": youtube_video.thumb_url,
-                "vid_path": youtube_video.vid_path,
-                "thumb_path": youtube_video.thumb_path,
-                "pub_date": youtube_video.pub_date,
-                "pub_date_human": youtube_video.pub_date_human,
-                "title": youtube_video.title,
-                "views": place_value(youtube_video.views),
-                "description": youtube_video.description,
-                "channel": youtube_video.channel,
-                "progress_percentage": progress_percentage(youtube_video),
-                "size": str(datetime.timedelta(seconds=youtube_video.size)),
-            }
-            for youtube_video in data
-        ],
+        [prepare_for_template(video) for video in data],
         0,
         rss_date.date_human,
         queue_size,
@@ -282,69 +202,10 @@ async def refresh_rss():
     return {"text": "True"}
 
 
-class Progress(BaseModel):
-    time: float
-    id: str
-
-
 @app.post("/save_progress")
 async def save_progress(progress: Progress):
     update_video_progress(progress.id, progress.time)
     return {"message": "Progress updated"}
-
-
-def get_rss_feed():
-    t1 = threading.Thread(target=send_request_rss)
-    t1.start()
-    return True, t1
-
-
-def send_request_rss():
-    return requests.post(f"http://{BACKEND_URL}:{BACKEND_PORT}/api/refresh_rss")
-
-
-def ready_up_request():
-    return requests.post(f"http://{BACKEND_URL}:{BACKEND_PORT}/api/startup")
-
-
-def get_queue_size():
-    data = requests.get(
-        f"http://{BACKEND_URL}:{BACKEND_PORT}/api/working_threads"
-    ).json()
-    return (data["size"], data["still_fetching"])
-
-
-def place_value(number):
-    return "{:,}".format(number)
-
-
-def get_all_channels():
-    data = open(f"{DATA_FOLDER}/subscription_manager", "r")
-
-    nested = opml.parse(data)
-
-    all_channels = list()
-    for channel in nested[0]:
-        real_id = channel.xmlUrl.split("=")[1]
-        all_channels.append((channel.title, real_id))
-    return all_channels
-
-
-def is_valid_url(feed_url):
-    video_feed = None
-    video_feed = feedparser.parse(feed_url)
-    if video_feed["status"] == 200:
-        return True
-    else:
-        return False
-
-
-def progress_percentage(youtube_video):
-    return (
-        (youtube_video.progress_seconds / youtube_video.size * 100)
-        if youtube_video.progress_seconds and youtube_video.size
-        else 0
-    )
 
 
 @app.on_event("startup")
