@@ -362,11 +362,7 @@ def livestream_download_thread(video):
     """
     file_name = video.vid_url.split("=")[1]
 
-    if download_video(video.vid_url, file_name) == 0:
-        logger.info(f"Downloaded video {file_name} from {video.vid_url}")
-    else:
-        logger.error(f"Failed to download video {file_name} from {video.vid_url}")
-        return
+    download_video(video.vid_url, file_name)
 
     if not confirm_video_name(file_name):
         return
