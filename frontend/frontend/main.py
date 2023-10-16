@@ -78,7 +78,7 @@ async def next_page(page, request: Request):
     (queue_size, queue_fetching) = get_queue_size()
 
     data = (
-        [prepare_for_template(video) for video in data],
+        [prepare_for_template(video) for video in videos],
         int(page),
         rss_date.date_human,
         queue_size,

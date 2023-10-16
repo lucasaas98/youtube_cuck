@@ -50,13 +50,15 @@
         </ul>
         <div class="grid-container">
             {% for row in data[0] %}
-                <div class="card">
+            <div class="card">
+                <a href="../video/{{ row['id'] }}">
                     <div class="center-div-video">
                         <div style="background-size: cover;
                                     background-position: center;
                                     background-image: url('../thumbnails/{{ row['thumb_path'] }}');
                                     width: 360px;
-                                    height: 270px">
+                                    height: 200px;
+                                    position: relative">
                             <div class="video-duration" style="left: 10px;">{{ row['size'] }}</div>
                             <div class="progress-bar">
                                 <div class="progress-fill"
@@ -64,28 +66,19 @@
                             </div>
                         </div>
                     </div>
-                    <div class="content">
-                        <div class="center-div-title">
-                            <h3>{{ row['title'] }}</h3>
-                        </div>
-                        <div class="center-div">
-                            <h4>
-                                <a class="channel_a" href="../channel/{{ row['channel'] }}">{{ row['channel'] }}</a>
-                            </h4>
-                        </div>
-                        <div class="center-div">
-                            <p class="views">{{ row['views'] }} views</p>
-                        </div>
-                        <div class="center-div">
-                            <p>{{ row['description'] }}</p>
-                        </div>
-                        <div class="center-div-button">
-                            <a href="../video/{{ row['id'] }}">
-                                <button>Watch</button>
-                            </a>
-                        </div>
+                </a>
+                <div class="content">
+                    <div class="center-div-title">
+                        <h3>{{ row['title'] }}</h3>
+                    </div>
+                    <div class="center-div">
+                        <p class="channel_name">
+                            <a class="channel_a" href="../channel/{{ row['channel'] }}">{{ row['channel'] }}</a>
+                        </p>
+                        <p class="views">{{ row['views'] }} views</p>
                     </div>
                 </div>
+            </div>
             {% endfor %}
             <div id="myModal" class="modal">
                 <div class="modal-content">
