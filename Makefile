@@ -60,6 +60,10 @@ format:
 shell:
 	cd backend && source .venv/bin/activate && ENV_FILE=.dev.env python3
 
+first:
+	yt-dlp --format mp4 https://youtu.be/dQw4w9WgXcQ
+	mv *.mp4 frontend/static/dQw4w9WgXcQ.mp4
+
 # prod
 build-prod:
 	docker compose -f docker-compose.prod.yml build yt_frontend yt_backend

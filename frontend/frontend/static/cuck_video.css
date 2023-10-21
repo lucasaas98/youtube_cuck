@@ -145,3 +145,64 @@ li a:hover {
 .right {
   margin-left: auto;
 }
+
+.container {
+  width: 15%;
+  position: relative;
+  margin-bottom: 12px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  text-align: right;
+  color: rgb(162, 162, 162);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.container input {
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+  margin-right: 10px;
+}
+
+.checkmark {
+  position: relative;
+  height: 25px;
+  width: 25px;
+  background-color: rgb(162, 162, 162);
+}
+
+.container:hover input ~ .checkmark {
+  background-color: rgb(100, 100, 100);
+}
+
+.container input:checked ~ .checkmark {
+  background-color: #c71111;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.container input:checked ~ .checkmark:after {
+  display: flex;
+}
+
+.container .checkmark:after {
+  left: 9px;
+  top: 5px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}

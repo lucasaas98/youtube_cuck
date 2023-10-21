@@ -40,22 +40,13 @@ def get_channel_videos(channel_name):
         return []
 
 
-def get_recent_videos(page, inserted_at_sort=False):
+def get_recent_videos(page):
     try:
         with session_scope() as session:
             selection = (int(page) + 1) * 35
-            initial_query = (
-                session.query(YoutubeVideo)
-                .filter(YoutubeVideo.vid_path != "NA")
-                .filter(YoutubeVideo.short.is_(False))
-            )
-            ordered_query = None
-            if inserted_at_sort:
-                ordered_query = initial_query.order_by(
-                    YoutubeVideo.downloaded_at.desc()
-                )
-            else:
-                ordered_query = initial_query.order_by(YoutubeVideo.pub_date.desc())
+            ordered_query = (
+                session.query(YoutubeVideo).filter(YoutubeVideo.short.is_(False))
+            ).order_by(YoutubeVideo.downloaded_at.desc())
 
             data = ordered_query.limit(35).offset(selection - 35).all()
             return data

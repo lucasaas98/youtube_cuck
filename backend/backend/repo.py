@@ -33,6 +33,7 @@ def get_expired_videos(date):
                 session.query(YoutubeVideo)
                 .filter(YoutubeVideo.pub_date < date)
                 .filter(YoutubeVideo.vid_path != "NA")
+                .filter(YoutubeVideo.keep == False)
                 .all()
             )
             return data
@@ -159,6 +160,18 @@ def get_all_videos():
                 )
                 .where(YoutubeVideo.size.is_(None))
             ).all()
+            return data
+    except Exception as error:
+        logger.error("Failed to get all videos", error)
+        return []
+
+
+def get_video_by_id(video_id):
+    try:
+        with session_scope() as session:
+            data = session.execute(
+                select(YoutubeVideo).where(YoutubeVideo.id == video_id)
+            ).one()
             return data
     except Exception as error:
         logger.error("Failed to get all videos", error)
