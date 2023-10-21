@@ -264,16 +264,18 @@ def video_download_thread(video, channel):
             if not confirm_video_name(file_name):
                 return
 
-            download_thumbnail(video["thumbnail"], file_name)
-
             vid_path = f"{file_name}.mp4"
+            thumb_path = f"{file_name}.jpg"
+
+            download_thumbnail(video["thumbnail"], thumb_path)
+
             size = get_video_size(vid_path)
 
             video_object = YoutubeVideo(
                 vid_url=video["video_url"],
                 vid_path=vid_path,
                 thumb_url=video["thumbnail"],
-                thumb_path=f"{file_name}.jpg",
+                thumb_path=thumb_path,
                 pub_date=int(video["epoch_date"]),
                 pub_date_human=video["human_date"],
                 title=video["title"],
@@ -319,7 +321,7 @@ def confirm_video_name(filename):
 
 def download_thumbnail(url, filename):
     r = requests.get(url)
-    with open(f"{DATA_FOLDER}/thumbnails/{filename}.jpg", "wb") as f:
+    with open(f"{DATA_FOLDER}/thumbnails/{filename}", "wb") as f:
         f.write(r.content)
 
 
@@ -357,22 +359,24 @@ def livestream_download_thread(video):
     """
     Download a livestream and its thumbnail and update the database.
 
-    :param video: A YoutubeVideo object continaing all livestream data.
+    :param video: A YoutubeVideo object containing all livestream data.
     :type video: YoutubeVideo
     """
     file_name = video.vid_url.split("=")[1]
 
-    download_video(video.vid_url, file_name)
-
-    if not confirm_video_name(file_name):
+    if download_video(video.vid_url, file_name) != 0:
+        logger.error(f"YT_DLP Failed to download_video for video {video.vid_url}")
         return
 
-    size = get_video_size(video.vid_url)
-
-    download_thumbnail(video.thumb_url, file_name)
+    if not confirm_video_name(file_name):
+        logger.error(f"Failed to confirm_video_name for video {video.vid_url}")
+        return
 
     video.vid_path = f"{file_name}.mp4"
     video.thumb_path = f"{file_name}.jpg"
+
+    download_thumbnail(video.thumb_url, video.thumb_path)
+    size = get_video_size(video.vid_path)
 
     with session_scope() as session:
         try:
@@ -432,10 +436,15 @@ def download_video(url, filename):
         "format": "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]",
         "outtmpl": f"{DATA_FOLDER}/videos/{filename}.mp4",
         "quiet": True,
+        "overwrites": True,
+        "noprogress": True,
     }
+
     try:
         with yt_dlp.YoutubeDL(options) as ydl:
-            ydl.download([url])
+            return ydl.download([url])
+    except yt_dlp.utils.ExtractorError as error:
+        logger.error(f"Video got fucking deleted, wtfffff", error)
     except Exception as error:
         logger.error(
             f"Failed to fetch new video {filename} at {url} with yt-dlp", error
