@@ -4,7 +4,7 @@ from time import time
 
 from sqlalchemy import and_, select
 
-from backend.constants import DELAY
+from backend.constants import LIVE_DELAY
 from backend.engine import session_scope
 from backend.logging import logging
 from backend.models import JsonData, RSSFeedDate, YoutubeVideo
@@ -132,8 +132,7 @@ def get_downloaded_video_urls():
 
 
 def get_livestream_videos():
-    # we want to get the livestream videos that are not downloaded and are older than 24 hours and are less than DELAY old
-
+    # we want to get the livestream videos that are not downloaded and are older than 12 hours and are less than LIVE_DELAY old
     time_now = int(time())
     try:
         with session_scope() as session:
@@ -141,8 +140,8 @@ def get_livestream_videos():
                 select(YoutubeVideo)
                 .where(YoutubeVideo.livestream)
                 .where(YoutubeVideo.downloaded_at.is_(None))
-                .where(YoutubeVideo.inserted_at < time_now - 86400)
-                .where(YoutubeVideo.inserted_at > time_now - DELAY)
+                .where(YoutubeVideo.inserted_at < time_now - 43200)
+                .where(YoutubeVideo.inserted_at > time_now - LIVE_DELAY)
             ).all()
             return data
     except Exception as error:
