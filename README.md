@@ -45,6 +45,12 @@ make build-prod
 make run-prod
 ```
 
+5. You might need this if you deal with livestreams a lot
+
+```sh
+make first
+```
+
 You should 100% take a look at the **Makefile** to see all the possible commands as well as the .env files to see all the possible environment variables.
 
 

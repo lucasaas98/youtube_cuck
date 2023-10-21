@@ -49,6 +49,13 @@
             <div class="info">
                 <h2 class="title">{{ data['title'] }}</h2>
                 <p class="views">{{ data['views'] }} views</p>
+                <label class="container">
+                    Keep
+                    <input type="checkbox"
+                           {% if data['keep'] %}checked='1'{% endif %}
+                           onclick="handleKeep(this, {{ data['video_id'] }});">
+                    <span class="checkmark"></span>
+                </label>
             </div>
             <div class="info">
                 <h4 class="channel_name">
@@ -83,6 +90,7 @@
         </div>
         <script src="../static/add_channel_modal.js"></script>
         <script src="../static/video_player.js"></script>
+        <script src="../static/keep.js"></script>
         <script>
             add_progress_listener("{{ data['id'] }}")
             start_at({{ data['progress'] }})

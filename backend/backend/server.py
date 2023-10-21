@@ -9,10 +9,12 @@ from backend.engine import close_engine
 from backend.env_vars import PORT
 from backend.logging import logging
 from backend.utils import (
+    download_and_keep,
     download_old_livestreams,
     get_queue_size,
     get_rss_feed,
     remove_old_videos,
+    unkeep,
     update_size_for_old_videos,
 )
 
@@ -45,6 +47,18 @@ def startup():
 def get_size():
     size = get_queue_size()
     return {"size": size, "still_fetching": size != 0}
+
+
+@app.get("/api/fetch_and_keep/{video_id}")
+def get_video_and_keep(video_id: str):
+    download_and_keep(video_id)
+    return {"text": "Downloading video!"}
+
+
+@app.get("/api/unkeep/{video_id}")
+def get_video_and_keep(video_id: str):
+    unkeep(video_id)
+    return {"text": "Downloading video!"}
 
 
 def activate_schedule():

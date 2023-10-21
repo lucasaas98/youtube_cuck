@@ -24,9 +24,11 @@ from frontend.utils import (
     get_queue_size,
     get_rss_feed,
     is_valid_url,
-    place_value,
+    keep_video_request,
     prepare_for_template,
+    prepare_for_watch,
     ready_up_request,
+    unkeep_video_request,
 )
 
 app = FastAPI()
@@ -37,17 +39,18 @@ app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    data = get_recent_videos(0, True)
+    data = get_recent_videos(0)
     rss_date = get_rss_date()
     (queue_size, queue_fetching) = get_queue_size()
 
     data = (
-        [prepare_for_template(youtube_video) for youtube_video in data],
+        [prepare_for_template(youtube_video, True) for youtube_video in data],
         0,
         rss_date.date_human,
         queue_size,
         queue_fetching,
     )
+
     return templates.TemplateResponse(
         "yt_cuck.html", {"request": request, "data": data, "is_short": False}
     )
@@ -66,6 +69,7 @@ async def get_shorts(request: Request):
         queue_size,
         queue_fetching,
     )
+
     return templates.TemplateResponse(
         "yt_cuck.html", {"request": request, "data": data, "is_short": True}
     )
@@ -73,7 +77,7 @@ async def get_shorts(request: Request):
 
 @app.get("/page/{page}", response_class=HTMLResponse)
 async def next_page(page, request: Request):
-    videos = get_recent_videos(page, True)
+    videos = get_recent_videos(page)
     rss_date = get_rss_date()
     (queue_size, queue_fetching) = get_queue_size()
 
@@ -84,6 +88,7 @@ async def next_page(page, request: Request):
         queue_size,
         queue_fetching,
     )
+
     return templates.TemplateResponse(
         "yt_cuck_page.html", {"request": request, "data": data}
     )
@@ -92,17 +97,8 @@ async def next_page(page, request: Request):
 @app.get("/video/{identifier}", response_class=HTMLResponse)
 async def video_watch(request: Request, identifier: str):
     video = get_video_by_id(identifier)
-    data = {
-        "title": video.title,
-        "views": place_value(video.views),
-        "vid_path": video.vid_path,
-        "channel_name": video.channel,
-        "date": video.pub_date_human,
-        "description": video.description.split("\n"),
-        "id": video.id,
-        "progress": video.progress_seconds or 0,
-        "player_width": "25" if video.short else "80",
-    }
+    data = prepare_for_watch(video)
+
     return templates.TemplateResponse(
         "cuck_video.html",
         {"request": request, "data": data, "length": len(data["description"])},
@@ -116,6 +112,7 @@ async def channel_video_watch(request: Request, channel_name: str):
         channel_name,
         [prepare_for_template(video) for video in data],
     ]
+
     return templates.TemplateResponse(
         "cuck_channel.html", {"request": request, "data": data}
     )
@@ -128,6 +125,7 @@ async def get_subs(request: Request):
         {"title": x[0], "id": x[1]}
         for x in sorted(data, key=lambda tup: tup[0].strip().lower())
     ]
+
     return templates.TemplateResponse(
         "cuck_subs.html", {"request": request, "data": sorted_by_lowercase_name}
     )
@@ -151,9 +149,11 @@ async def add_channel(
         data += "</outline></body></opml>"
         fo.write(data)
         fo.close()
+
         return {"text": "Channel added!"}
     else:
         response.status_code = 400
+
         return {
             "text": "There was an error adding that channel, make sure the channel ID is correct."
         }
@@ -162,17 +162,8 @@ async def add_channel(
 @app.get("/most_recent_video", response_class=HTMLResponse)
 async def most_recent_video_watch(request: Request):
     video = get_video_by_id(most_recent_video().vid_id)
-    data = {
-        "title": video.title,
-        "views": place_value(video.views),
-        "vid_path": video.vid_path,
-        "channel_name": video.channel,
-        "date": video.pub_date_human,
-        "description": video.description.split("\n"),
-        "id": video.id,
-        "progress": video.progress_seconds or 0,
-        "player_width": "25" if video.short else "80",
-    }
+    data = prepare_for_watch(video)
+
     return templates.TemplateResponse(
         "cuck_video.html",
         {"request": request, "data": data, "length": len(data["description"])},
@@ -193,20 +184,37 @@ async def most_recent_videos_page(request: Request):
         queue_size,
         queue_fetching,
     )
+
     return templates.TemplateResponse(
         "yt_cuck.html", {"request": request, "data": data, "is_short": True}
     )
 
 
+@app.get("/keep/{video_id}")
+async def keep_video(video_id: str):
+    t1 = threading.Thread(target=keep_video_request, args=[video_id])
+    t1.start()
+    return {"text": "Video kept!"}
+
+
+@app.get("/unkeep/{video_id}")
+async def unkeep_video(video_id: str):
+    t1 = threading.Thread(target=unkeep_video_request, args=[video_id])
+    t1.start()
+    return {"text": "Video unkept!"}
+
+
 @app.post("/refresh_rss", status_code=200)
 async def refresh_rss():
     get_rss_feed()
+
     return {"text": "True"}
 
 
 @app.post("/save_progress")
 async def save_progress(progress: Progress):
     update_video_progress(progress.id, progress.time)
+
     return {"message": "Progress updated"}
 
 

@@ -26,6 +26,7 @@ from backend.repo import (
     get_expired_videos,
     get_json,
     get_livestream_videos,
+    get_video_by_id,
     update_json,
     update_rss_date,
     update_view_count,
@@ -449,3 +450,66 @@ def download_video(url, filename):
         logger.error(
             f"Failed to fetch new video {filename} at {url} with yt-dlp", error
         )
+
+
+def download_and_keep(video_id):
+    """
+    Download an old video and keep it forever.
+
+    :param video_id: A video_id for a YoutubeVideo
+    :type video_id: str
+    """
+
+    video = get_video_by_id(video_id)[0]
+    is_missing = video.vid_path == "NA"
+
+    file_name = video.vid_url.split("=")[1]
+
+    if is_missing:
+        if download_video(video.vid_url, file_name) != 0:
+            logger.error(f"YT_DLP Failed to download_video for video {video.vid_url}")
+            return
+
+        if not confirm_video_name(file_name):
+            logger.error(f"Failed to confirm_video_name for video {video.vid_url}")
+            return
+
+        video.vid_path = f"{file_name}.mp4"
+        video.thumb_path = f"{file_name}.jpg"
+
+        download_thumbnail(video.thumb_url, video.thumb_path)
+        size = get_video_size(video.vid_path)
+
+    with session_scope() as session:
+        try:
+            session.query(YoutubeVideo).filter(YoutubeVideo.id == video.id).update(
+                {
+                    "vid_path": video.vid_path,
+                    "thumb_path": video.thumb_path,
+                    "downloaded_at": int(time()) if is_missing else video.downloaded_at,
+                    "size": size if is_missing else video.size,
+                    "keep": True,
+                }
+            )
+            session.commit()
+            logger.info(f"Video - {video.title} was updated and will be kept")
+        except Exception as error:
+            logger.error(
+                "Failed to update the video",
+                error,
+            )
+
+
+def unkeep(video_id):
+    with session_scope() as session:
+        try:
+            session.query(YoutubeVideo).filter(YoutubeVideo.id == video_id).update(
+                {"keep": False}
+            )
+            session.commit()
+            logger.info(f"Video - {video_id} was unkept")
+        except Exception as error:
+            logger.error(
+                "Failed to update the video",
+                error,
+            )
