@@ -92,14 +92,10 @@ def prepare_for_template(video, main_page=False):
 
     prefix = "../" if not main_page else ""
 
-    vid_path = (
-        "../videos/" + video.vid_path
-        if not is_live_without_video
-        else "static/dQw4w9WgXcQ.mp4"
-    )
+    vid_thumb_path = video.thumb_path if video.thumb_path else "NA"
 
     thumb_path = (
-        "thumbnails/" + video.thumb_path
+        "thumbnails/" + vid_thumb_path
         if not is_live_without_video
         else "static/livestream-coming.png"
     )
@@ -109,7 +105,6 @@ def prepare_for_template(video, main_page=False):
         "id": video.id,
         "vid_url": video.vid_url,
         "thumb_url": video.thumb_url,
-        "vid_path": vid_path,
         "thumb_path": thumb_path,
         "pub_date_human": video.pub_date_human,
         "title": video.title,
@@ -126,7 +121,7 @@ def prepare_for_watch(video):
 
     vid_path = (
         "../videos/" + video.vid_path
-        if not is_live_without_video
+        if not is_live_without_video and video.vid_path
         else "../static/dQw4w9WgXcQ.mp4"
     )
 
