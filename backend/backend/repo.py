@@ -7,7 +7,7 @@ from sqlalchemy import and_, select
 from backend.constants import LIVE_DELAY
 from backend.engine import session_scope
 from backend.logging import logging
-from backend.models import JsonData, RSSFeedDate, YoutubeVideo
+from backend.models import JsonData, RSSFeedDate, YoutubeVideo, Channel
 
 logger = logging.getLogger(__name__)
 logger.setLevel(_logging.INFO)
@@ -160,6 +160,21 @@ def get_all_videos():
                 )
                 .where(YoutubeVideo.size.is_(None))
             ).all()
+            return data
+    except Exception as error:
+        logger.error("Failed to get all videos", error)
+        return []
+
+
+def get_real_all_videos(session):
+    data = session.execute(select(YoutubeVideo).where(YoutubeVideo.channel_id.is_(None))).all()
+    return data
+
+
+def get_all_channels():
+    try:
+        with session_scope() as session:
+            data = session.execute(select(Channel)).all()
             return data
     except Exception as error:
         logger.error("Failed to get all videos", error)

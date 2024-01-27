@@ -4,7 +4,7 @@ import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from subprocess import DEVNULL, PIPE, Popen, check_output
+from subprocess import DEVNULL, check_output
 from time import time
 
 import dateutil.parser as date_parser
