@@ -93,7 +93,9 @@
         <script src="../static/keep.js"></script>
         <script>
             add_progress_listener("{{ data['id'] }}");
+            {{ /* djlint:off */ }}
             start_at({{ data['progress'] }});
+            {{ /* djlint:off */ }}
         </script>
     </body>
 </html>
