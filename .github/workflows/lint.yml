@@ -3,6 +3,8 @@ name: Lint
 on: 
   pull_request:
     branches: [ main ]
+  push:
+    branches: [ main ]
 
 jobs:
   run-linters:
@@ -10,23 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.11.5
+          python-version: 3.10.12
+          cache: 'pip'
       
       - name: Install Python dependencies
-        run: |
-          pip install black isort
+        run: make deps
       
-      - name: Lint all
-        run: |
-          echo "Running for backend"
-          cd backend && black --check .
-          isort --check .
-          cd ..
-          echo "Running for frontend"
-          cd frontend && black --check .
-          isort --check .
+      - name: Check Formatting
+        run: make check-formatting
+
+      - name: Check Linting
+        run: make lint

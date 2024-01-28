@@ -13,3 +13,4 @@ alembic
 black
 isort
 djlint
+flake8

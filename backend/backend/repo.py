@@ -7,7 +7,7 @@ from sqlalchemy import and_, select
 from backend.constants import LIVE_DELAY
 from backend.engine import session_scope
 from backend.logging import logging
-from backend.models import JsonData, RSSFeedDate, YoutubeVideo
+from backend.models import Channel, JsonData, RSSFeedDate, YoutubeVideo
 
 logger = logging.getLogger(__name__)
 logger.setLevel(_logging.INFO)
@@ -33,7 +33,7 @@ def get_expired_videos(date):
                 session.query(YoutubeVideo)
                 .filter(YoutubeVideo.pub_date < date)
                 .filter(YoutubeVideo.vid_path != "NA")
-                .filter(YoutubeVideo.keep == False)
+                .filter(YoutubeVideo.keep.is_(False))
                 .all()
             )
             return data
@@ -76,7 +76,7 @@ def update_rss_date(date_str):
                 data[0].date_human = date_str
             session.commit()
     except Exception as error:
-        logger.error(f"Failed to update rss_feed_date table", error)
+        logger.error("Failed to update rss_feed_date table", error)
 
 
 def insert_rss_date(session, date_str):
@@ -156,10 +156,29 @@ def get_all_videos():
             data = session.execute(
                 select(YoutubeVideo)
                 .where(
-                    and_(YoutubeVideo.vid_path != "NA", YoutubeVideo.vid_path != None)
+                    and_(
+                        YoutubeVideo.vid_path != "NA", YoutubeVideo.vid_path.isnot(None)
+                    )
                 )
                 .where(YoutubeVideo.size.is_(None))
             ).all()
+            return data
+    except Exception as error:
+        logger.error("Failed to get all videos", error)
+        return []
+
+
+def get_real_all_videos(session):
+    data = session.execute(
+        select(YoutubeVideo).where(YoutubeVideo.channel_id.is_(None))
+    ).all()
+    return data
+
+
+def get_all_channels():
+    try:
+        with session_scope() as session:
+            data = session.execute(select(Channel)).all()
             return data
     except Exception as error:
         logger.error("Failed to get all videos", error)

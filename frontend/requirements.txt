@@ -12,3 +12,4 @@ python-multipart
 black
 isort
 djlint
+flake8

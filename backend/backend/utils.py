@@ -4,7 +4,7 @@ import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from subprocess import DEVNULL, PIPE, Popen, check_output
+from subprocess import DEVNULL, check_output
 from time import time
 
 import dateutil.parser as date_parser
@@ -78,7 +78,7 @@ def remove_old_videos():
             os.remove(file_path)
             logger.info(f"Delete video at path: {file_path}")
 
-        except:
+        except Exception:
             logger.error(f"Failed to delete video at path: {file_path}")
 
         try:
@@ -87,7 +87,7 @@ def remove_old_videos():
             )
             os.remove(thumb_path)
             logger.info(f"Delete thumbnail at path: {thumb_path}")
-        except:
+        except Exception:
             logger.error(f"Failed to delete thumbnail at path: {thumb_path}")
 
         expire_video(expired_video.id)
@@ -176,7 +176,7 @@ def get_video():
             future.result()
 
     except Exception as error:
-        logger.error(f"Failed to get new videos", error)
+        logger.error("Failed to get new videos", error)
     finally:
         logger.info("Videos Downloaded!")
 
@@ -445,7 +445,7 @@ def download_video(url, filename):
         with yt_dlp.YoutubeDL(options) as ydl:
             return ydl.download([url])
     except yt_dlp.utils.ExtractorError as error:
-        logger.error(f"Video got fucking deleted, wtfffff", error)
+        logger.error("Video got fucking deleted, wtfffff", error)
     except Exception as error:
         logger.error(
             f"Failed to fetch new video {filename} at {url} with yt-dlp", error

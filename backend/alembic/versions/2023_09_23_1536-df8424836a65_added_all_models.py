@@ -1,10 +1,11 @@
 """Added all models
 
 Revision ID: df8424836a65
-Revises: 
+Revises:
 Create Date: 2023-09-23 15:36:18.413053+00:00
 
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
