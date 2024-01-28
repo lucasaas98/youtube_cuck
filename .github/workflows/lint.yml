@@ -25,4 +25,4 @@ jobs:
         run: make check-formatting
 
       - name: Check Linting
-        run: make lint-check
+        run: make lint
