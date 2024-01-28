@@ -1,9 +1,17 @@
 var player = document.getElementById('video_player');
 
+player.addEventListener('keydown', (event) => {
+    event.stopPropagation();
+});
+
 window.onload = function () {
-    // f = 70;l = 76;k = 75;j = 74;down_arrow = 40;up_arrow = 38;left_arrow = 37;right_arrow = 39;space_bar = 32;
     window.onkeydown = function (gfg) {
         gfg.preventDefault();
+        handleKeyPress(gfg);
+    };
+
+    // f = 70;l = 76;k = 75;j = 74;down_arrow = 40;up_arrow = 38;left_arrow = 37;right_arrow = 39;space_bar = 32;
+    function handleKeyPress(gfg) {
         switch (gfg.keyCode) {
             case 32:
             case 75:
