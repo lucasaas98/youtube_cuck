@@ -59,21 +59,15 @@ format:
 
 check-formatting:
 	echo "Checking Backend"
-	cd backend && black . --check && isort . --check-only && djlint . --check --format-css --format-js --profile=jinja
+	cd backend && source .venv/bin/activate && black . --check && isort . --check-only && djlint . --check --format-css --format-js --profile=jinja
 	echo "Checking Frontend"
-	cd frontend && black . --check && isort . --check-only && djlint . --check --format-css --format-js --profile=jinja
+	cd frontend && source .venv/bin/activate && black . --check && isort . --check-only && djlint . --check --format-css --format-js --profile=jinja
 
 lint:
 	echo "Linting Backend"
 	cd backend && source .venv/bin/activate && flake8 . --exclude=.venv --ignore=E501 --per-file-ignores="__init__.py:F401"
 	echo "Linting Frontend"
 	cd frontend && source .venv/bin/activate && flake8 . --exclude=.venv --ignore=E501 --per-file-ignores="__init__.py:F401"
-
-lint-check:
-	echo "Linting Backend"
-	cd backend && flake8 . --exclude=.venv --ignore=E501 --per-file-ignores="__init__.py:F401"
-	echo "Linting Frontend"
-	cd frontend && flake8 . --exclude=.venv --ignore=E501 --per-file-ignores="__init__.py:F401"
 
 shell:
 	cd backend && source .venv/bin/activate && ENV_FILE=.dev.env python3
