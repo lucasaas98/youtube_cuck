@@ -91,11 +91,9 @@
         <script src="../static/add_channel_modal.js"></script>
         <script src="../static/video_player.js"></script>
         <script src="../static/keep.js"></script>
-        <!-- djlint:off -->
-                <script>
+        <!-- djlint:off --> <script>
             add_progress_listener("{{ data['id'] }}");
             start_at({{ data['progress'] }});
-        </script>
-                <!-- djlint:off -->
-        </body>
+</script> <!-- djlint:on -->
+</body>
 </html>
