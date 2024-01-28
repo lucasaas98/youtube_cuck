@@ -57,6 +57,12 @@ format:
 	echo "Formatting Frontend"
 	cd frontend && source .venv/bin/activate && black . && isort . && djlint . --reformat --format-css --format-js --profile=jinja
 
+check-formatting:
+	echo "Checking Backend"
+	cd backend && source .venv/bin/activate && black . --check && isort . --check-only && djlint . --check --format-css --format-js --profile=jinja
+	echo "Checking Frontend"
+	cd frontend && source .venv/bin/activate && black . --check && isort . --check-only && djlint . --check --format-css --format-js --profile=jinja
+
 lint:
 	echo "Linting Backend"
 	cd backend && source .venv/bin/activate && flake8 . --exclude=.venv --ignore=E501 --per-file-ignores="__init__.py:F401"
