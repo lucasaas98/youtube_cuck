@@ -49,7 +49,7 @@ def backfill_channels():
                 )
             )
             titles.append((channel_name, channel.title))
-        except:
+        except Exception:
             logger.error(f"Failed to add channel {channel.title}")
 
     with session_scope() as session:
