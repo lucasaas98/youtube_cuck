@@ -10,21 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.10.12
       
       - name: Install Python dependencies
-        run: |
-          pip install black isort djlint flake8
+        run: make deps
       
       - name: Check Formatting
-        run: |
-          make check-formatting
+        run: make check-formatting
 
       - name: Check Linting
-        run: |
-          make lint
+        run: make lint-check
