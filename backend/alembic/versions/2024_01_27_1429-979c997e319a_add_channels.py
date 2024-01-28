@@ -35,7 +35,7 @@ def upgrade() -> None:
         sa.UniqueConstraint("id"),
     )
     op.add_column("youtube_video", sa.Column("channel_id", sa.Integer(), nullable=True))
-    
+
     # create the channels from the subscription_manager file
     titles = backfill_channels()
     backfill_video_channels(titles)

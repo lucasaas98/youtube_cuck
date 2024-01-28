@@ -8,10 +8,11 @@ from backend.engine import session_scope
 from backend.env_vars import DATA_FOLDER
 from backend.logging import logging
 from backend.models import Channel
-from backend.repo import get_real_all_videos, get_all_channels
+from backend.repo import get_all_channels, get_real_all_videos
 
 logger = logging.getLogger(__name__)
 logger.setLevel(_logging.INFO)
+
 
 def backfill_channels():
     """
@@ -27,25 +28,29 @@ def backfill_channels():
     new_channels = []
     titles = []
     for channel in channels:
-        channel_feed = feedparser.parse(channel.xmlUrl)
-        channel_id = "UC" + channel_feed["feed"]["yt_channelid"]
-        channel_urls = channel_feed["feed"]["links"]
-        channel_url = [a["href"] for a in channel_urls if a["rel"] == "alternate"][0]
-        channel_name = channel_feed["feed"]["title"]
+        try:
+            channel_feed = feedparser.parse(channel.xmlUrl)
+            channel_id = "UC" + channel_feed["feed"]["yt_channelid"]
+            channel_urls = channel_feed["feed"]["links"]
+            channel_url = [a["href"] for a in channel_urls if a["rel"] == "alternate"][
+                0
+            ]
+            channel_name = channel_feed["feed"]["title"]
 
-        new_channels.append(
-            (
-                Channel(
-                    channel_id=channel_id,
-                    channel_url=channel_url,
-                    channel_name=channel_name,
-                    inserted_at=int(time()),
-                ),
-                channel.title,
+            new_channels.append(
+                (
+                    Channel(
+                        channel_id=channel_id,
+                        channel_url=channel_url,
+                        channel_name=channel_name,
+                        inserted_at=int(time()),
+                    ),
+                    channel.title,
+                )
             )
-        )
-        titles.append((channel_name,channel.title))
-
+            titles.append((channel_name, channel.title))
+        except:
+            logger.error(f"Failed to add channel {channel.title}")
 
     with session_scope() as session:
         session.add_all([a[0] for a in new_channels])

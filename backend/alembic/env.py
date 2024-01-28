@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from backend.models import Base as bb
 
 env_file = os.getenv("ENV_FILE")
 load_dotenv(dotenv_path=env_file)
@@ -25,7 +26,6 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from backend.models import Base as bb
 
 target_metadata = bb.metadata
 # target_metadata = None

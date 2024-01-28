@@ -56,7 +56,7 @@ def get_video_and_keep(video_id: str):
 
 
 @app.get("/api/unkeep/{video_id}")
-def get_video_and_keep(video_id: str):
+def unkeep_video(video_id: str):
     unkeep(video_id)
     return {"text": "Downloading video!"}
 
