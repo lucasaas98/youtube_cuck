@@ -1,9 +1,5 @@
 var player = document.getElementById('video_player');
 
-player.addEventListener('keydown', (event) => {
-    event.stopPropagation();
-});
-
 window.onload = function () {
     window.onkeydown = function (gfg) {
         gfg.preventDefault();
