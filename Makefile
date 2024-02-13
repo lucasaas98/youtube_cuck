@@ -3,9 +3,9 @@ SHELL=/bin/bash
 # dev
 deps:
 	echo "Installing backend dependencies"
-	cd backend && python3 -m venv .venv && source .venv/bin/activate && pip3 install -r requirements.txt
+	cd backend && python3 -m venv .venv && source .venv/bin/activate && pip3 install --upgrade -r requirements.txt
 	echo "Installing frontend dependencies"
-	cd frontend && python3 -m venv .venv && source .venv/bin/activate && pip3 install -r requirements.txt
+	cd frontend && python3 -m venv .venv && source .venv/bin/activate && pip3 install --upgrade -r requirements.txt
 
 autogen-migration:
 	cd backend && source .venv/bin/activate && ENV_FILE=.dev.env alembic revision --autogenerate -m '$(message)'
@@ -38,6 +38,12 @@ run-dev-backend:
 
 run-dev-frontend:
 	cd frontend && source .venv/bin/activate && ENV_FILE=.dev.env uvicorn frontend.main:app --host 0.0.0.0 --port 11013 --reload
+
+run-migrate-backend:
+	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env uvicorn backend.server:app --host 0.0.0.0 --port 11014 --reload
+
+run-migrate-frontend:
+	cd frontend && source .venv/bin/activate && ENV_FILE=.migrate.env uvicorn frontend.main:app --host 0.0.0.0 --port 11013 --reload
 
 stop-dev:
 	docker compose -f docker-compose.dev.yml down 
