@@ -6,7 +6,7 @@
         <title>Youtube Cuck</title>
         <meta name="description" content="Bootleg Garbagio Youtube">
         <meta name="author" content="Repi Gamer">
-        <link rel="shortcut icon" href="static/favicon.ico">
+        <link rel="shortcut icon" href="../static/favicon.ico">
         <link rel="stylesheet" href="../static/yt_cuck.css">
     </head>
     <body>
@@ -59,6 +59,7 @@
                                         width: 360px;
                                         height: 200px;
                                         position: relative">
+                                {% if loop.index <= 9 %}<div class="video-number">{{ loop.index }}</div>{% endif %}
                                 <div class="video-duration" style="left: 10px;">{{ row['size'] }}</div>
                                 <div class="progress-bar">
                                     <div class="progress-fill"
@@ -119,5 +120,6 @@
         </ul>
         <script src="../static/add_channel_modal.js"></script>
         <script src="../static/refresh_rss.js"></script>
+        <script src="../static/keyboard_controls.js"></script>
     </body>
 </html>

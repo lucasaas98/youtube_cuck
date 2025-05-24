@@ -25,6 +25,7 @@ from frontend.utils import (
     get_rss_feed,
     is_valid_url,
     keep_video_request,
+    log_decorator,
     prepare_for_template,
     prepare_for_watch,
     ready_up_request,
@@ -37,6 +38,7 @@ templates = Jinja2Templates(directory="frontend/templates")
 app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
 
+@log_decorator
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     data = get_recent_videos(0)
@@ -56,6 +58,7 @@ async def index(request: Request):
     )
 
 
+@log_decorator
 @app.get("/shorts", response_class=HTMLResponse)
 async def get_shorts(request: Request):
     data = get_recent_shorts(0)
@@ -75,6 +78,7 @@ async def get_shorts(request: Request):
     )
 
 
+@log_decorator
 @app.get("/page/{page}", response_class=HTMLResponse)
 async def next_page(page, request: Request):
     videos = get_recent_videos(page)
@@ -94,6 +98,7 @@ async def next_page(page, request: Request):
     )
 
 
+@log_decorator
 @app.get("/video/{identifier}", response_class=HTMLResponse)
 async def video_watch(request: Request, identifier: str):
     video = get_video_by_id(identifier)
@@ -105,6 +110,20 @@ async def video_watch(request: Request, identifier: str):
     )
 
 
+@log_decorator
+@app.get("/push_{key}", response_class=HTMLResponse)
+async def push_to_watch(request: Request, key: str):
+    key_number = int(key)
+    video = get_recent_videos(0)[key_number - 1]
+    data = prepare_for_watch(video)
+
+    return templates.TemplateResponse(
+        "cuck_video.html",
+        {"request": request, "data": data, "length": len(data["description"])},
+    )
+
+
+@log_decorator
 @app.get("/channel/{channel_name}", response_class=HTMLResponse)
 async def channel_video_watch(request: Request, channel_name: str):
     data = get_channel_videos(channel_name)
@@ -118,6 +137,7 @@ async def channel_video_watch(request: Request, channel_name: str):
     )
 
 
+@log_decorator
 @app.get("/subs", response_class=HTMLResponse)
 async def get_subs(request: Request):
     data = get_all_channels()
@@ -131,6 +151,7 @@ async def get_subs(request: Request):
     )
 
 
+@log_decorator
 @app.post("/add", status_code=200)
 async def add_channel(
     channel_name: Annotated[str, Form()],
@@ -159,6 +180,7 @@ async def add_channel(
         }
 
 
+@log_decorator
 @app.get("/most_recent_video", response_class=HTMLResponse)
 async def most_recent_video_watch(request: Request):
     video = get_video_by_id(most_recent_video().vid_id)
@@ -170,6 +192,7 @@ async def most_recent_video_watch(request: Request):
     )
 
 
+@log_decorator
 @app.get("/most_recent_videos", response_class=HTMLResponse)
 async def most_recent_videos_page(request: Request):
     data = most_recent_videos()
@@ -190,6 +213,7 @@ async def most_recent_videos_page(request: Request):
     )
 
 
+@log_decorator
 @app.get("/keep/{video_id}")
 async def keep_video(video_id: str):
     t1 = threading.Thread(target=keep_video_request, args=[video_id])
@@ -197,6 +221,7 @@ async def keep_video(video_id: str):
     return {"text": "Video kept!"}
 
 
+@log_decorator
 @app.get("/unkeep/{video_id}")
 async def unkeep_video(video_id: str):
     t1 = threading.Thread(target=unkeep_video_request, args=[video_id])
@@ -204,6 +229,7 @@ async def unkeep_video(video_id: str):
     return {"text": "Video unkept!"}
 
 
+@log_decorator
 @app.post("/refresh_rss", status_code=200)
 async def refresh_rss():
     get_rss_feed()
@@ -211,6 +237,7 @@ async def refresh_rss():
     return {"text": "True"}
 
 
+@log_decorator
 @app.post("/save_progress")
 async def save_progress(progress: Progress):
     update_video_progress(progress.id, progress.time)
@@ -218,6 +245,7 @@ async def save_progress(progress: Progress):
     return {"message": "Progress updated"}
 
 
+@log_decorator
 @app.on_event("startup")
 async def ready_up_server():
     t1 = threading.Thread(target=ready_up_request)
