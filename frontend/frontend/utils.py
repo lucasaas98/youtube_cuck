@@ -1,6 +1,7 @@
 import datetime
 import logging as _logging
 import threading
+import functools
 
 import feedparser
 import opml
@@ -14,35 +15,51 @@ logger = logging.getLogger(__name__)
 logger.setLevel(_logging.INFO)
 
 
+def log_decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        logger.info(f'Entering function {func.__name__}')
+        result = func(*args, **kwargs)
+        logger.info(f'Exiting function {func.__name__}')
+        return result
+    return wrapper
+
+
 class Progress(BaseModel):
     time: float
     id: str
 
 
+@log_decorator
 def get_rss_feed():
     t1 = threading.Thread(target=send_request_rss)
     t1.start()
     return True, t1
 
 
+@log_decorator
 def send_request_rss():
     return requests.post(f"http://{BACKEND_URL}:{BACKEND_PORT}/api/refresh_rss")
 
 
+@log_decorator
 def ready_up_request():
     return requests.post(f"http://{BACKEND_URL}:{BACKEND_PORT}/api/startup")
 
 
+@log_decorator
 def keep_video_request(video_id):
     return requests.get(
         f"http://{BACKEND_URL}:{BACKEND_PORT}/api/fetch_and_keep/{video_id}"
     )
 
 
+@log_decorator
 def unkeep_video_request(video_id):
     return requests.get(f"http://{BACKEND_URL}:{BACKEND_PORT}/api/unkeep/{video_id}")
 
 
+@log_decorator
 def get_queue_size():
     data = requests.get(
         f"http://{BACKEND_URL}:{BACKEND_PORT}/api/working_threads"
@@ -50,10 +67,12 @@ def get_queue_size():
     return (data["size"], data["still_fetching"])
 
 
+@log_decorator
 def place_value(number):
     return "{:,}".format(number)
 
 
+@log_decorator
 def get_all_channels():
     data = open(f"{DATA_FOLDER}/subscription_manager", "r")
 
@@ -66,6 +85,7 @@ def get_all_channels():
     return all_channels
 
 
+@log_decorator
 def is_valid_url(feed_url):
     video_feed = None
     video_feed = feedparser.parse(feed_url)
@@ -75,6 +95,7 @@ def is_valid_url(feed_url):
         return False
 
 
+@log_decorator
 def progress_percentage(video):
     return (
         (video.progress_seconds / video.size * 100)
@@ -83,10 +104,12 @@ def progress_percentage(video):
     )
 
 
+@log_decorator
 def format_video_size(video):
     return str(datetime.timedelta(seconds=video.size)) if video.size else ""
 
 
+@log_decorator
 def prepare_for_template(video, main_page=False):
     is_live_without_video = video.vid_path == "NA" and video.livestream
 
@@ -116,6 +139,7 @@ def prepare_for_template(video, main_page=False):
     }
 
 
+@log_decorator
 def prepare_for_watch(video):
     is_live_without_video = video.vid_path == "NA" and video.livestream
 

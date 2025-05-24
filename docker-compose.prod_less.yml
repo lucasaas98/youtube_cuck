@@ -1,0 +1,76 @@
+services:
+    yt_nginx_less_good:
+        container_name: yt_nginx_less_good
+        restart: unless-stopped
+        build:
+            context: ./nginx_server
+            args:
+                - SERVER_IP=yt_frontend_less_good
+                - PORT=5010
+        ports:
+            - 66066:80
+        expose:
+            - 80
+        volumes:
+            - /youtube/cuck_less_good/data:/data
+        networks:
+            - cuck_less_good
+        depends_on:
+            - yt_frontend_less_good
+            - yt_backend_less_good
+
+    yt_mysql_less_good:
+        container_name: yt_mysql_less_good
+        image: mysql:latest
+        restart: unless-stopped
+        ports:
+            - 4408:3306
+        expose:
+            - 3306
+        cap_add:
+            - SYS_NICE
+        environment:
+            MYSQL_DATABASE: youtube_cuck_less_good
+            MYSQL_ROOT_PASSWORD: password123
+        volumes:
+            - /youtube/cuck_less_good/mysql:/var/lib/mysql
+        networks:
+            - cuck_less_good
+
+    yt_frontend_less_good:
+        container_name: yt_frontend_less_good
+        restart: unless-stopped
+        build: ./frontend
+        ports:
+            - 6121:5010
+        expose:
+            - 5010
+        environment:
+            ENV_FILE: .prod_less.env
+        volumes:
+            - /youtube/cuck_less_good/data:/data
+        networks:
+            - cuck_less_good
+        depends_on:
+            - yt_mysql_less_good
+            - yt_backend_less_good
+
+    yt_backend_less_good:
+        container_name: yt_backend_less_good
+        restart: unless-stopped
+        build: ./backend
+        ports:
+            - 6131:5020
+        expose:
+            - 5020
+        environment:
+            ENV_FILE: .prod_less.env
+        volumes:
+            - /youtube/cuck_less_good/data:/data
+        networks:
+            - cuck_less_good
+        depends_on:
+            - yt_mysql_less_good
+
+networks:
+    cuck_less_good:

@@ -6,6 +6,8 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from subprocess import DEVNULL, check_output
 from time import time
+import functools
+import random
 
 import dateutil.parser as date_parser
 import feedparser
@@ -35,10 +37,20 @@ from backend.repo import (
 logger = logging.getLogger(__name__)
 logger.setLevel(_logging.INFO)
 
-video_executor = ThreadPoolExecutor(max_workers=4)
+video_executor = ThreadPoolExecutor(max_workers=1)
 update_count_executor = ThreadPoolExecutor(max_workers=32)
 
+def log_decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        logger.info(f'Entering function {func.__name__}')
+        result = func(*args, **kwargs)
+        logger.info(f'Exiting function {func.__name__}')
+        return result
+    return wrapper
 
+
+@log_decorator
 def get_rss_data():
     """
     Parse the OPML file containing YouTube channel subscriptions and fetch channel data.
@@ -62,6 +74,7 @@ def get_rss_data():
     return all_channels
 
 
+@log_decorator
 def remove_old_videos():
     """
     Remove old videos and their thumbnails based on the REMOVAL_DELAY value.
@@ -93,6 +106,7 @@ def remove_old_videos():
         expire_video(expired_video.id)
 
 
+@log_decorator
 def get_rss_feed():
     """
     Update the RSS feed data, fetch new data, and start a new thread to download the videos.
@@ -111,6 +125,7 @@ def get_rss_feed():
     return thread
 
 
+@log_decorator
 def get_channel_data(channel):
     """
     Fetch video data from a channel using the feedparser library.
@@ -147,6 +162,7 @@ def get_channel_data(channel):
     return channel_data, channel.title
 
 
+@log_decorator
 def get_video():
     """
     Download videos from the channels based on the DELAY value.
@@ -181,6 +197,7 @@ def get_video():
         logger.info("Videos Downloaded!")
 
 
+@log_decorator
 def video_type(video_info):
     """
     Determines the type of video based on its information.
@@ -202,6 +219,7 @@ def video_type(video_info):
         return "regular video"
 
 
+@log_decorator
 def extract_video_info(video_url):
     """
     Extracts video information from a given YouTube video URL using the youtube-dl library.
@@ -213,11 +231,10 @@ def extract_video_info(video_url):
         tuple: A tuple containing a boolean indicating whether the extraction was successful and the extracted video information.
                If the extraction was unsuccessful, the boolean value will be False and the video information will be None.
     """
-
-    ydl_opts = {}
+    options = {}
 
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        with yt_dlp.YoutubeDL(options) as ydl:
             video_info = ydl.extract_info(video_url, download=False)
             return video_info
     except DownloadError as error:
@@ -225,6 +242,7 @@ def extract_video_info(video_url):
         return None
 
 
+@log_decorator
 def video_download_thread(video, channel):
     """
     Download a video and its thumbnail based on the video type and update the database.
@@ -259,7 +277,7 @@ def video_download_thread(video, channel):
             file_name = video["video_url"].split("=")[1]
 
             download_video(video["video_url"], file_name)
-
+            
             now = int(time())
 
             if not confirm_video_name(file_name):
@@ -308,6 +326,7 @@ def video_download_thread(video, channel):
         )
 
 
+@log_decorator
 def confirm_video_name(filename):
     path = f"{DATA_FOLDER}/videos/{filename}.mp4"
     if os.path.exists(path):
@@ -320,16 +339,19 @@ def confirm_video_name(filename):
         return False
 
 
+@log_decorator
 def download_thumbnail(url, filename):
     r = requests.get(url)
     with open(f"{DATA_FOLDER}/thumbnails/{filename}", "wb") as f:
         f.write(r.content)
 
 
+@log_decorator
 def get_queue_size():
     return video_executor._work_queue.qsize()
 
 
+@log_decorator
 def download_old_livestreams():
     """
     Downloads old livestreams and their thumbnails and updates the database.
@@ -356,6 +378,7 @@ def download_old_livestreams():
     logger.info("Download of old livestreams complete.")
 
 
+@log_decorator
 def livestream_download_thread(video):
     """
     Download a livestream and its thumbnail and update the database.
@@ -399,28 +422,30 @@ def livestream_download_thread(video):
             )
 
 
-def update_size_for_old_videos():
-    """
-    TEMP: because we added the size column to the database, we need to update the size column for all videos
-    """
-    logger.info("Updating size for old videos")
-    all_videos = get_all_videos()
-    for video in [x[0] for x in all_videos]:
-        try:
-            video_size = get_video_size(video.vid_path)
-            with session_scope() as session:
-                session.query(YoutubeVideo).filter(YoutubeVideo.id == video.id).update(
-                    {"size": video_size}
-                )
-                session.commit()
-            logger.info(f"Video size for {video.title} was updated with {video_size}s")
-        except Exception as error:
-            logger.error(
-                f"Failed to update size for video {video.title} at path {video.vid_path}",
-                error,
-            )
+# @log_decorator
+# def update_size_for_old_videos():
+#     """
+#     TEMP: because we added the size column to the database, we need to update the size column for all videos
+#     """
+#     logger.info("Updating size for old videos")
+#     all_videos = get_all_videos()
+#     for video in [x[0] for x in all_videos]:
+#         try:
+#             video_size = get_video_size(video.vid_path)
+#             with session_scope() as session:
+#                 session.query(YoutubeVideo).filter(YoutubeVideo.id == video.id).update(
+#                     {"size": video_size}
+#                 )
+#                 session.commit()
+#             logger.info(f"Video size for {video.title} was updated with {video_size}s")
+#         except Exception as error:
+#             logger.error(
+#                 f"Failed to update size for video {video.title} at path {video.vid_path}",
+#                 error,
+#             )
 
 
+@log_decorator
 def get_video_size(video_path):
     output = check_output(
         f"ffprobe {DATA_FOLDER}/videos/{video_path} -show_format",
@@ -432,14 +457,32 @@ def get_video_size(video_path):
     return int(float(output.split("duration=")[1].split("\n")[0]))
 
 
+@log_decorator
 def download_video(url, filename):
+    user_agents = [
+        "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.3",
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.",
+        "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Mobile Safari/537.3",
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 16_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.2 Mobile/15E148 Safari/604.",
+        "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.3",
+        "Mozilla/5.0 (Linux; Android 10; MAR-LX1A) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.0.0 Mobile Safari/537.3",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 OPR/106.0.0.",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.3",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.6",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.3",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.",
+    ]
+
     options = {
         "format": "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]",
         "outtmpl": f"{DATA_FOLDER}/videos/{filename}.mp4",
         "quiet": True,
         "overwrites": True,
-        "noprogress": True,
+        "noprogress": True
     }
+
+    yt_dlp.utils.std_headers['User-Agent'] = random.choice(user_agents)
 
     try:
         with yt_dlp.YoutubeDL(options) as ydl:
@@ -452,6 +495,7 @@ def download_video(url, filename):
         )
 
 
+@log_decorator
 def download_and_keep(video_id):
     """
     Download an old video and keep it forever.
@@ -500,6 +544,7 @@ def download_and_keep(video_id):
             )
 
 
+@log_decorator
 def unkeep(video_id):
     with session_scope() as session:
         try:

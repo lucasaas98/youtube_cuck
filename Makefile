@@ -116,3 +116,78 @@ deploy:
 	$(MAKE) run-prod-db
 	$(MAKE) build-prod
 	$(MAKE) run-prod
+
+# prod_less
+build-prod-less:
+	docker compose -f docker-compose.prod_less.yml build yt_frontend_less_good yt_backend_less_good
+	$(MAKE) build-prod-nginx-less
+
+build-prod-nginx-less:
+	SERVER_IP=yt_frontend_less_good docker compose -f docker-compose.prod_less.yml build yt_nginx_less_good
+
+run-prod-nginx-less:
+	docker compose -f docker-compose.prod_less.yml up -d yt_nginx_less_good
+
+run-prod-less:
+	docker compose -f docker-compose.prod_less.yml up -d yt_backend_less_good yt_frontend_less_good yt_nginx_less_good
+
+migrate-prod-less:
+	echo "Migrating to last version"
+	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env alembic upgrade head 
+
+run-prod-db-less:
+	docker compose -f docker-compose.prod_less.yml up -d yt_mysql_less_good
+	sleep 10
+	$(MAKE) migrate-prod-less
+
+stop-prod-less:
+	docker compose -f docker-compose.prod_less.yml down
+
+shell-prod-less:
+	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env python3
+
+deploy-less:
+	$(MAKE) stop-prod-less
+	$(MAKE) run-prod-db-less
+	$(MAKE) build-prod-less
+	$(MAKE) run-prod-less
+
+# prod_vpn
+build-prod-vpn:
+	docker compose -f docker-compose.prod_vpn.yml build yt_frontend yt_backend
+	$(MAKE) build-prod-nginx-vpn
+
+build-prod-nginx-vpn:
+	SERVER_IP=yt_frontend_vpn_good docker compose -f docker-compose.prod_vpn.yml build yt_nginx
+
+run-prod-nginx-vpn:
+	docker compose -f docker-compose.prod_vpn.yml up -d yt_nginx
+
+run-prod-vpn:
+	docker compose -f docker-compose.prod_vpn.yml up -d yt_backend yt_frontend yt_nginx
+
+migrate-prod-vpn:
+	echo "Migrating to last version"
+	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env alembic upgrade head 
+
+run-prod-db-vpn:
+	docker compose -f docker-compose.prod_vpn.yml up -d yt_mysql
+	sleep 10
+	$(MAKE) migrate-prod-vpn
+
+stop-prod-vpn:
+	docker compose -f docker-compose.prod_vpn.yml down
+
+shell-prod-vpn:
+	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env python3
+
+rebuild-frontend:
+	docker compose -f docker-compose.prod_vpn.yml down yt_frontend
+	docker compose -f docker-compose.prod_vpn.yml build yt_frontend
+	docker compose -f docker-compose.prod_vpn.yml up -d yt_frontend
+
+deploy-vpn:
+	$(MAKE) stop-prod-vpn
+	$(MAKE) run-prod-db-vpn
+	$(MAKE) build-prod-vpn
+	$(MAKE) run-prod-vpn
