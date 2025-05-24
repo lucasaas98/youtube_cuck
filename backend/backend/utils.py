@@ -23,7 +23,6 @@ from backend.logging import logging
 from backend.models import YoutubeVideo
 from backend.repo import (
     expire_video,
-    get_all_videos,
     get_downloaded_video_urls,
     get_expired_videos,
     get_json,
@@ -422,29 +421,6 @@ def livestream_download_thread(video):
                 "Failed to update the Youtube Livestream",
                 error,
             )
-
-
-# @log_decorator
-# def update_size_for_old_videos():
-#     """
-#     TEMP: because we added the size column to the database, we need to update the size column for all videos
-#     """
-#     logger.info("Updating size for old videos")
-#     all_videos = get_all_videos()
-#     for video in [x[0] for x in all_videos]:
-#         try:
-#             video_size = get_video_size(video.vid_path)
-#             with session_scope() as session:
-#                 session.query(YoutubeVideo).filter(YoutubeVideo.id == video.id).update(
-#                     {"size": video_size}
-#                 )
-#                 session.commit()
-#             logger.info(f"Video size for {video.title} was updated with {video_size}s")
-#         except Exception as error:
-#             logger.error(
-#                 f"Failed to update size for video {video.title} at path {video.vid_path}",
-#                 error,
-#             )
 
 
 @log_decorator

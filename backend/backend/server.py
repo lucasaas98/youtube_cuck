@@ -1,5 +1,4 @@
 import atexit
-import datetime
 import logging as _logging
 
 import uvicorn
@@ -9,7 +8,7 @@ from fastapi import FastAPI
 from backend.engine import close_engine
 from backend.env_vars import PORT
 from backend.logging import logging
-from backend.utils import (  # update_size_for_old_videos,
+from backend.utils import (
     download_and_keep,
     download_old_livestreams,
     get_queue_size,
