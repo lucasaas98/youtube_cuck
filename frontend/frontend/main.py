@@ -25,11 +25,11 @@ from frontend.utils import (
     get_rss_feed,
     is_valid_url,
     keep_video_request,
+    log_decorator,
     prepare_for_template,
     prepare_for_watch,
     ready_up_request,
     unkeep_video_request,
-    log_decorator,
 )
 
 app = FastAPI()
@@ -109,11 +109,12 @@ async def video_watch(request: Request, identifier: str):
         {"request": request, "data": data, "length": len(data["description"])},
     )
 
+
 @log_decorator
 @app.get("/push_{key}", response_class=HTMLResponse)
 async def push_to_watch(request: Request, key: str):
     key_number = int(key)
-    video = get_recent_videos(0)[key_number-1]
+    video = get_recent_videos(0)[key_number - 1]
     data = prepare_for_watch(video)
 
     return templates.TemplateResponse(

@@ -59,9 +59,7 @@
                                         width: 360px;
                                         height: 200px;
                                         position: relative">
-                                {% if loop.index <= 9 %}
-                                <div class="video-number">{{ loop.index }}</div>
-                                {% endif %}
+                                {% if loop.index <= 9 %}<div class="video-number">{{ loop.index }}</div>{% endif %}
                                 <div class="video-duration" style="left: 10px;">{{ row['size'] }}</div>
                                 <div class="progress-bar">
                                     <div class="progress-fill"

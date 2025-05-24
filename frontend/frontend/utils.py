@@ -1,7 +1,7 @@
 import datetime
+import functools
 import logging as _logging
 import threading
-import functools
 
 import feedparser
 import opml
@@ -18,10 +18,11 @@ logger.setLevel(_logging.INFO)
 def log_decorator(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        logger.info(f'Entering function {func.__name__}')
+        logger.info(f"Entering function {func.__name__}")
         result = func(*args, **kwargs)
-        logger.info(f'Exiting function {func.__name__}')
+        logger.info(f"Exiting function {func.__name__}")
         return result
+
     return wrapper
 
 

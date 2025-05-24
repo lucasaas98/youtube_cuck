@@ -1,13 +1,13 @@
+import functools
 import json
 import logging as _logging
 import os
+import random
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from subprocess import DEVNULL, check_output
 from time import time
-import functools
-import random
 
 import dateutil.parser as date_parser
 import feedparser
@@ -40,13 +40,15 @@ logger.setLevel(_logging.INFO)
 video_executor = ThreadPoolExecutor(max_workers=1)
 update_count_executor = ThreadPoolExecutor(max_workers=32)
 
+
 def log_decorator(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        logger.info(f'Entering function {func.__name__}')
+        logger.info(f"Entering function {func.__name__}")
         result = func(*args, **kwargs)
-        logger.info(f'Exiting function {func.__name__}')
+        logger.info(f"Exiting function {func.__name__}")
         return result
+
     return wrapper
 
 
@@ -277,7 +279,7 @@ def video_download_thread(video, channel):
             file_name = video["video_url"].split("=")[1]
 
             download_video(video["video_url"], file_name)
-            
+
             now = int(time())
 
             if not confirm_video_name(file_name):
@@ -479,10 +481,10 @@ def download_video(url, filename):
         "outtmpl": f"{DATA_FOLDER}/videos/{filename}.mp4",
         "quiet": True,
         "overwrites": True,
-        "noprogress": True
+        "noprogress": True,
     }
 
-    yt_dlp.utils.std_headers['User-Agent'] = random.choice(user_agents)
+    yt_dlp.utils.std_headers["User-Agent"] = random.choice(user_agents)
 
     try:
         with yt_dlp.YoutubeDL(options) as ydl:

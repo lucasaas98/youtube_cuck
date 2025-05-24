@@ -1,6 +1,6 @@
 import atexit
-import logging as _logging
 import datetime
+import logging as _logging
 
 import uvicorn
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -9,15 +9,14 @@ from fastapi import FastAPI
 from backend.engine import close_engine
 from backend.env_vars import PORT
 from backend.logging import logging
-from backend.utils import (
+from backend.utils import (  # update_size_for_old_videos,
     download_and_keep,
     download_old_livestreams,
     get_queue_size,
     get_rss_feed,
+    log_decorator,
     remove_old_videos,
     unkeep,
-    # update_size_for_old_videos,
-    log_decorator,
 )
 
 logger = logging.getLogger(__name__)
