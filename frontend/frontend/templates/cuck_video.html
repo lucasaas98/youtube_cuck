@@ -3,6 +3,7 @@
     <head>
         <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
         <meta content="utf-8" http-equiv="encoding">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Youtube Cuck</title>
         <meta name="description" content="Bootleg Garbagio Youtube">
         <meta name="author" content="Repi Gamer">
@@ -11,36 +12,43 @@
     </head>
     <body style="background-color:#1E1F1C;">
         <ul class="nav_bar">
-            <li>
-                <a {% if request.url.path.endswith('/') %}class="active"{% endif %}
-                   href="../">Home</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('shorts') %}class="active"{% endif %}
-                   href="../shorts">Shorts</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('most_recent_video') %}class="active"{% endif %}
-                   href="../most_recent_video">Continue</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('most_recent_videos') %}class="active"{% endif %}
-                   href="../most_recent_videos">History</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('subs') %}class="active"{% endif %}
-                   href="../subs">Subscriptions</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
-                   href="../playlist">Playlists</a>
-            </li>
-            <li class="right">
-                <a id="add">Add Channel</a>
-            </li>
+            <button class="hamburger" id="hamburger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="nav-menu">
+                <li>
+                    <a {% if request.url.path.endswith('/') %}class="active"{% endif %}
+                       href="../">Home</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('shorts') %}class="active"{% endif %}
+                       href="../shorts">Shorts</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('most_recent_video') %}class="active"{% endif %}
+                       href="../most_recent_video">Continue</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('most_recent_videos') %}class="active"{% endif %}
+                       href="../most_recent_videos">History</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('subs') %}class="active"{% endif %}
+                       href="../subs">Subscriptions</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
+                       href="../playlist">Playlists</a>
+                </li>
+                <li class="right">
+                    <a id="add">Add Channel</a>
+                </li>
+            </div>
         </ul>
-        <div class="viewer">
-            <video id="video_player" width="{{ data['player_width'] }}%" controls>
+        <div class="viewer{% if data['is_short'] %} shorts{% endif %}">
+            <video id="video_player" controls preload="metadata" playsinline>
                 <source src="../videos/{{ data['vid_path'] }}" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
@@ -48,14 +56,19 @@
         <div class="div_info">
             <div class="info">
                 <h2 class="title">{{ data['title'] }}</h2>
-                <p class="views">{{ data['views'] }} views</p>
-                <label class="container">
-                    Keep
-                    <input type="checkbox"
-                           {% if data['keep'] %}checked='1'{% endif %}
-                           onclick="handleKeep(this, {{ data['video_id'] }});">
-                    <span class="checkmark"></span>
-                </label>
+                <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; width: 100%;">
+                    <p class="views">{{ data['views'] }} views</p>
+                    <label class="container">
+                        Keep
+                        <input type="checkbox"
+                               {% if data['keep'] %}checked='1'{% endif %}
+                               onclick="handleKeep(this, {{ data['video_id'] }});">
+                        <span class="checkmark"></span>
+                    </label>
+                    <button id="add-to-playlist-btn">
+                        Add to Playlist
+                    </button>
+                </div>
             </div>
             <div class="info">
                 <h4 class="channel_name">
@@ -64,7 +77,7 @@
                 <p class="date">{{ data['date'] }}</p>
             </div>
             <div class="info">
-                <div class="description">
+                <div class="description" id="description-content">
                     {% for i in range(0, length) %}
                         {{ data['description'][i] }}
                         <br>
@@ -88,10 +101,273 @@
                 </form>
             </div>
         </div>
+
+        <!-- Add to Playlist Modal -->
+        <div id="playlistModal" class="modal" style="z-index: 1000;">
+            <div class="modal-content" style="background-color: #2a2a2a; border: 2px solid #555; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                <span class="close" id="closePlaylistModal" style="color: #ccc; font-size: 32px; font-weight: bold; cursor: pointer; float: right; line-height: 1;">&times;</span>
+                <h3 style="color: white; margin-bottom: 20px; clear: both;">Add to Playlist</h3>
+                <div id="playlist-list" style="margin: 20px 0;">
+                    <!-- Playlists will be loaded here -->
+                </div>
+                <hr style="margin: 20px 0; border-color: #555; border-style: solid; border-width: 1px 0 0 0;">
+                <h4 style="color: white; margin-bottom: 15px;">Create New Playlist</h4>
+                <form id="create_playlist_form">
+                    <input type="text" id="new_playlist_name" name="playlist_name" placeholder="Playlist name" style="width: 100%; padding: 12px; margin: 10px 0; background-color: #333; border: 2px solid #555; color: white; border-radius: 4px; font-size: 14px; box-sizing: border-box; outline: none;" autocomplete="off">
+                    <input type="submit" value="Create & Add" style="background-color: #555; color: white; border: none; padding: 12px 20px; cursor: pointer; border-radius: 4px; font-size: 14px; margin-top: 10px; transition: background-color 0.2s;">
+                </form>
+                <style>
+                    #new_playlist_name:focus, #manual_playlist_name:focus {
+                        border-color: #777 !important;
+                        background-color: #444 !important;
+                    }
+                    #create_playlist_form input[type="submit"]:hover {
+                        background-color: #666 !important;
+                    }
+                </style>
+            </div>
+        </div>
+
+        <style>
+            /* Focus trap and modal improvements */
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(0, 0, 0, 0.6);
+            }
+
+            .modal input[type="text"] {
+                outline: none !important;
+                border: 2px solid #555 !important;
+                transition: border-color 0.2s !important;
+            }
+
+            .modal input[type="text"]:focus {
+                border-color: #888 !important;
+                background-color: #444 !important;
+            }
+        </style>
         <script src="../static/add_channel_modal.js"></script>
         <script src="../static/video_player.js"></script>
         <script src="../static/keep.js"></script>
         <script src="../static/keyboard_controls.js"></script>
+        <script src="../static/hamburger_menu.js"></script>
+
+        <script>
+            // Playlist functionality
+            var playlistModal = document.getElementById("playlistModal");
+            var addToPlaylistBtn = document.getElementById("add-to-playlist-btn");
+            var closePlaylistModal = document.getElementById("closePlaylistModal");
+            var currentVideoId = "{{ data['id'] }}";
+
+            addToPlaylistBtn.onclick = function() {
+                loadPlaylists();
+                playlistModal.style.display = "block";
+                // Focus on the first input when modal opens
+                setTimeout(function() {
+                    var firstInput = playlistModal.querySelector('input[type="text"]');
+                    if (firstInput) {
+                        firstInput.focus();
+                        firstInput.select();
+                    }
+                }, 200);
+            };
+
+            closePlaylistModal.onclick = function() {
+                playlistModal.style.display = "none";
+            };
+
+            window.onclick = function(event) {
+                if (event.target == playlistModal) {
+                    playlistModal.style.display = "none";
+                }
+            };
+
+            // Handle Escape key to close modal
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && playlistModal.style.display === 'block') {
+                    playlistModal.style.display = "none";
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
+            });
+
+            // Prevent event bubbling on all modal interactions
+            playlistModal.addEventListener('keydown', function(event) {
+                event.stopPropagation();
+            });
+
+            playlistModal.addEventListener('keypress', function(event) {
+                event.stopPropagation();
+            });
+
+            playlistModal.addEventListener('keyup', function(event) {
+                event.stopPropagation();
+            });
+
+            function loadPlaylists() {
+                var playlistList = document.getElementById('playlist-list');
+                playlistList.innerHTML = '<p style="color: white; margin-bottom: 15px;">Loading playlists...</p>';
+
+                // Fetch existing playlists from the API
+                fetch('../api/playlists')
+                    .then(response => response.json())
+                    .then(data => {
+                        let html = '<p style="color: white; margin-bottom: 15px;">Select a playlist to add this video to:</p>';
+
+                        if (data.playlists && data.playlists.length > 0) {
+                            html += '<div style="margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; max-height: 300px; overflow-y: auto;">';
+                            data.playlists.forEach(playlist => {
+                                html += `<button onclick="addVideoToPlaylist('${playlist.name.replace(/'/g, "\\'")}')" style="padding: 12px; background-color: #444; color: white; border: 2px solid #555; cursor: pointer; border-radius: 4px; font-size: 14px; transition: background-color 0.2s; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" onmouseover="this.style.backgroundColor='#555'" onmouseout="this.style.backgroundColor='#444'">${playlist.name}</button>`;
+                            });
+                            html += '</div>';
+                        } else {
+                            html += '<p style="color: #888; margin-bottom: 15px; font-style: italic;">No playlists found. Create your first playlist below.</p>';
+                        }
+
+                        html += `
+                            <hr style="margin: 20px 0; border-color: #555; border-style: solid; border-width: 1px 0 0 0;">
+                            <h4 style="color: white; margin-bottom: 10px;">Or enter playlist name manually:</h4>
+                            <div style="margin: 10px 0; display: flex; gap: 10px; align-items: center;">
+                                <input type="text" id="manual_playlist_name" placeholder="Enter existing playlist name" style="flex: 1; padding: 12px; background-color: #333; border: 2px solid #555; color: white; border-radius: 4px; font-size: 14px; outline: none; box-sizing: border-box;" autocomplete="off">
+                                <button onclick="addToExistingPlaylist()" style="padding: 12px 20px; background-color: #555; color: white; border: none; cursor: pointer; border-radius: 4px; font-size: 14px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#666'" onmouseout="this.style.backgroundColor='#555'">Add</button>
+                            </div>
+                        `;
+
+                        playlistList.innerHTML = html;
+
+                        // Focus on the manual input field and add event listeners
+                        setTimeout(function() {
+                            var input = document.getElementById('manual_playlist_name');
+                            if (input) {
+                                input.addEventListener('keydown', function(e) {
+                                    e.stopPropagation();
+                                    if (e.key === 'Enter') {
+                                        addToExistingPlaylist();
+                                    }
+                                });
+                                input.addEventListener('keypress', function(e) {
+                                    e.stopPropagation();
+                                });
+                                input.addEventListener('keyup', function(e) {
+                                    e.stopPropagation();
+                                });
+                            }
+                        }, 200);
+                    })
+                    .catch(error => {
+                        console.error('Error loading playlists:', error);
+                        playlistList.innerHTML = `
+                            <p style="color: #ff6b6b; margin-bottom: 15px;">Error loading playlists. You can still enter a playlist name manually:</p>
+                            <div style="margin: 10px 0; display: flex; gap: 10px; align-items: center;">
+                                <input type="text" id="manual_playlist_name" placeholder="Enter existing playlist name" style="flex: 1; padding: 12px; background-color: #333; border: 2px solid #555; color: white; border-radius: 4px; font-size: 14px; outline: none; box-sizing: border-box;" autocomplete="off">
+                                <button onclick="addToExistingPlaylist()" style="padding: 12px 20px; background-color: #555; color: white; border: none; cursor: pointer; border-radius: 4px; font-size: 14px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#666'" onmouseout="this.style.backgroundColor='#555'">Add</button>
+                            </div>
+                        `;
+
+                        // Focus on the input field even if there's an error
+                        setTimeout(function() {
+                            var input = document.getElementById('manual_playlist_name');
+                            if (input) {
+                                input.focus();
+                                input.select();
+                                input.addEventListener('keydown', function(e) {
+                                    e.stopPropagation();
+                                    if (e.key === 'Enter') {
+                                        addToExistingPlaylist();
+                                    }
+                                });
+                                input.addEventListener('keypress', function(e) {
+                                    e.stopPropagation();
+                                });
+                                input.addEventListener('keyup', function(e) {
+                                    e.stopPropagation();
+                                });
+                            }
+                        }, 200);
+                    });
+            }
+
+            function addToExistingPlaylist() {
+                var playlistName = document.getElementById('manual_playlist_name').value;
+                if (!playlistName) {
+                    alert('Please enter a playlist name');
+                    return;
+                }
+                addVideoToPlaylist(playlistName);
+            }
+
+            function addVideoToPlaylist(playlistName) {
+                var formData = new FormData();
+                formData.append('video_id', currentVideoId);
+
+                fetch('../playlist/' + encodeURIComponent(playlistName) + '/add_video', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.text);
+                    playlistModal.style.display = "none";
+                })
+                .catch(error => {
+                    alert('Error adding video to playlist');
+                });
+            }
+
+            // Create new playlist form submission
+            document.getElementById('create_playlist_form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                var playlistName = document.getElementById('new_playlist_name').value;
+                if (!playlistName) {
+                    alert('Please enter a playlist name');
+                    return;
+                }
+
+                var formData = new FormData();
+                formData.append('playlist_name', playlistName);
+
+                fetch('../playlist/create', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.text.includes('successfully')) {
+                        // Playlist created, now add video to it
+                        addVideoToPlaylist(playlistName);
+                    } else {
+                        alert(data.text);
+                    }
+                })
+                .catch(error => {
+                    alert('Error creating playlist');
+                });
+            });
+
+            // Add event listener to new playlist name input
+            setTimeout(function() {
+                var newPlaylistInput = document.getElementById('new_playlist_name');
+                if (newPlaylistInput) {
+                    newPlaylistInput.addEventListener('keydown', function(e) {
+                        e.stopPropagation();
+                    });
+                    newPlaylistInput.addEventListener('keypress', function(e) {
+                        e.stopPropagation();
+                    });
+                    newPlaylistInput.addEventListener('keyup', function(e) {
+                        e.stopPropagation();
+                    });
+                }
+            }, 200);
+        </script>
+
         <!-- djlint:off --> <script>
             add_progress_listener("{{ data['id'] }}");
             start_at({{ data['progress'] }});

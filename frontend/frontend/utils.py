@@ -114,20 +114,18 @@ def format_video_size(video):
 def prepare_for_template(video, main_page=False):
     is_live_without_video = video.vid_path == "NA" and video.livestream
 
-    prefix = "../" if not main_page else ""
-
     vid_thumb_path = video.thumb_path if video.thumb_path else "NA"
 
     thumb_path = (
-        "thumbnails/" + vid_thumb_path
+        "/thumbnails/" + vid_thumb_path
         if not is_live_without_video
-        else "static/livestream-coming.png"
+        else "/static/livestream-coming.png"
     )
-    thumb_path = prefix + thumb_path
 
     return {
         "id": video.id,
         "vid_url": video.vid_url,
+        "vid_path": video.vid_path,
         "thumb_url": video.thumb_url,
         "thumb_path": thumb_path,
         "pub_date_human": video.pub_date_human,
@@ -160,6 +158,7 @@ def prepare_for_watch(video):
         "id": video.id,
         "progress": video.progress_seconds or 0,
         "player_width": "25" if video.short else "80",
+        "is_short": video.short,
         "keep": video.keep,
         "video_id": video.id,
     }

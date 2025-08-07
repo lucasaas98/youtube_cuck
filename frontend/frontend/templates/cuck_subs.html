@@ -3,6 +3,7 @@
     <head>
         <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
         <meta content="utf-8" http-equiv="encoding">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Youtube Cuck</title>
         <meta name="description" content="Bootleg Garbagio Youtube">
         <meta name="author" content="Repi Gamer">
@@ -11,35 +12,42 @@
     </head>
     <body>
         <ul class="nav_bar">
-            <li>
-                <a {% if request.url.path.endswith('/') %}class="active"{% endif %}
-                   href="../">Home</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('shorts') %}class="active"{% endif %}
-                   href="../shorts">Shorts</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('most_recent_video') %}class="active"{% endif %}
-                   href="../most_recent_video">Continue</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('most_recent_videos') %}class="active"{% endif %}
-                   href="../most_recent_videos">History</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('subs') %}class="active"{% endif %}
-                   href="../subs">Subscriptions</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
-                   href="../playlist">Playlists</a>
-            </li>
-            <li class="right">
-                <a id="add">Add Channel</a>
-            </li>
+            <button class="hamburger" id="hamburger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="nav-menu">
+                <li>
+                    <a {% if request.url.path.endswith('/') %}class="active"{% endif %}
+                       href="../">Home</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('shorts') %}class="active"{% endif %}
+                       href="../shorts">Shorts</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('most_recent_video') %}class="active"{% endif %}
+                       href="../most_recent_video">Continue</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('most_recent_videos') %}class="active"{% endif %}
+                       href="../most_recent_videos">History</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('subs') %}class="active"{% endif %}
+                       href="../subs">Subscriptions</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
+                       href="../playlist">Playlists</a>
+                </li>
+                <li class="right">
+                    <a id="add">Add Channel</a>
+                </li>
+            </div>
         </ul>
-        <div class="grid-container">
+        <div class="table-container">
             <table id="channels">
                 <tr>
                     <th>Channel Name</th>
@@ -47,13 +55,15 @@
                 </tr>
                 {% for row in data %}
                     <tr>
-                        <th>
+                        <td data-label="Channel Name">
                             <a class="channel" href="../channel/{{ row['title'] }}">{{ row['title'] }}</a>
-                        </th>
-                        <th>{{ row['id'] }}</th>
+                        </td>
+                        <td data-label="Channel ID">{{ row['id'] }}</td>
                     </tr>
                 {% endfor %}
             </table>
+        </div>
+        <div class="grid-container">
             <div id="myModal" class="modal">
                 <div class="modal-content">
                     <span class="close">&times;</span>
@@ -73,5 +83,6 @@
         </div>
         <script src="../static/add_channel_modal.js"></script>
         <script src="../static/keyboard_controls.js"></script>
+        <script src="../static/hamburger_menu.js"></script>
     </body>
 </html>

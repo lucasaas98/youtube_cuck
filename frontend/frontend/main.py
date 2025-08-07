@@ -2,20 +2,28 @@ import threading
 
 import uvicorn
 from fastapi import FastAPI, Form, Request, Response
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from typing_extensions import Annotated
+import os
 
 from frontend.env_vars import DATA_FOLDER, PORT
 from frontend.repo import (
+    add_video_to_playlist,
+    create_playlist,
+    delete_playlist,
+    get_all_playlists,
     get_channel_videos,
+    get_playlist_by_name,
+    get_playlist_videos,
     get_recent_shorts,
     get_recent_videos,
     get_rss_date,
     get_video_by_id,
     most_recent_video,
     most_recent_videos,
+    remove_video_from_playlist,
     update_video_progress,
 )
 from frontend.utils import (
@@ -243,6 +251,143 @@ async def save_progress(progress: Progress):
     update_video_progress(progress.id, progress.time)
 
     return {"message": "Progress updated"}
+
+
+@log_decorator
+@app.get("/download/{video_id}")
+async def download_video(video_id: str):
+    video = get_video_by_id(video_id)
+    if not video or not video.vid_path or video.vid_path == "NA":
+        return {"error": "Video not found or not downloaded"}, 404
+
+    video_file_path = os.path.join(DATA_FOLDER, "videos", video.vid_path)
+
+    if not os.path.exists(video_file_path):
+        return {"error": "Video file not found on disk"}, 404
+
+    # Clean filename for download
+    safe_filename = "".join(c for c in video.title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+    safe_filename = safe_filename[:100]  # Limit length
+    file_extension = os.path.splitext(video.vid_path)[1]
+    download_filename = f"{safe_filename}{file_extension}"
+
+    return FileResponse(
+        path=video_file_path,
+        filename=download_filename,
+        media_type='application/octet-stream'
+    )
+
+
+@log_decorator
+@app.get("/api/playlists")
+async def get_playlists_api():
+    playlists = get_all_playlists()
+    return {"playlists": [{"id": playlist.id, "name": playlist.name} for playlist in playlists]}
+
+
+@log_decorator
+@app.get("/playlist", response_class=HTMLResponse)
+async def get_playlists(request: Request):
+    playlists = get_all_playlists()
+    data = [(playlist.name, playlist.id) for playlist in playlists]
+    return templates.TemplateResponse(
+        "cuck_playlist.html", {"request": request, "data": data}
+    )
+
+
+@log_decorator
+@app.get("/playlist/{playlist_name}", response_class=HTMLResponse)
+async def get_playlist_videos_page(request: Request, playlist_name: str):
+    playlist = get_playlist_by_name(playlist_name)
+    if not playlist:
+        return templates.TemplateResponse(
+            "cuck_playlist.html", {"request": request, "data": [], "error": "Playlist not found"}
+        )
+
+    videos = get_playlist_videos(playlist_name)
+    video_data = []
+    for playlist_video, youtube_video in videos:
+        # Format view count
+        views_formatted = ""
+        if youtube_video.views:
+            views_count = youtube_video.views
+            if views_count >= 1000000:
+                views_formatted = f"{views_count / 1000000:.1f}M"
+            elif views_count >= 1000:
+                views_formatted = f"{views_count / 1000:.1f}K"
+            else:
+                views_formatted = str(views_count)
+
+        video_data.append({
+            "id": youtube_video.id,  # Internal ID for watch URL
+            "title": playlist_video.title,
+            "vid_url": playlist_video.vid_url,
+            "vid_path": playlist_video.vid_path,
+            "thumb_path": youtube_video.thumb_path,
+            "channel": youtube_video.channel,
+            "views": views_formatted,
+            "pub_date": youtube_video.pub_date
+        })
+
+    return templates.TemplateResponse(
+        "cuck_playlist_videos.html",
+        {"request": request, "playlist_name": playlist_name, "videos": video_data}
+    )
+
+
+@log_decorator
+@app.post("/playlist/create", status_code=200)
+async def create_new_playlist(
+    playlist_name: Annotated[str, Form()],
+    response: Response,
+):
+    success, message = create_playlist(playlist_name)
+    if success:
+        return {"text": message}
+    else:
+        response.status_code = 400
+        return {"text": message}
+
+
+@log_decorator
+@app.post("/playlist/{playlist_name}/delete", status_code=200)
+async def delete_existing_playlist(playlist_name: str, response: Response):
+    success, message = delete_playlist(playlist_name)
+    if success:
+        return {"text": message}
+    else:
+        response.status_code = 400
+        return {"text": message}
+
+
+@log_decorator
+@app.post("/playlist/{playlist_name}/add_video", status_code=200)
+async def add_video_to_existing_playlist(
+    playlist_name: str,
+    video_id: Annotated[str, Form()],
+    response: Response,
+):
+    success, message = add_video_to_playlist(playlist_name, video_id)
+    if success:
+        return {"text": message}
+    else:
+        response.status_code = 400
+        return {"text": message}
+
+
+@log_decorator
+@app.post("/playlist/{playlist_name}/remove_video", status_code=200)
+async def remove_video_from_existing_playlist(
+    playlist_name: str,
+    video_url: Annotated[str, Form()],
+    response: Response,
+):
+    success, message = remove_video_from_playlist(playlist_name, video_url)
+    if success:
+        return {"text": message}
+    else:
+        response.status_code = 400
+        return {"text": message}
 
 
 @log_decorator

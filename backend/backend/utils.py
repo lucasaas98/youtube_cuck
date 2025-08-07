@@ -185,6 +185,8 @@ def get_video():
                     continue
                 if float(video["epoch_date"]) < min_date:
                     continue
+                if '/shorts/' in url:
+                    continue
                 futures.append(
                     video_executor.submit(video_download_thread, video, channel)
                 )

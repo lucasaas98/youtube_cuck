@@ -1,0 +1,32 @@
+#Download Python from DockerHub and use it
+FROM python:3-alpine
+
+#Set the working directory in the Docker container
+WORKDIR /code
+
+#Copy the dependencies file to the working directory
+COPY requirements.txt .
+
+#Install the dependencies
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
+
+#Plus FFMPEG for youtube-dl
+RUN apk update \
+    && apk add ffmpeg
+
+#Plus PhantomJS because it is maybe needed
+RUN apk add --no-cache fontconfig \
+    && apk add curl \
+    && mkdir -p /usr/share \
+    && cd /usr/share \
+    && curl -L https://github.com/Overbryd/docker-phantomjs-alpine/releases/download/2.11/phantomjs-alpine-x86_64.tar.bz2 | tar -xj \
+    && ln -s /usr/share/phantomjs/phantomjs /usr/bin/phantomjs
+
+#Copy the Flask app code to the working directory
+COPY . .
+
+EXPOSE 5020
+
+#Run the container
+CMD uvicorn --host 0.0.0.0 --port 5020 backend:app

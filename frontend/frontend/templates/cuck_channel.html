@@ -3,97 +3,356 @@
     <head>
         <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
         <meta content="utf-8" http-equiv="encoding">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Youtube Cuck</title>
         <meta name="description" content="Bootleg Garbagio Youtube">
         <meta name="author" content="Repi Gamer">
         <link rel="shortcut icon" href="../static/favicon.ico">
-        <link rel="stylesheet" href="../static/cuck_channel.css">
+        <link rel="stylesheet" href="../static/base.css">
+        <link rel="stylesheet" href="../static/playlist.css">
     </head>
     <body>
         <ul class="nav_bar">
-            <li>
-                <a {% if request.url.path.endswith('/') %}class="active"{% endif %}
-                   href="../">Home</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('shorts') %}class="active"{% endif %}
-                   href="../shorts">Shorts</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('most_recent_video') %}class="active"{% endif %}
-                   href="../most_recent_video">Continue</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('most_recent_videos') %}class="active"{% endif %}
-                   href="../most_recent_videos">History</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('subs') %}class="active"{% endif %}
-                   href="../subs">Subscriptions</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
-                   href="../playlist">Playlists</a>
-            </li>
-            <li class="right">
-                <a id="add">Add Channel</a>
-            </li>
+            <button class="hamburger" id="hamburger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="nav-menu">
+                <li>
+                    <a {% if request.url.path.endswith('/') %}class="active"{% endif %}
+                       href="../">Home</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('shorts') %}class="active"{% endif %}
+                       href="../shorts">Shorts</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('most_recent_video') %}class="active"{% endif %}
+                       href="../most_recent_video">Continue</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('most_recent_videos') %}class="active"{% endif %}
+                       href="../most_recent_videos">History</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('subs') %}class="active"{% endif %}
+                       href="../subs">Subscriptions</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
+                       href="../playlist">Playlists</a>
+                </li>
+                <li class="right">
+                    <a id="add">Add Channel</a>
+                </li>
+            </div>
         </ul>
-        <h2>
-            {{ data[0] }}
-        </h1>
-        <div class="grid-container">
-            {% for row in data[1] %}
-                <div class="card">
-                    <a href="../video/{{ row['id'] }}">
-                        <div class="center-div-video">
-                            <div style="background-size: cover;
-                                        background-position: center;
-                                        background-image: url('../thumbnails/{{ row['thumb_path'] }}');
-                                        width: 360px;
-                                        height: 200px;
-                                        position: relative">
-                                <div class="video-duration" style="left: 10px;">{{ row['size'] }}</div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill"
-                                         style="width: {{ row['progress_percentage'] }}%"></div>
-                                </div>
-                            </div>
+        <div class="main-content">
+            <div class="playlist-header">
+                <a href="../subs" class="back-btn">← Back to Channels</a>
+                <h1 class="playlist-title">{{ data[0] }}</h1>
+                <button id="add" class="btn btn-success">Add Channel</button>
+            </div>
+
+            {% if data[1] %}
+                <div class="video-list">
+                    {% for row in data[1] %}
+                    <div class="video-item">
+                        <div class="video-thumbnail">
+                            <a href="../video/{{ row['id'] }}">
+                                {% if row['thumb_path'] and row['thumb_path'] != 'NA' %}
+                                    <img src="{{ row['thumb_path'] }}" alt="{{ row['title'] }}" onerror="this.src='../static/no-thumbnail.svg'" />
+                                {% else %}
+                                    <img src="../static/no-thumbnail.svg" alt="{{ row['title'] }}" />
+                                {% endif %}
+                                {% if row['progress_percentage'] and row['progress_percentage'] > 0 %}
+                                    <div class="progress-overlay">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: {{ row['progress_percentage'] }}%"></div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </a>
                         </div>
-                    </a>
-                    <div class="content">
-                        <div class="center-div-title">
-                            <h3>{{ row['title'] }}</h3>
+                        <div class="video-info">
+                            <a href="../video/{{ row['id'] }}" class="video-title">
+                                {{ row['title'] }}
+                            </a>
+                            <p class="video-channel">{{ row['channel'] }}</p>
+                            {% if row['views'] %}
+                                <p class="video-views">{{ row['views'] }} views</p>
+                            {% endif %}
+                            {% if row['size'] %}
+                                <p class="video-size">{{ row['size'] }}</p>
+                            {% endif %}
                         </div>
-                        <div class="center-div">
-                            <h4>
-                                <a class="channel_a" href="channel/{{ row['channel'] }}">{{ row['channel'] }}</a>
-                            </h4>
-                        </div>
-                        <div class="center-div">
-                            <p class="views">{{ row['views'] }} views</p>
+                        <div class="video-actions">
+                            {% if row['vid_path'] and row['vid_path'] != 'NA' %}
+                                <a href="../video/{{ row['id'] }}" class="btn btn-primary">
+                                    <span class="btn-text">Watch</span>
+                                    <span class="btn-icon">▶</span>
+                                </a>
+                                <a href="../download/{{ row['id'] }}" class="btn btn-success" download>
+                                    <span class="btn-text">Download</span>
+                                    <span class="btn-icon">⬇</span>
+                                </a>
+                            {% else %}
+                                <span class="btn btn-secondary disabled">Not Downloaded</span>
+                            {% endif %}
+                            <button class="btn btn-success" onclick="addToPlaylist('{{ row['id'] }}')">
+                                <span class="btn-text">Add to Playlist</span>
+                                <span class="btn-icon">+</span>
+                            </button>
                         </div>
                     </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
+            {% else %}
+                <div class="no-videos">
+                    <h3>No Videos Found</h3>
+                    <p>This channel doesn't have any downloaded videos yet.</p>
+                </div>
+            {% endif %}
+
+            <!-- Add Channel Modal -->
             <div id="myModal" class="modal">
                 <div class="modal-content">
                     <span class="close">&times;</span>
+                    <h3>Add New Channel</h3>
                     <form id="channel_form">
-                        <label for="channel_name" style="color:white;">Channel name:</label>
-                        <input type="text" id="channel_name" name="channel_name">
-                        <br>
-                        <br>
-                        <label for="channel_id" style="color:white;">Channel ID:</label>
-                        <input type="text" id="channel_id" name="channel_id">
-                        <br>
-                        <br>
-                        <input type="submit" value="Submit">
+                        <div class="form-group">
+                            <label for="channel_name" class="form-label">Channel name</label>
+                            <input
+                                type="text"
+                                id="channel_name"
+                                name="channel_name"
+                                class="form-input"
+                                placeholder="Enter channel name"
+                                required
+                                autocomplete="off"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label for="channel_id" class="form-label">Channel ID</label>
+                            <input
+                                type="text"
+                                id="channel_id"
+                                name="channel_id"
+                                class="form-input"
+                                placeholder="Enter YouTube channel ID"
+                                required
+                                autocomplete="off"
+                            />
+                        </div>
+                        <button type="submit" class="btn btn-success">Add Channel</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Add to Playlist Modal -->
+            <div id="playlistModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" id="closePlaylistModal">&times;</span>
+                    <h3>Add to Playlist</h3>
+                    <div id="playlist-list" style="margin: 20px 0;">
+                        <!-- Playlists will be loaded here -->
+                    </div>
+                    <hr style="margin: 20px 0; border-color: #555; border-style: solid; border-width: 1px 0 0 0;">
+                    <h4>Create New Playlist</h4>
+                    <form id="create_playlist_form">
+                        <div class="form-group">
+                            <input type="text" id="new_playlist_name" name="playlist_name" class="form-input" placeholder="Playlist name" autocomplete="off">
+                        </div>
+                        <button type="submit" class="btn btn-success">Create & Add</button>
                     </form>
                 </div>
             </div>
         </div>
         <script src="../static/add_channel_modal.js"></script>
         <script src="../static/keyboard_controls.js"></script>
+        <script src="../static/hamburger_menu.js"></script>
+
+        <script>
+            // Playlist functionality
+            var playlistModal = document.getElementById("playlistModal");
+            var closePlaylistModal = document.getElementById("closePlaylistModal");
+            var currentVideoId = null;
+
+            function addToPlaylist(videoId) {
+                currentVideoId = videoId;
+                loadPlaylists();
+                playlistModal.style.display = "block";
+                setTimeout(function() {
+                    var firstInput = playlistModal.querySelector('input[type="text"]');
+                    if (firstInput) {
+                        firstInput.focus();
+                        firstInput.select();
+                    }
+                }, 200);
+            }
+
+            closePlaylistModal.onclick = function() {
+                playlistModal.style.display = "none";
+            };
+
+            window.onclick = function(event) {
+                if (event.target == playlistModal) {
+                    playlistModal.style.display = "none";
+                }
+            };
+
+            // Handle Escape key to close modal
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && playlistModal.style.display === 'block') {
+                    playlistModal.style.display = "none";
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
+            });
+
+            // Prevent event bubbling on modal interactions
+            playlistModal.addEventListener('keydown', function(event) {
+                event.stopPropagation();
+            });
+
+            function loadPlaylists() {
+                var playlistList = document.getElementById('playlist-list');
+                playlistList.innerHTML = '<p style="color: white; margin-bottom: 15px;">Loading playlists...</p>';
+
+                // Fetch existing playlists from the API
+                fetch('/api/playlists')
+                    .then(response => response.json())
+                    .then(data => {
+                        let html = '<p style="color: white; margin-bottom: 15px;">Select a playlist to add this video to:</p>';
+
+                        if (data.playlists && data.playlists.length > 0) {
+                            html += '<div style="margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; max-height: 300px; overflow-y: auto;">';
+                            data.playlists.forEach(playlist => {
+                                html += `<button onclick="addVideoToPlaylist('${playlist.name.replace(/'/g, "\\'")}')" class="btn btn-secondary" style="padding: 10px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${playlist.name}</button>`;
+                            });
+                            html += '</div>';
+                        } else {
+                            html += '<p style="color: #888; margin-bottom: 15px; font-style: italic;">No playlists found. Create your first playlist below.</p>';
+                        }
+
+                        html += `
+                            <hr style="margin: 20px 0; border-color: #555; border-style: solid; border-width: 1px 0 0 0;">
+                            <h4 style="color: white; margin-bottom: 10px;">Or enter playlist name manually:</h4>
+                            <div style="margin: 10px 0; display: flex; gap: 10px; align-items: center;">
+                                <input type="text" id="manual_playlist_name" placeholder="Enter existing playlist name" class="form-input" style="flex: 1;" autocomplete="off">
+                                <button onclick="addToExistingPlaylist()" class="btn btn-primary">Add</button>
+                            </div>
+                        `;
+
+                        playlistList.innerHTML = html;
+
+                        // Focus on the manual input field and add event listeners
+                        setTimeout(function() {
+                            var input = document.getElementById('manual_playlist_name');
+                            if (input) {
+                                input.addEventListener('keydown', function(e) {
+                                    e.stopPropagation();
+                                    if (e.key === 'Enter') {
+                                        addToExistingPlaylist();
+                                    }
+                                });
+                            }
+                        }, 200);
+                    })
+                    .catch(error => {
+                        console.error('Error loading playlists:', error);
+                        playlistList.innerHTML = `
+                            <p style="color: #ff6b6b; margin-bottom: 15px;">Error loading playlists. You can still enter a playlist name manually:</p>
+                            <div style="margin: 10px 0; display: flex; gap: 10px; align-items: center;">
+                                <input type="text" id="manual_playlist_name" placeholder="Enter existing playlist name" class="form-input" style="flex: 1;" autocomplete="off">
+                                <button onclick="addToExistingPlaylist()" class="btn btn-primary">Add</button>
+                            </div>
+                        `;
+
+                        // Focus on the input field even if there's an error
+                        setTimeout(function() {
+                            var input = document.getElementById('manual_playlist_name');
+                            if (input) {
+                                input.focus();
+                                input.select();
+                                input.addEventListener('keydown', function(e) {
+                                    e.stopPropagation();
+                                    if (e.key === 'Enter') {
+                                        addToExistingPlaylist();
+                                    }
+                                });
+                            }
+                        }, 200);
+                    });
+            }
+
+            function addToExistingPlaylist() {
+                var playlistName = document.getElementById('manual_playlist_name').value;
+                if (!playlistName) {
+                    alert('Please enter a playlist name');
+                    return;
+                }
+                addVideoToPlaylist(playlistName);
+            }
+
+            function addVideoToPlaylist(playlistName) {
+                var formData = new FormData();
+                formData.append('video_id', currentVideoId);
+
+                fetch('../playlist/' + encodeURIComponent(playlistName) + '/add_video', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.text);
+                    playlistModal.style.display = "none";
+                })
+                .catch(error => {
+                    alert('Error adding video to playlist');
+                });
+            }
+
+            // Create new playlist form submission
+            document.getElementById('create_playlist_form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                var playlistName = document.getElementById('new_playlist_name').value;
+                if (!playlistName) {
+                    alert('Please enter a playlist name');
+                    return;
+                }
+
+                var formData = new FormData();
+                formData.append('playlist_name', playlistName);
+
+                fetch('../playlist/create', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.text.includes('successfully')) {
+                        // Playlist created, now add video to it
+                        addVideoToPlaylist(playlistName);
+                    } else {
+                        alert(data.text);
+                    }
+                })
+                .catch(error => {
+                    alert('Error creating playlist');
+                });
+            });
+
+            // Add event listener to new playlist name input
+            setTimeout(function() {
+                var newPlaylistInput = document.getElementById('new_playlist_name');
+                if (newPlaylistInput) {
+                    newPlaylistInput.addEventListener('keydown', function(e) {
+                        e.stopPropagation();
+                    });
+                }
+            }, 200);
+        </script>
     </body>
 </html>

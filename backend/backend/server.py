@@ -8,9 +8,17 @@ from fastapi import FastAPI
 from backend.engine import close_engine
 from backend.env_vars import PORT
 from backend.logging import logging
+from backend.repo import (
+    add_video_to_playlist,
+    create_playlist,
+    delete_playlist,
+    get_all_playlists,
+    get_playlist_by_name,
+    get_playlist_videos,
+    remove_video_from_playlist,
+)
 from backend.utils import (
     download_and_keep,
-    download_old_livestreams,
     get_queue_size,
     get_rss_feed,
     log_decorator,
@@ -28,7 +36,7 @@ app = FastAPI()
 @app.post("/api/refresh_rss")
 def refresh_rss():
     get_rss_feed()
-    download_old_livestreams()
+    # download_old_livestreams()
     return {"text": "Refreshing RSS feed!"}
 
 
@@ -62,6 +70,73 @@ def get_video_and_keep(video_id: str):
 def unkeep_video(video_id: str):
     unkeep(video_id)
     return {"text": "Downloading video!"}
+
+
+@log_decorator
+@app.get("/api/playlists")
+def get_playlists():
+    playlists = get_all_playlists()
+    return {"playlists": [{"id": p[0].id, "name": p[0].name} for p in playlists]}
+
+
+@log_decorator
+@app.get("/api/playlist/{playlist_name}")
+def get_playlist(playlist_name: str):
+    playlist = get_playlist_by_name(playlist_name)
+    if not playlist:
+        return {"error": "Playlist not found"}, 404
+
+    videos = get_playlist_videos(playlist_name)
+    return {
+        "playlist": {"id": playlist[0].id, "name": playlist[0].name},
+        "videos": [
+            {
+                "vid_url": v[0].vid_url,
+                "vid_path": v[0].vid_path,
+                "title": v[0].title
+            } for v in videos
+        ]
+    }
+
+
+@log_decorator
+@app.post("/api/playlist/create/{playlist_name}")
+def create_new_playlist(playlist_name: str):
+    success, message = create_playlist(playlist_name)
+    if success:
+        return {"text": message}
+    else:
+        return {"error": message}, 400
+
+
+@log_decorator
+@app.delete("/api/playlist/{playlist_name}")
+def delete_existing_playlist(playlist_name: str):
+    success, message = delete_playlist(playlist_name)
+    if success:
+        return {"text": message}
+    else:
+        return {"error": message}, 400
+
+
+@log_decorator
+@app.post("/api/playlist/{playlist_name}/add/{video_id}")
+def add_video_to_existing_playlist(playlist_name: str, video_id: str):
+    success, message = add_video_to_playlist(playlist_name, video_id)
+    if success:
+        return {"text": message}
+    else:
+        return {"error": message}, 400
+
+
+@log_decorator
+@app.delete("/api/playlist/{playlist_name}/remove/{video_url}")
+def remove_video_from_existing_playlist(playlist_name: str, video_url: str):
+    success, message = remove_video_from_playlist(playlist_name, video_url)
+    if success:
+        return {"text": message}
+    else:
+        return {"error": message}, 400
 
 
 @log_decorator

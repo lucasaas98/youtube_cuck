@@ -2,3 +2,9 @@ data
 .venv
 __pycache__
 *.mp4
+docker-compose.prod_vpn.yml
+# Ignore all markdown files
+*.md
+
+# But don't ignore README.md files anywhere in the project
+!README.md

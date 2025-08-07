@@ -3,50 +3,59 @@
     <head>
         <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
         <meta content="utf-8" http-equiv="encoding">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Youtube Cuck</title>
         <meta name="description" content="Bootleg Garbagio Youtube">
         <meta name="author" content="Repi Gamer">
         <link rel="shortcut icon" href="../static/favicon.ico">
+        <link rel="stylesheet" href="../static/base.css">
         <link rel="stylesheet" href="../static/yt_cuck.css">
     </head>
     <body>
         <ul class="nav_bar">
-            <li>
-                <a {% if request.url.path.endswith('/') %}class="active"{% endif %}
-                   href="/">Home</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('shorts') %}class="active"{% endif %}
-                   href="shorts">Shorts</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('most_recent_video') %}class="active"{% endif %}
-                   href="most_recent_video">Continue</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('most_recent_videos') %}class="active"{% endif %}
-                   href="most_recent_videos">History</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('subs') %}class="active"{% endif %}
-                   href="subs">Subscriptions</a>
-            </li>
-            <li>
-                <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
-                   href="playlist">Playlists</a>
-            </li>
-            <li class="right">
-                <a id="add">Add Channel</a>
-            </li>
-            {% if data[4] %}
+            <button class="hamburger" id="hamburger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="nav-menu">
                 <li>
-                    <a id="rss_ref" class="active" onclick="refresh_rss()">Last Refresh - {{ data[2] }} -> {{ data[3] }}</a>
+                    <a {% if request.url.path.endswith('/') %}class="active"{% endif %}
+                       href="/">Home</a>
                 </li>
-            {% else %}
                 <li>
-                    <a id="rss_ref" onclick="refresh_rss()">Last Refresh - {{ data[2] }}</a>
+                    <a {% if request.url.path.endswith('shorts') %}class="active"{% endif %}
+                       href="shorts">Shorts</a>
                 </li>
-            {% endif %}
+                <li>
+                    <a {% if request.url.path.endswith('most_recent_video') %}class="active"{% endif %}
+                       href="most_recent_video">Continue</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('most_recent_videos') %}class="active"{% endif %}
+                       href="most_recent_videos">History</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('subs') %}class="active"{% endif %}
+                       href="subs">Subscriptions</a>
+                </li>
+                <li>
+                    <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
+                       href="playlist">Playlists</a>
+                </li>
+                <li class="right">
+                    <a id="add">Add Channel</a>
+                </li>
+                {% if data[4] %}
+                    <li>
+                        <a id="rss_ref" class="active" onclick="refresh_rss()">Last Refresh - {{ data[2] }} -> {{ data[3] }}</a>
+                    </li>
+                {% else %}
+                    <li>
+                        <a id="rss_ref" onclick="refresh_rss()">Last Refresh - {{ data[2] }}</a>
+                    </li>
+                {% endif %}
+            </div>
         </ul>
         <div class="grid-container">
             {% for row in data[0] %}
@@ -56,8 +65,6 @@
                             <div style="background-size: cover;
                                         background-position: center;
                                         background-image: url('{{ row['thumb_path'] }}');
-                                        width: 360px;
-                                        height: 200px;
                                         position: relative">
                                 {% if loop.index <= 9 %}<div class="video-number">{{ loop.index }}</div>{% endif %}
                                 <div class="video-duration" style="left: 10px;">{{ row['size'] }}</div>
@@ -121,5 +128,6 @@
         <script src="../static/add_channel_modal.js"></script>
         <script src="../static/refresh_rss.js"></script>
         <script src="../static/keyboard_controls.js"></script>
+        <script src="../static/hamburger_menu.js"></script>
     </body>
 </html>

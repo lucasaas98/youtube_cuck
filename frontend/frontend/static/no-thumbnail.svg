@@ -1,0 +1,15 @@
+<svg width="160" height="90" viewBox="0 0 160 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="160" height="90" fill="#2a2a2a"/>
+
+  <!-- Play button circle -->
+  <circle cx="80" cy="45" r="20" fill="#555" stroke="#777" stroke-width="2"/>
+
+  <!-- Play triangle -->
+  <polygon points="74,35 74,55 92,45" fill="#999"/>
+
+  <!-- Text -->
+  <text x="80" y="75" text-anchor="middle" fill="#666" font-family="Arial, sans-serif" font-size="10" font-weight="500">
+    No Thumbnail
+  </text>
+</svg>

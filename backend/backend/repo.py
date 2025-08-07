@@ -7,7 +7,7 @@ from sqlalchemy import and_, select
 from backend.constants import LIVE_DELAY
 from backend.engine import session_scope
 from backend.logging import logging
-from backend.models import Channel, JsonData, RSSFeedDate, YoutubeVideo
+from backend.models import Channel, JsonData, Playlist, PlaylistVideo, RSSFeedDate, YoutubeVideo
 
 logger = logging.getLogger(__name__)
 logger.setLevel(_logging.INFO)
@@ -195,3 +195,147 @@ def get_video_by_id(video_id):
     except Exception as error:
         logger.error("Failed to get all videos", error)
         return []
+
+
+def get_all_playlists():
+    try:
+        with session_scope() as session:
+            data = session.execute(select(Playlist)).all()
+            return data
+    except Exception as error:
+        logger.error("Failed to get all playlists", error)
+        return []
+
+
+def get_playlist_by_name(playlist_name):
+    try:
+        with session_scope() as session:
+            data = session.execute(
+                select(Playlist).where(Playlist.name == playlist_name)
+            ).first()
+            return data
+    except Exception as error:
+        logger.error(f"Failed to get playlist {playlist_name}", error)
+        return None
+
+
+def get_playlist_videos(playlist_name):
+    try:
+        with session_scope() as session:
+            data = session.execute(
+                select(PlaylistVideo).where(PlaylistVideo.playlist_name == playlist_name)
+            ).all()
+            return data
+    except Exception as error:
+        logger.error(f"Failed to get videos for playlist {playlist_name}", error)
+        return []
+
+
+def create_playlist(playlist_name):
+    try:
+        with session_scope() as session:
+            existing = session.execute(
+                select(Playlist).where(Playlist.name == playlist_name)
+            ).first()
+            if existing:
+                return False, "Playlist already exists"
+
+            new_playlist = Playlist(name=playlist_name)
+            session.add(new_playlist)
+            session.commit()
+            return True, "Playlist created successfully"
+    except Exception as error:
+        logger.error(f"Failed to create playlist {playlist_name}", error)
+        return False, "Failed to create playlist"
+
+
+def delete_playlist(playlist_name):
+    try:
+        with session_scope() as session:
+            # Delete playlist videos first
+            session.execute(
+                select(PlaylistVideo).where(PlaylistVideo.playlist_name == playlist_name)
+            ).delete()
+
+            # Delete playlist
+            result = session.execute(
+                select(Playlist).where(Playlist.name == playlist_name)
+            ).delete()
+
+            session.commit()
+            if result:
+                return True, "Playlist deleted successfully"
+            else:
+                return False, "Playlist not found"
+    except Exception as error:
+        logger.error(f"Failed to delete playlist {playlist_name}", error)
+        return False, "Failed to delete playlist"
+
+
+def add_video_to_playlist(playlist_name, video_id):
+    try:
+        with session_scope() as session:
+            # Check if playlist exists
+            playlist = session.execute(
+                select(Playlist).where(Playlist.name == playlist_name)
+            ).first()
+            if not playlist:
+                return False, "Playlist not found"
+
+            # Get video details
+            video = session.execute(
+                select(YoutubeVideo).where(YoutubeVideo.id == video_id)
+            ).first()
+            if not video:
+                return False, "Video not found"
+
+            # Check if video already in playlist
+            existing = session.execute(
+                select(PlaylistVideo).where(
+                    and_(
+                        PlaylistVideo.playlist_name == playlist_name,
+                        PlaylistVideo.vid_url == video[0].vid_url
+                    )
+                )
+            ).first()
+            if existing:
+                return False, "Video already in playlist"
+
+            # Auto-keep the video to prevent deletion
+            video[0].keep = True
+
+            # Add video to playlist
+            playlist_video = PlaylistVideo(
+                vid_url=video[0].vid_url,
+                vid_path=video[0].vid_path,
+                title=video[0].title,
+                playlist_name=playlist_name
+            )
+            session.add(playlist_video)
+            session.commit()
+            return True, "Video added to playlist and marked as kept"
+    except Exception as error:
+        logger.error(f"Failed to add video {video_id} to playlist {playlist_name}", error)
+        return False, "Failed to add video to playlist"
+
+
+def remove_video_from_playlist(playlist_name, video_url):
+    try:
+        with session_scope() as session:
+            result = session.execute(
+                select(PlaylistVideo).where(
+                    and_(
+                        PlaylistVideo.playlist_name == playlist_name,
+                        PlaylistVideo.vid_url == video_url
+                    )
+                )
+            ).delete()
+
+            session.commit()
+            if result:
+                return True, "Video removed from playlist"
+            else:
+                return False, "Video not found in playlist"
+    except Exception as error:
+        logger.error(f"Failed to remove video {video_url} from playlist {playlist_name}", error)
+        return False, "Failed to remove video from playlist"

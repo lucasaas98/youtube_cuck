@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+        <meta content="utf-8" http-equiv="encoding" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Youtube Cuck - {{ playlist_name }}</title>
+        <meta name="description" content="Bootleg Garbagio Youtube" />
+        <meta name="author" content="Repi Gamer" />
+        <link rel="shortcut icon" href="../static/favicon.ico" />
+        <link rel="stylesheet" href="../../static/base.css" />
+        <link rel="stylesheet" href="../../static/playlist.css" />
+    </head>
+    <body>
+        <ul class="nav_bar">
+            <button class="hamburger" id="hamburger-menu">
+                <span></span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="nav-menu">
+                <li>
+                    <a href="../../">Home</a>
+                </li>
+                <li>
+                    <a href="../../shorts">Shorts</a>
+                </li>
+                <li>
+                    <a href="../../most_recent_video">Continue</a>
+                </li>
+                <li>
+                    <a href="../../most_recent_videos">History</a>
+                </li>
+                <li>
+                    <a href="../../subs">Subscriptions</a>
+                </li>
+                <li>
+                    <a class="active" href="../../playlist">Playlists</a>
+                </li>
+                <li class="right">
+                    <a id="add">Add Video</a>
+                </li>
+            </div>
+        </ul>
+
+        <div class="main-content">
+            <div class="playlist-header">
+                <a href="../" class="back-btn">← Back to Playlists</a>
+                <h1 class="playlist-title">{{ playlist_name }}</h1>
+                <button id="add-video-btn" class="btn btn-success">Add Video</button>
+            </div>
+
+            {% if videos %}
+                <div class="video-list">
+                    {% for video in videos %}
+                    <div class="video-item">
+                        <div class="video-thumbnail">
+                            {% if video.vid_path and video.vid_path != 'NA' %}
+                                <a href="/video/{{ video.id }}">
+                                    {% if video.thumb_path and video.thumb_path != 'NA' %}
+                                        <img src="/thumbnails/{{ video.thumb_path }}" alt="{{ video.title }}" onerror="this.src='/static/no-thumbnail.svg'" />
+                                    {% else %}
+                                        <img src="/static/no-thumbnail.svg" alt="{{ video.title }}" />
+                                    {% endif %}
+                                </a>
+                            {% else %}
+                                {% if video.thumb_path and video.thumb_path != 'NA' %}
+                                    <img src="/thumbnails/{{ video.thumb_path }}" alt="{{ video.title }}" onerror="this.src='/static/no-thumbnail.svg'" />
+                                {% else %}
+                                    <img src="/static/no-thumbnail.svg" alt="{{ video.title }}" />
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <div class="video-info">
+                            {% if video.vid_path and video.vid_path != 'NA' %}
+                                <a href="/video/{{ video.id }}" class="video-title">
+                                    {{ video.title }}
+                                </a>
+                            {% else %}
+                                <h3 class="video-title">{{ video.title }}</h3>
+                            {% endif %}
+                            <p class="video-channel">{{ video.channel }}</p>
+                            {% if video.views %}
+                                <p class="video-views">{{ video.views }} views</p>
+                            {% endif %}
+                            <p class="video-url">{{ video.vid_url }}</p>
+                        </div>
+                        <div class="video-actions">
+                            {% if video.vid_path and video.vid_path != 'NA' %}
+                                <a href="/video/{{ video.id }}" class="btn btn-primary">
+                                    <span class="btn-text">Watch</span>
+                                    <span class="btn-icon">▶</span>
+                                </a>
+                                <a href="/download/{{ video.id }}" class="btn btn-success" download>
+                                    <span class="btn-text">Download</span>
+                                    <span class="btn-icon">⬇</span>
+                                </a>
+                            {% else %}
+                                <span class="btn btn-secondary disabled">Not Downloaded</span>
+                            {% endif %}
+                            <button class="btn btn-danger" onclick="removeFromPlaylist('{{ video.vid_url }}')">
+                                <span class="btn-text">Remove</span>
+                                <span class="btn-icon">×</span>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-videos">
+                    <h3>No Videos Yet</h3>
+                    <p>This playlist is empty. Add some videos to get started!</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Add Video Modal -->
+        <div id="addVideoModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeModal">&times;</span>
+                <h3>Add Video to Playlist</h3>
+                <form id="add_video_form">
+                    <div class="form-group">
+                        <label for="video_id" class="form-label">Video ID</label>
+                        <input
+                            type="text"
+                            id="video_id"
+                            name="video_id"
+                            class="form-input"
+                            placeholder="Enter video ID"
+                            required
+                            autocomplete="off"
+                        />
+                    </div>
+                    <button type="submit" class="btn btn-success">Add Video</button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            // Get modal elements
+            var modal = document.getElementById("addVideoModal");
+            var btn = document.getElementById("add-video-btn");
+            var addBtn = document.getElementById("add");
+            var span = document.getElementById("closeModal");
+
+            // Open modal
+            function openModal() {
+                modal.style.display = "block";
+            }
+
+            btn.onclick = openModal;
+            if (addBtn) addBtn.onclick = openModal;
+
+            // Close modal
+            span.onclick = function () {
+                modal.style.display = "none";
+            };
+
+            window.onclick = function (event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            };
+
+            // Add video form submission
+            function addVideoSubmit(event) {
+                var url = "../../playlist/{{ playlist_name }}/add_video";
+                var request = new XMLHttpRequest();
+                request.open("POST", url, true);
+                request.onload = function () {
+                    var jsonResponse = JSON.parse(request.responseText);
+                    alert(jsonResponse.text);
+                    modal.style.display = "none";
+                    if (request.status === 200) {
+                        location.reload();
+                    }
+                };
+
+                request.onerror = function () {
+                    alert("There was an error adding the video to the playlist.");
+                };
+
+                request.send(new FormData(event.target));
+                event.preventDefault();
+            }
+
+            document.getElementById("add_video_form").addEventListener("submit", addVideoSubmit);
+
+            // Remove video from playlist
+            function removeFromPlaylist(videoUrl) {
+                if (confirm("Are you sure you want to remove this video from the playlist?")) {
+                    var url = "../../playlist/{{ playlist_name }}/remove_video";
+                    var formData = new FormData();
+                    formData.append("video_url", videoUrl);
+
+                    var request = new XMLHttpRequest();
+                    request.open("POST", url, true);
+                    request.onload = function () {
+                        var jsonResponse = JSON.parse(request.responseText);
+                        alert(jsonResponse.text);
+                        if (request.status === 200) {
+                            location.reload();
+                        }
+                    };
+                    request.onerror = function () {
+                        alert("There was an error removing the video from the playlist.");
+                    };
+                    request.send(formData);
+                }
+            }
+        </script>
+        <script src="../../static/hamburger_menu.js"></script>
+        <script src="../../static/keyboard_controls.js"></script>
+    </body>
+</html>

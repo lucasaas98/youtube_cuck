@@ -1,0 +1,316 @@
+/* Base Color Theme Variables */
+:root {
+    /* Primary Brand Colors */
+    --primary-color: #c71111;
+    --primary-color-hover: #a00e0e;
+    --primary-color-light: #e11111;
+    --primary-color-dark: #8b0d0d;
+
+    /* Secondary Colors */
+    --secondary-color: #555555;
+    --secondary-color-hover: #666666;
+    --secondary-color-light: #777777;
+    --secondary-color-dark: #444444;
+
+    /* Accent Colors */
+    --accent-color: #666666;
+    --accent-color-hover: #777777;
+    --accent-color-light: #888888;
+    --accent-color-dark: #555555;
+
+    /* Success Colors */
+    --success-color: #666666;
+    --success-color-hover: #777777;
+    --success-color-light: #888888;
+    --success-color-dark: #555555;
+
+    /* Warning Colors */
+    --warning-color: #c71111;
+    --warning-color-hover: #a00e0e;
+    --warning-color-light: #e11111;
+    --warning-color-dark: #8b0d0d;
+
+    /* Danger Colors */
+    --danger-color: var(--primary-color);
+    --danger-color-hover: var(--primary-color-hover);
+    --danger-color-light: var(--primary-color-light);
+    --danger-color-dark: var(--primary-color-dark);
+
+    /* Background Colors */
+    --bg-primary: #181818;
+    --bg-secondary: #212121;
+    --bg-tertiary: #303030;
+    --bg-card: #272727;
+    --bg-hover: #323232;
+    --bg-input: #1a1a1a;
+    --bg-modal: #212121;
+    --bg-overlay: rgba(0, 0, 0, 0.8);
+
+    /* Text Colors */
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --text-muted: #999999;
+    --text-disabled: #666666;
+    --text-link: var(--accent-color);
+    --text-link-hover: var(--accent-color-light);
+
+    /* Border Colors */
+    --border-primary: #555555;
+    --border-secondary: #444444;
+    --border-light: #666666;
+    --border-dark: #333333;
+    --border-input: #555555;
+    --border-input-focus: #777777;
+
+    /* Navigation Colors */
+    --nav-bg: var(--bg-secondary);
+    --nav-border: #3a3a3a;
+    --nav-link: var(--text-primary);
+    --nav-link-hover: var(--text-primary);
+    --nav-link-active: var(--text-primary);
+    --nav-bg-hover: #3a3a3a;
+    --nav-bg-active: var(--primary-color);
+
+    /* Button Colors */
+    --btn-primary-bg: var(--primary-color);
+    --btn-primary-bg-hover: var(--primary-color-hover);
+    --btn-primary-text: var(--text-primary);
+
+    --btn-secondary-bg: var(--secondary-color);
+    --btn-secondary-bg-hover: var(--secondary-color-hover);
+    --btn-secondary-text: var(--text-primary);
+
+    --btn-success-bg: var(--success-color);
+    --btn-success-bg-hover: var(--success-color-hover);
+    --btn-success-text: var(--text-primary);
+
+    --btn-danger-bg: var(--danger-color);
+    --btn-danger-bg-hover: var(--danger-color-hover);
+    --btn-danger-text: var(--text-primary);
+
+    --btn-disabled-bg: var(--text-disabled);
+    --btn-disabled-text: var(--text-muted);
+
+    /* Card Colors */
+    --card-bg: var(--bg-card);
+    --card-bg-hover: var(--bg-hover);
+    --card-border: var(--border-secondary);
+    --card-shadow: rgba(0, 0, 0, 0.3);
+    --card-shadow-hover: rgba(0, 0, 0, 0.4);
+
+    /* Progress Bar Colors */
+    --progress-bg: rgba(255, 255, 255, 0.3);
+    --progress-fill: var(--primary-color);
+    --progress-overlay-bg: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+
+    /* Modal Colors */
+    --modal-bg: var(--bg-modal);
+    --modal-border: var(--border-primary);
+    --modal-backdrop: var(--bg-overlay);
+    --modal-shadow: rgba(0, 0, 0, 0.5);
+
+    /* Form Colors */
+    --form-bg: var(--bg-input);
+    --form-border: var(--border-input);
+    --form-border-focus: var(--border-input-focus);
+    --form-text: var(--text-primary);
+    --form-placeholder: var(--text-muted);
+
+    /* Video Specific Colors */
+    --video-duration-bg: rgba(0, 0, 0, 0.8);
+    --video-duration-border: var(--border-primary);
+    --video-thumbnail-bg: #1a1a1a;
+    --video-info-channel: #aaaaaa;
+    --video-info-views: #909090;
+    --video-info-url: #909090;
+    --video-size-bg: rgba(255, 255, 255, 0.08);
+    --video-size-text: #aaaaaa;
+
+    /* Gradients */
+    --gradient-card: linear-gradient(
+        145deg,
+        var(--bg-card),
+        var(--bg-tertiary)
+    );
+    --gradient-card-hover: linear-gradient(145deg, var(--bg-hover), #454545);
+    --gradient-section: linear-gradient(145deg, var(--bg-modal), #353535);
+
+    /* Shadows */
+    --shadow-small: 0 2px 4px var(--card-shadow);
+    --shadow-medium: 0 4px 8px var(--card-shadow);
+    --shadow-large: 0 8px 16px var(--card-shadow-hover);
+    --shadow-modal: 0 8px 32px var(--modal-shadow);
+
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-medium: 0.3s ease;
+    --transition-slow: 0.5s ease;
+
+    /* Border Radius */
+    --radius-small: 4px;
+    --radius-medium: 6px;
+    --radius-large: 8px;
+    --radius-xl: 12px;
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 20px;
+    --spacing-2xl: 24px;
+    --spacing-3xl: 30px;
+
+    /* Typography */
+    --font-family: Arial, Helvetica, sans-serif;
+    --font-size-xs: 0.8rem;
+    --font-size-sm: 0.9rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.1rem;
+    --font-size-xl: 1.3rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 2rem;
+    --font-size-4xl: 2.5rem;
+
+    /* Z-Index */
+    --z-dropdown: 1000;
+    --z-modal: 1010;
+    --z-tooltip: 1020;
+    --z-overlay: 1030;
+}
+
+/* Dark Theme Override (optional) */
+[data-theme="dark"] {
+    /* Can be used to override colors for explicit dark theme */
+}
+
+/* Light Theme Override (for future light theme support) */
+[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --bg-tertiary: #e5e5e5;
+    --bg-card: #ffffff;
+    --bg-hover: #f0f0f0;
+    --bg-input: #ffffff;
+    --bg-modal: #ffffff;
+
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-muted: #999999;
+    --text-disabled: #cccccc;
+
+    --border-primary: #dddddd;
+    --border-secondary: #e5e5e5;
+    --border-light: #cccccc;
+    --border-dark: #bbbbbb;
+
+    --card-shadow: rgba(0, 0, 0, 0.1);
+    --card-shadow-hover: rgba(0, 0, 0, 0.15);
+}
+
+/* Base Reset and Global Styles */
+* {
+    font-family: var(--font-family);
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+}
+
+/* Global Link Styles */
+a {
+    color: var(--text-link);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+a:hover {
+    color: var(--text-link-hover);
+}
+
+/* Global Button Base Styles */
+button,
+.btn {
+    border: none;
+    border-radius: var(--radius-medium);
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    padding: var(--spacing-md) var(--spacing-xl);
+}
+
+/* Global Form Styles */
+input,
+textarea,
+select {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    border-radius: var(--radius-small);
+    transition: all var(--transition-fast);
+}
+
+/* Global Modal Backdrop */
+.modal {
+    background-color: var(--modal-backdrop);
+    backdrop-filter: blur(2px);
+}
+
+/* Utility Classes */
+.text-primary {
+    color: var(--text-primary);
+}
+.text-secondary {
+    color: var(--text-secondary);
+}
+.text-muted {
+    color: var(--text-muted);
+}
+.text-disabled {
+    color: var(--text-disabled);
+}
+
+.bg-primary {
+    background-color: var(--bg-primary);
+}
+.bg-secondary {
+    background-color: var(--bg-secondary);
+}
+.bg-card {
+    background-color: var(--bg-card);
+}
+
+.border-primary {
+    border-color: var(--border-primary);
+}
+.border-secondary {
+    border-color: var(--border-secondary);
+}
+
+.shadow-sm {
+    box-shadow: var(--shadow-small);
+}
+.shadow-md {
+    box-shadow: var(--shadow-medium);
+}
+.shadow-lg {
+    box-shadow: var(--shadow-large);
+}
+
+.radius-sm {
+    border-radius: var(--radius-small);
+}
+.radius-md {
+    border-radius: var(--radius-medium);
+}
+.radius-lg {
+    border-radius: var(--radius-large);
+}
