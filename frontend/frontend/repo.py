@@ -1,11 +1,18 @@
 import logging as _logging
 import threading
 from time import time
+
 from sqlalchemy import func
 
 from frontend.engine import session_scope
 from frontend.logging import logging
-from frontend.models import MostRecentVideo, Playlist, PlaylistVideo, RSSFeedDate, YoutubeVideo
+from frontend.models import (
+    MostRecentVideo,
+    Playlist,
+    PlaylistVideo,
+    RSSFeedDate,
+    YoutubeVideo,
+)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(_logging.INFO)
@@ -213,7 +220,9 @@ def get_playlist_by_name(playlist_name):
             data = session.query(Playlist).filter_by(name=playlist_name).first()
             return data
     except Exception as error:
-        logger.warn(f"Failed to select playlist {playlist_name} from playlist table", error)
+        logger.warn(
+            f"Failed to select playlist {playlist_name} from playlist table", error
+        )
         return None
 
 
@@ -249,7 +258,9 @@ def get_playlist_videos(playlist_name, page=0, items_per_page=35):
 def create_playlist(playlist_name):
     try:
         with session_scope() as session:
-            existing_playlist = session.query(Playlist).filter_by(name=playlist_name).first()
+            existing_playlist = (
+                session.query(Playlist).filter_by(name=playlist_name).first()
+            )
             if existing_playlist:
                 return False, "Playlist already exists"
 
@@ -310,13 +321,15 @@ def add_video_to_playlist(playlist_name, video_id):
                 vid_url=video.vid_url,
                 vid_path=video.vid_path,
                 title=video.title,
-                playlist_name=playlist_name
+                playlist_name=playlist_name,
             )
             session.add(playlist_video)
             session.commit()
             return True, "Video added to playlist and marked as kept"
     except Exception as error:
-        logger.error(f"Failed to add video {video_id} to playlist {playlist_name}", error)
+        logger.error(
+            f"Failed to add video {video_id} to playlist {playlist_name}", error
+        )
         return False, "Failed to add video to playlist"
 
 
@@ -335,5 +348,7 @@ def remove_video_from_playlist(playlist_name, video_url):
             else:
                 return False, "Video not found in playlist"
     except Exception as error:
-        logger.error(f"Failed to remove video {video_url} from playlist {playlist_name}", error)
+        logger.error(
+            f"Failed to remove video {video_url} from playlist {playlist_name}", error
+        )
         return False, "Failed to remove video from playlist"

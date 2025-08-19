@@ -94,12 +94,9 @@ def get_playlist(playlist_name: str):
     return {
         "playlist": {"id": playlist[0].id, "name": playlist[0].name},
         "videos": [
-            {
-                "vid_url": v[0].vid_url,
-                "vid_path": v[0].vid_path,
-                "title": v[0].title
-            } for v in videos
-        ]
+            {"vid_url": v[0].vid_url, "vid_path": v[0].vid_path, "title": v[0].title}
+            for v in videos
+        ],
     }
 
 
@@ -147,10 +144,10 @@ def remove_video_from_existing_playlist(playlist_name: str, video_url: str):
 @app.post("/api/preview_channel")
 def preview_channel(channel_input: str):
     result = preview_channel_info(channel_input)
-    if result['success']:
-        return {"success": True, "channel_info": result['channel_info']}
+    if result["success"]:
+        return {"success": True, "channel_info": result["channel_info"]}
     else:
-        return {"success": False, "error": result['error']}, 400
+        return {"success": False, "error": result["error"]}, 400
 
 
 @log_decorator
@@ -161,12 +158,15 @@ def add_channel_to_system(channel_id: str, channel_url: str, channel_name: str):
     """
     try:
         # First add to database
-        db_success, db_message = add_channel_to_db(channel_id, channel_url, channel_name)
+        db_success, db_message = add_channel_to_db(
+            channel_id, channel_url, channel_name
+        )
         if not db_success:
             return {"success": False, "error": db_message}, 400
 
         # Then add to OPML file
         from backend.env_vars import DATA_FOLDER
+
         feed_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
 
         try:
@@ -186,7 +186,10 @@ def add_channel_to_system(channel_id: str, channel_url: str, channel_name: str):
             # If OPML update fails, remove from database
             remove_channel_from_db(channel_id)
             logger.error(f"Failed to update OPML file: {e}")
-            return {"success": False, "error": "Failed to update subscription file"}, 500
+            return {
+                "success": False,
+                "error": "Failed to update subscription file",
+            }, 500
 
     except Exception as e:
         logger.error(f"Error adding channel: {e}")

@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
@@ -42,68 +42,67 @@
                 </li>
             </div>
         </ul>
-
         <div class="main-content">
             <div class="playlist-header">
                 <a href="../" class="back-btn">← Back to Playlists</a>
                 <h1 class="playlist-title">{{ playlist_name }}</h1>
                 <button id="add-video-btn" class="btn btn-success">Add Video</button>
             </div>
-
             {% if videos %}
                 <div class="video-list">
                     {% for video in videos %}
-                    <div class="video-item">
-                        <div class="video-thumbnail">
-                            {% if video.vid_path and video.vid_path != 'NA' %}
-                                <a href="/video/{{ video.id }}">
+                        <div class="video-item">
+                            <div class="video-thumbnail">
+                                {% if video.vid_path and video.vid_path != 'NA' %}
+                                    <a href="/video/{{ video.id }}">
+                                        {% if video.thumb_path and video.thumb_path != 'NA' %}
+                                            <img src="/thumbnails/{{ video.thumb_path }}"
+                                                 alt="{{ video.title }}"
+                                                 onerror="this.src='/static/no-thumbnail.svg'" />
+                                        {% else %}
+                                            <img src="/static/no-thumbnail.svg" alt="{{ video.title }}" />
+                                        {% endif %}
+                                    </a>
+                                {% else %}
                                     {% if video.thumb_path and video.thumb_path != 'NA' %}
-                                        <img src="/thumbnails/{{ video.thumb_path }}" alt="{{ video.title }}" onerror="this.src='/static/no-thumbnail.svg'" />
+                                        <img src="/thumbnails/{{ video.thumb_path }}"
+                                             alt="{{ video.title }}"
+                                             onerror="this.src='/static/no-thumbnail.svg'" />
                                     {% else %}
                                         <img src="/static/no-thumbnail.svg" alt="{{ video.title }}" />
                                     {% endif %}
-                                </a>
-                            {% else %}
-                                {% if video.thumb_path and video.thumb_path != 'NA' %}
-                                    <img src="/thumbnails/{{ video.thumb_path }}" alt="{{ video.title }}" onerror="this.src='/static/no-thumbnail.svg'" />
-                                {% else %}
-                                    <img src="/static/no-thumbnail.svg" alt="{{ video.title }}" />
                                 {% endif %}
-                            {% endif %}
+                            </div>
+                            <div class="video-info">
+                                {% if video.vid_path and video.vid_path != 'NA' %}
+                                    <a href="/video/{{ video.id }}" class="video-title">{{ video.title }}</a>
+                                {% else %}
+                                    <h3 class="video-title">{{ video.title }}</h3>
+                                {% endif %}
+                                <p class="video-channel">{{ video.channel }}</p>
+                                {% if video.views %}<p class="video-views">{{ video.views }} views</p>{% endif %}
+                                <p class="video-url">{{ video.vid_url }}</p>
+                            </div>
+                            <div class="video-actions">
+                                {% if video.vid_path and video.vid_path != 'NA' %}
+                                    <a href="/video/{{ video.id }}" class="btn btn-primary">
+                                        <span class="btn-text">Watch</span>
+                                        <span class="btn-icon">▶</span>
+                                    </a>
+                                    <a href="/download/{{ video.id }}" class="btn btn-success" download>
+                                        <span class="btn-text">Download</span>
+                                        <span class="btn-icon">⬇</span>
+                                    </a>
+                                {% else %}
+                                    <span class="btn btn-secondary disabled">Not Downloaded</span>
+                                {% endif %}
+                                <button class="btn btn-danger"
+                                        onclick="removeFromPlaylist('{{ video.vid_url }}')">
+                                    <span class="btn-text">Remove</span>
+                                    <span class="btn-icon">×</span>
+                                </button>
+                            </div>
                         </div>
-                        <div class="video-info">
-                            {% if video.vid_path and video.vid_path != 'NA' %}
-                                <a href="/video/{{ video.id }}" class="video-title">
-                                    {{ video.title }}
-                                </a>
-                            {% else %}
-                                <h3 class="video-title">{{ video.title }}</h3>
-                            {% endif %}
-                            <p class="video-channel">{{ video.channel }}</p>
-                            {% if video.views %}
-                                <p class="video-views">{{ video.views }} views</p>
-                            {% endif %}
-                            <p class="video-url">{{ video.vid_url }}</p>
-                        </div>
-                        <div class="video-actions">
-                            {% if video.vid_path and video.vid_path != 'NA' %}
-                                <a href="/video/{{ video.id }}" class="btn btn-primary">
-                                    <span class="btn-text">Watch</span>
-                                    <span class="btn-icon">▶</span>
-                                </a>
-                                <a href="/download/{{ video.id }}" class="btn btn-success" download>
-                                    <span class="btn-text">Download</span>
-                                    <span class="btn-icon">⬇</span>
-                                </a>
-                            {% else %}
-                                <span class="btn btn-secondary disabled">Not Downloaded</span>
-                            {% endif %}
-                            <button class="btn btn-danger" onclick="removeFromPlaylist('{{ video.vid_url }}')">
-                                <span class="btn-text">Remove</span>
-                                <span class="btn-icon">×</span>
-                            </button>
-                        </div>
-                    </div>
                     {% endfor %}
                 </div>
             {% else %}
@@ -112,11 +111,9 @@
                     <p>This playlist is empty. Add some videos to get started!</p>
                 </div>
             {% endif %}
-
             <!-- Pagination -->
             {% include 'pagination.html' %}
         </div>
-
         <!-- Add Video Modal -->
         <div id="addVideoModal" class="modal">
             <div class="modal-content">
@@ -125,21 +122,18 @@
                 <form id="add_video_form">
                     <div class="form-group">
                         <label for="video_id" class="form-label">Video ID</label>
-                        <input
-                            type="text"
-                            id="video_id"
-                            name="video_id"
-                            class="form-input"
-                            placeholder="Enter video ID"
-                            required
-                            autocomplete="off"
-                        />
+                        <input type="text"
+                               id="video_id"
+                               name="video_id"
+                               class="form-input"
+                               placeholder="Enter video ID"
+                               required
+                               autocomplete="off" />
                     </div>
                     <button type="submit" class="btn btn-success">Add Video</button>
                 </form>
             </div>
         </div>
-
         <script>
             // Get modal elements
             var modal = document.getElementById("addVideoModal");
@@ -156,11 +150,11 @@
             if (addBtn) addBtn.onclick = openModal;
 
             // Close modal
-            span.onclick = function () {
+            span.onclick = function() {
                 modal.style.display = "none";
             };
 
-            window.onclick = function (event) {
+            window.onclick = function(event) {
                 if (event.target == modal) {
                     modal.style.display = "none";
                 }
@@ -171,7 +165,7 @@
                 var url = "../../playlist/{{ playlist_name }}/add_video";
                 var request = new XMLHttpRequest();
                 request.open("POST", url, true);
-                request.onload = function () {
+                request.onload = function() {
                     var jsonResponse = JSON.parse(request.responseText);
                     alert(jsonResponse.text);
                     modal.style.display = "none";
@@ -180,7 +174,7 @@
                     }
                 };
 
-                request.onerror = function () {
+                request.onerror = function() {
                     alert("There was an error adding the video to the playlist.");
                 };
 
@@ -199,14 +193,14 @@
 
                     var request = new XMLHttpRequest();
                     request.open("POST", url, true);
-                    request.onload = function () {
+                    request.onload = function() {
                         var jsonResponse = JSON.parse(request.responseText);
                         alert(jsonResponse.text);
                         if (request.status === 200) {
                             location.reload();
                         }
                     };
-                    request.onerror = function () {
+                    request.onerror = function() {
                         alert("There was an error removing the video from the playlist.");
                     };
                     request.send(formData);

@@ -185,7 +185,7 @@ def get_video():
                     continue
                 if float(video["epoch_date"]) < min_date:
                     continue
-                if '/shorts/' in url:
+                if "/shorts/" in url:
                     continue
                 futures.append(
                     video_executor.submit(video_download_thread, video, channel)
@@ -551,24 +551,24 @@ def preview_channel_info(channel_input):
     """
     try:
         # Handle different input formats
-        if channel_input.startswith('UC') and len(channel_input) == 24:
+        if channel_input.startswith("UC") and len(channel_input) == 24:
             # It's a channel ID
             channel_url = f"https://www.youtube.com/channel/{channel_input}"
-        elif channel_input.startswith('http'):
+        elif channel_input.startswith("http"):
             # It's a URL
             channel_url = channel_input
         else:
             # Try as username/handle
-            if channel_input.startswith('@'):
+            if channel_input.startswith("@"):
                 channel_url = f"https://www.youtube.com/{channel_input}"
             else:
                 channel_url = f"https://www.youtube.com/c/{channel_input}"
 
         # Extract basic channel info using yt-dlp
         ydl_opts = {
-            'quiet': True,
-            'no_warnings': True,
-            'extract_flat': True,
+            "quiet": True,
+            "no_warnings": True,
+            "extract_flat": True,
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -577,31 +577,59 @@ def preview_channel_info(channel_input):
 
                 if not info:
                     return {
-                        'success': False,
-                        'error': "Could not find channel information. Please check the channel URL/ID and try again."
+                        "success": False,
+                        "error": "Could not find channel information. Please check the channel URL/ID and try again.",
                     }
 
                 # Safely extract channel information
-                channel_name = 'Unknown'
+                channel_name = "Unknown"
                 if isinstance(info, dict):
-                    if 'title' in info and info['title']:
-                        channel_name = str(info['title'])
-                    elif 'uploader' in info and info['uploader']:
-                        channel_name = str(info['uploader'])
+                    if "title" in info and info["title"]:
+                        channel_name = str(info["title"])
+                    elif "uploader" in info and info["uploader"]:
+                        channel_name = str(info["uploader"])
 
-                channel_id = ''
-                if isinstance(info, dict) and 'channel_id' in info and info['channel_id']:
-                    channel_id = str(info['channel_id'])
+                channel_id = ""
+                if (
+                    isinstance(info, dict)
+                    and "channel_id" in info
+                    and info["channel_id"]
+                ):
+                    channel_id = str(info["channel_id"])
 
                 channel_info = {
-                    'channel_name': channel_name,
-                    'channel_id': channel_id,
-                    'channel_url': str(info.get('channel_url', channel_url)) if isinstance(info, dict) else channel_url,
-                    'subscriber_count': int(info.get('subscriber_count', 0)) if isinstance(info, dict) and info.get('subscriber_count') else 0,
-                    'video_count': int(info.get('video_count', 0)) if isinstance(info, dict) and info.get('video_count') else 0,
-                    'description': str(info.get('description', '')) if isinstance(info, dict) and info.get('description') else '',
-                    'thumbnail': str(info.get('thumbnail', '')) if isinstance(info, dict) and info.get('thumbnail') else '',
-                    'feed_url': f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}" if channel_id else None
+                    "channel_name": channel_name,
+                    "channel_id": channel_id,
+                    "channel_url": (
+                        str(info.get("channel_url", channel_url))
+                        if isinstance(info, dict)
+                        else channel_url
+                    ),
+                    "subscriber_count": (
+                        int(info.get("subscriber_count", 0))
+                        if isinstance(info, dict) and info.get("subscriber_count")
+                        else 0
+                    ),
+                    "video_count": (
+                        int(info.get("video_count", 0))
+                        if isinstance(info, dict) and info.get("video_count")
+                        else 0
+                    ),
+                    "description": (
+                        str(info.get("description", ""))
+                        if isinstance(info, dict) and info.get("description")
+                        else ""
+                    ),
+                    "thumbnail": (
+                        str(info.get("thumbnail", ""))
+                        if isinstance(info, dict) and info.get("thumbnail")
+                        else ""
+                    ),
+                    "feed_url": (
+                        f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
+                        if channel_id
+                        else None
+                    ),
                 }
 
                 # Try to get recent videos from RSS feed if we have channel_id
@@ -610,42 +638,55 @@ def preview_channel_info(channel_input):
                         feed_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
                         video_feed = feedparser.parse(feed_url)
 
-                        if hasattr(video_feed, 'entries') and video_feed.entries:
+                        if hasattr(video_feed, "entries") and video_feed.entries:
                             recent_videos = []
-                            for entry in video_feed.entries[:3]:  # Get 3 most recent videos
-                                recent_videos.append({
-                                    'title': entry.get('title', '') if hasattr(entry, 'get') else '',
-                                    'published': entry.get('published', '') if hasattr(entry, 'get') else '',
-                                    'link': entry.get('link', '') if hasattr(entry, 'get') else ''
-                                })
-                            channel_info['recent_videos'] = recent_videos
-                            channel_info['feed_working'] = True
+                            for entry in video_feed.entries[
+                                :3
+                            ]:  # Get 3 most recent videos
+                                recent_videos.append(
+                                    {
+                                        "title": (
+                                            entry.get("title", "")
+                                            if hasattr(entry, "get")
+                                            else ""
+                                        ),
+                                        "published": (
+                                            entry.get("published", "")
+                                            if hasattr(entry, "get")
+                                            else ""
+                                        ),
+                                        "link": (
+                                            entry.get("link", "")
+                                            if hasattr(entry, "get")
+                                            else ""
+                                        ),
+                                    }
+                                )
+                            channel_info["recent_videos"] = recent_videos
+                            channel_info["feed_working"] = True
                         else:
-                            channel_info['recent_videos'] = []
-                            channel_info['feed_working'] = False
+                            channel_info["recent_videos"] = []
+                            channel_info["feed_working"] = False
                     except Exception as e:
                         logger.warning(f"Could not fetch RSS feed for channel: {e}")
-                        channel_info['recent_videos'] = []
-                        channel_info['feed_working'] = False
+                        channel_info["recent_videos"] = []
+                        channel_info["feed_working"] = False
                 else:
-                    channel_info['recent_videos'] = []
-                    channel_info['feed_working'] = False
+                    channel_info["recent_videos"] = []
+                    channel_info["feed_working"] = False
 
-                return {
-                    'success': True,
-                    'channel_info': channel_info
-                }
+                return {"success": True, "channel_info": channel_info}
 
             except Exception as e:
                 logger.error(f"Failed to extract channel info: {e}")
                 return {
-                    'success': False,
-                    'error': "Could not find channel information. Please check the channel URL/ID and try again."
+                    "success": False,
+                    "error": "Could not find channel information. Please check the channel URL/ID and try again.",
                 }
 
     except Exception as e:
         logger.error(f"Error in preview_channel_info: {e}")
         return {
-            'success': False,
-            'error': "An error occurred while fetching channel information."
+            "success": False,
+            "error": "An error occurred while fetching channel information.",
         }
