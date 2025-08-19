@@ -48,7 +48,7 @@
             </div>
         </ul>
         <div class="viewer{% if data['is_short'] %} shorts{% endif %}">
-            <video id="video_player" controls preload="metadata" playsinline>
+            <video id="video_player" controls >
                 <source src="../videos/{{ data['vid_path'] }}" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
@@ -77,6 +77,12 @@
                 <p class="date">{{ data['date'] }}</p>
             </div>
             <div class="info">
+                <div id="chapter-list" class="chapter-list" style="display: none;">
+                    <h3 class="chapter-title">Chapters</h3>
+                    <div id="chapter-items" class="chapter-items">
+                        <!-- Chapters will be populated by JavaScript -->
+                    </div>
+                </div>
                 <div class="description" id="description-content">
                     {% for i in range(0, length) %}
                         {{ data['description'][i] }}
@@ -89,15 +95,19 @@
             <div class="modal-content">
                 <span class="close">&times;</span>
                 <form id="channel_form">
-                    <label for="channel_name" style="color:white;">Channel name:</label>
-                    <input type="text" id="channel_name" name="channel_name">
+                    <label for="channel_input" style="color:white;">Channel URL, ID, or @handle:</label>
+                    <input type="text" id="channel_input" name="channel_input" placeholder="https://youtube.com/c/channelname or UCxxxxxxx or @username">
                     <br>
                     <br>
-                    <label for="channel_id" style="color:white;">Channel ID:</label>
-                    <input type="text" id="channel_id" name="channel_id">
+                    <button type="button" id="preview_btn">Preview Channel</button>
                     <br>
                     <br>
-                    <input type="submit" value="Submit">
+                    <div id="channel_preview" style="display:none;">
+                        <h3 style="color:white;">Channel Preview</h3>
+                        <div id="preview_content"></div>
+                        <br>
+                        <button type="button" id="confirm_add_btn" style="display:none;">Add This Channel</button>
+                    </div>
                 </form>
             </div>
         </div>

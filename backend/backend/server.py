@@ -9,12 +9,15 @@ from backend.engine import close_engine
 from backend.env_vars import PORT
 from backend.logging import logging
 from backend.repo import (
+    add_channel_to_db,
     add_video_to_playlist,
     create_playlist,
     delete_playlist,
     get_all_playlists,
+    get_channel_by_id,
     get_playlist_by_name,
     get_playlist_videos,
+    remove_channel_from_db,
     remove_video_from_playlist,
 )
 from backend.utils import (
@@ -22,6 +25,7 @@ from backend.utils import (
     get_queue_size,
     get_rss_feed,
     log_decorator,
+    preview_channel_info,
     remove_old_videos,
     unkeep,
 )
@@ -137,6 +141,56 @@ def remove_video_from_existing_playlist(playlist_name: str, video_url: str):
         return {"text": message}
     else:
         return {"error": message}, 400
+
+
+@log_decorator
+@app.post("/api/preview_channel")
+def preview_channel(channel_input: str):
+    result = preview_channel_info(channel_input)
+    if result['success']:
+        return {"success": True, "channel_info": result['channel_info']}
+    else:
+        return {"success": False, "error": result['error']}, 400
+
+
+@log_decorator
+@app.post("/api/add_channel")
+def add_channel_to_system(channel_id: str, channel_url: str, channel_name: str):
+    """
+    Add a channel to both the database and OPML subscription file.
+    """
+    try:
+        # First add to database
+        db_success, db_message = add_channel_to_db(channel_id, channel_url, channel_name)
+        if not db_success:
+            return {"success": False, "error": db_message}, 400
+
+        # Then add to OPML file
+        from backend.env_vars import DATA_FOLDER
+        feed_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
+
+        try:
+            with open(f"{DATA_FOLDER}/subscription_manager", "r") as fi:
+                sub_data = fi.readlines()
+
+            with open(f"{DATA_FOLDER}/subscription_manager", "w") as fo:
+                data = sub_data[0]
+                data += sub_data[1].split("</outline></body></opml>")[0]
+                data += f'<outline text="{channel_name}" title="{channel_name}" type="rss" xmlUrl="{feed_url}" />'
+                data += "</outline></body></opml>"
+                fo.write(data)
+
+            return {"success": True, "message": "Channel added successfully"}
+
+        except Exception as e:
+            # If OPML update fails, remove from database
+            remove_channel_from_db(channel_id)
+            logger.error(f"Failed to update OPML file: {e}")
+            return {"success": False, "error": "Failed to update subscription file"}, 500
+
+    except Exception as e:
+        logger.error(f"Error adding channel: {e}")
+        return {"success": False, "error": "Internal server error"}, 500
 
 
 @log_decorator

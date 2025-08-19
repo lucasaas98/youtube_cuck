@@ -162,3 +162,87 @@ def prepare_for_watch(video):
         "keep": video.keep,
         "video_id": video.id,
     }
+
+
+class PaginationInfo(BaseModel):
+    current_page: int
+    total_pages: int
+    total_items: int
+    items_per_page: int
+    has_prev: bool
+    has_next: bool
+    prev_page: int | None = None
+    next_page: int | None = None
+
+
+@log_decorator
+def calculate_pagination(current_page: int, total_items: int, items_per_page: int = 35) -> PaginationInfo:
+    """Calculate pagination metadata"""
+    total_pages = max(1, (total_items + items_per_page - 1) // items_per_page)
+    current_page = max(0, min(current_page, total_pages - 1))
+
+    has_prev = current_page > 0
+    has_next = current_page < total_pages - 1
+    prev_page = current_page - 1 if has_prev else None
+    next_page = current_page + 1 if has_next else None
+
+    return PaginationInfo(
+        current_page=current_page,
+        total_pages=total_pages,
+        total_items=total_items,
+        items_per_page=items_per_page,
+        has_prev=has_prev,
+        has_next=has_next,
+        prev_page=prev_page,
+        next_page=next_page
+    )
+
+
+@log_decorator
+def get_pagination_range(current_page: int, total_pages: int, max_links: int = 5) -> list:
+    """Get a range of page numbers to display in pagination"""
+    if total_pages <= max_links:
+        return list(range(total_pages))
+
+    # Calculate start and end of range
+    half_links = max_links // 2
+    start = max(0, current_page - half_links)
+    end = min(total_pages, start + max_links)
+
+    # Adjust start if we're near the end
+    if end - start < max_links:
+        start = max(0, end - max_links)
+
+    return list(range(start, end))
+
+
+@log_decorator
+def preview_channel_info_frontend(channel_input):
+    """
+    Preview channel information by calling the backend API.
+
+    :param channel_input: Channel URL, channel ID, or channel name
+    :type channel_input: str
+    :return: A dictionary containing channel information or error
+    :rtype: dict
+    """
+    try:
+        response = requests.post(
+            f"http://{BACKEND_URL}:{BACKEND_PORT}/api/preview_channel",
+            params={'channel_input': channel_input}
+        )
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            error_data = response.json()
+            return {
+                'success': False,
+                'error': error_data.get('error', 'Unknown error occurred')
+            }
+    except Exception as e:
+        logger.error(f"Error previewing channel: {e}")
+        return {
+            'success': False,
+            'error': 'Failed to connect to backend service'
+        }

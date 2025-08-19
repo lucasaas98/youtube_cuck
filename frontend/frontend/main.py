@@ -38,6 +38,9 @@ from frontend.utils import (
     prepare_for_watch,
     ready_up_request,
     unkeep_video_request,
+    preview_channel_info_frontend,
+    calculate_pagination,
+    get_pagination_range,
 )
 
 app = FastAPI()
@@ -49,12 +52,15 @@ app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 @log_decorator
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    data = get_recent_videos(0)
+    videos, total_count = get_recent_videos(0)
     rss_date = get_rss_date()
     (queue_size, queue_fetching) = get_queue_size()
 
+    pagination = calculate_pagination(0, total_count)
+    page_range = get_pagination_range(0, pagination.total_pages)
+
     data = (
-        [prepare_for_template(youtube_video, True) for youtube_video in data],
+        [prepare_for_template(youtube_video, True) for youtube_video in videos],
         0,
         rss_date.date_human,
         queue_size,
@@ -62,19 +68,28 @@ async def index(request: Request):
     )
 
     return templates.TemplateResponse(
-        "yt_cuck.html", {"request": request, "data": data, "is_short": False}
+        "yt_cuck.html", {
+            "request": request,
+            "data": data,
+            "is_short": False,
+            "pagination": pagination,
+            "page_range": page_range
+        }
     )
 
 
 @log_decorator
 @app.get("/shorts", response_class=HTMLResponse)
 async def get_shorts(request: Request):
-    data = get_recent_shorts(0)
+    videos, total_count = get_recent_shorts(0)
     rss_date = get_rss_date()
     (queue_size, queue_fetching) = get_queue_size()
 
+    pagination = calculate_pagination(0, total_count)
+    page_range = get_pagination_range(0, pagination.total_pages)
+
     data = (
-        [prepare_for_template(video) for video in data],
+        [prepare_for_template(video) for video in videos],
         0,
         rss_date.date_human,
         queue_size,
@@ -82,27 +97,43 @@ async def get_shorts(request: Request):
     )
 
     return templates.TemplateResponse(
-        "yt_cuck.html", {"request": request, "data": data, "is_short": True}
+        "yt_cuck.html", {
+            "request": request,
+            "data": data,
+            "is_short": True,
+            "pagination": pagination,
+            "page_range": page_range,
+            "base_url": "/shorts"
+        }
     )
 
 
 @log_decorator
 @app.get("/page/{page}", response_class=HTMLResponse)
 async def next_page(page, request: Request):
-    videos = get_recent_videos(page)
+    page_num = int(page)
+    videos, total_count = get_recent_videos(page_num)
     rss_date = get_rss_date()
     (queue_size, queue_fetching) = get_queue_size()
 
+    pagination = calculate_pagination(page_num, total_count)
+    page_range = get_pagination_range(page_num, pagination.total_pages)
+
     data = (
         [prepare_for_template(video) for video in videos],
-        int(page),
+        page_num,
         rss_date.date_human,
         queue_size,
         queue_fetching,
     )
 
     return templates.TemplateResponse(
-        "yt_cuck_page.html", {"request": request, "data": data}
+        "yt_cuck_page.html", {
+            "request": request,
+            "data": data,
+            "pagination": pagination,
+            "page_range": page_range
+        }
     )
 
 
@@ -134,14 +165,76 @@ async def push_to_watch(request: Request, key: str):
 @log_decorator
 @app.get("/channel/{channel_name}", response_class=HTMLResponse)
 async def channel_video_watch(request: Request, channel_name: str):
-    data = get_channel_videos(channel_name)
+    videos, total_count = get_channel_videos(channel_name, 0)
+    pagination = calculate_pagination(0, total_count)
+    page_range = get_pagination_range(0, pagination.total_pages)
+
     data = [
         channel_name,
-        [prepare_for_template(video) for video in data],
+        [prepare_for_template(video) for video in videos],
     ]
 
     return templates.TemplateResponse(
-        "cuck_channel.html", {"request": request, "data": data}
+        "cuck_channel.html", {
+            "request": request,
+            "data": data,
+            "pagination": pagination,
+            "page_range": page_range,
+            "base_url": f"/channel/{channel_name}"
+        }
+    )
+
+
+@log_decorator
+@app.get("/channel/{channel_name}/page/{page}", response_class=HTMLResponse)
+async def channel_video_page(request: Request, channel_name: str, page: int):
+    videos, total_count = get_channel_videos(channel_name, page)
+    pagination = calculate_pagination(page, total_count)
+    page_range = get_pagination_range(page, pagination.total_pages)
+
+    data = [
+        channel_name,
+        [prepare_for_template(video) for video in videos],
+    ]
+
+    return templates.TemplateResponse(
+        "cuck_channel.html", {
+            "request": request,
+            "data": data,
+            "pagination": pagination,
+            "page_range": page_range,
+            "base_url": f"/channel/{channel_name}"
+        }
+    )
+
+
+@log_decorator
+@app.get("/shorts/page/{page}", response_class=HTMLResponse)
+async def shorts_page(request: Request, page: int):
+    videos, total_count = get_recent_shorts(page)
+    rss_date = get_rss_date()
+    (queue_size, queue_fetching) = get_queue_size()
+
+    pagination = calculate_pagination(page, total_count)
+    page_range = get_pagination_range(page, pagination.total_pages)
+
+    data = (
+        [prepare_for_template(video) for video in videos],
+        page,
+        rss_date.date_human,
+        queue_size,
+        queue_fetching,
+    )
+
+    return templates.TemplateResponse(
+        "yt_cuck_page.html", {
+            "request": request,
+            "data": data,
+            "is_short": True,
+            "pagination": pagination,
+            "page_range": page_range,
+            "base_url": "/shorts"
+        }
     )
 
 
@@ -161,55 +254,139 @@ async def get_subs(request: Request):
 
 @log_decorator
 @app.post("/add", status_code=200)
-async def add_channel(
+async def add_channel_legacy(
     channel_name: Annotated[str, Form()],
     channel_id: Annotated[str, Form()],
     response: Response,
 ):
-    feed_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
-    if is_valid_url(feed_url):
-        fi = open(f"{DATA_FOLDER}/subscription_manager", "r")
-        sub_data = fi.readlines()
-        fi.close()
-        fo = open(f"{DATA_FOLDER}/subscription_manager", "w")
-        data = sub_data[0]
-        data += sub_data[1].split("</outline></body></opml>")[0]
-        data += f'<outline text="{channel_name}" title="{channel_name}" type="rss" xmlUrl="{feed_url}" />'
-        data += "</outline></body></opml>"
-        fo.write(data)
-        fo.close()
+    """
+    Legacy endpoint - now redirects to new preview system.
+    This endpoint is deprecated and should use the new preview flow.
+    """
+    import requests
+    from frontend.env_vars import BACKEND_URL
 
-        return {"text": "Channel added!"}
+    try:
+        # Use the new backend API directly
+        channel_url = f"https://www.youtube.com/channel/{channel_id}"
+
+        backend_response = requests.post(
+            f"{BACKEND_URL}/api/add_channel",
+            params={
+                'channel_id': channel_id,
+                'channel_url': channel_url,
+                'channel_name': channel_name
+            }
+        )
+
+        if backend_response.status_code == 200:
+            result = backend_response.json()
+            return {"text": "Channel added successfully! (Note: Please use the new preview system for better experience)"}
+        else:
+            result = backend_response.json()
+            response.status_code = 400
+            return {"text": f"Error: {result.get('error', 'Failed to add channel')}"}
+
+    except Exception as e:
+        response.status_code = 500
+        return {"text": "There was an error adding that channel. Please try the new preview system."}
+
+
+@log_decorator
+@app.post("/api/preview_channel")
+async def preview_channel_frontend(channel_input: Annotated[str, Form()], response: Response):
+    """
+    Preview channel information before adding it.
+    """
+    result = preview_channel_info_frontend(channel_input)
+    if result['success']:
+        return {"success": True, "channel_info": result['channel_info']}
     else:
         response.status_code = 400
+        return {"success": False, "error": result['error']}
 
-        return {
-            "text": "There was an error adding that channel, make sure the channel ID is correct."
-        }
+
+@log_decorator
+@app.post("/api/add_channel_confirmed")
+async def add_channel_confirmed(
+    channel_id: Annotated[str, Form()],
+    channel_url: Annotated[str, Form()],
+    channel_name: Annotated[str, Form()],
+    response: Response,
+):
+    """
+    Add a confirmed channel to the system.
+    """
+    import requests
+    from frontend.env_vars import BACKEND_URL
+
+    try:
+        backend_response = requests.post(
+            f"{BACKEND_URL}/api/add_channel",
+            params={
+                'channel_id': channel_id,
+                'channel_url': channel_url,
+                'channel_name': channel_name
+            }
+        )
+
+        if backend_response.status_code == 200:
+            result = backend_response.json()
+            return {"success": True, "message": result['message']}
+        else:
+            result = backend_response.json()
+            response.status_code = 400
+            return {"success": False, "error": result.get('error', 'Unknown error')}
+
+    except Exception as e:
+        response.status_code = 500
+        return {"success": False, "error": "Failed to communicate with backend"}
 
 
 @log_decorator
 @app.get("/most_recent_video", response_class=HTMLResponse)
 async def most_recent_video_watch(request: Request):
-    video = get_video_by_id(most_recent_video().vid_id)
-    data = prepare_for_watch(video)
+    recent_video = most_recent_video()
+    if recent_video:
+        video = get_video_by_id(recent_video.vid_id)
+        if video:
+            data = prepare_for_watch(video)
+            return templates.TemplateResponse(
+                "cuck_video.html",
+                {"request": request, "data": data, "length": len(data["description"])},
+            )
 
+    # Fallback to home page if no recent video
     return templates.TemplateResponse(
-        "cuck_video.html",
-        {"request": request, "data": data, "length": len(data["description"])},
+        "yt_cuck.html", {
+            "request": request,
+            "data": ([], 0, "", 0, False),
+            "is_short": False,
+            "pagination": calculate_pagination(0, 0),
+            "page_range": []
+        }
     )
 
 
 @log_decorator
 @app.get("/most_recent_videos", response_class=HTMLResponse)
 async def most_recent_videos_page(request: Request):
-    data = most_recent_videos()
-    data = [get_video_by_id(video.vid_id) for video in data]
+    recent_videos = most_recent_videos()
+    if recent_videos:
+        video_data = [get_video_by_id(video.vid_id) for video in recent_videos]
+        video_data = [video for video in video_data if video is not None]
+    else:
+        video_data = []
+
     rss_date = get_rss_date()
     (queue_size, queue_fetching) = get_queue_size()
 
+    # Create pagination info (static for most recent videos)
+    pagination = calculate_pagination(0, len(video_data))
+    page_range = get_pagination_range(0, pagination.total_pages)
+
     data = (
-        [prepare_for_template(video) for video in data],
+        [prepare_for_template(video) for video in video_data],
         0,
         rss_date.date_human,
         queue_size,
@@ -217,7 +394,13 @@ async def most_recent_videos_page(request: Request):
     )
 
     return templates.TemplateResponse(
-        "yt_cuck.html", {"request": request, "data": data, "is_short": True}
+        "yt_cuck.html", {
+            "request": request,
+            "data": data,
+            "is_short": False,
+            "pagination": pagination,
+            "page_range": page_range
+        }
     )
 
 
@@ -268,7 +451,7 @@ async def download_video(video_id: str):
     # Clean filename for download
     safe_filename = "".join(c for c in video.title if c.isalnum() or c in (' ', '-', '_')).rstrip()
     safe_filename = safe_filename[:100]  # Limit length
-    file_extension = os.path.splitext(video.vid_path)[1]
+    file_extension = os.path.splitext(video.vid_path or "")[1]
     download_filename = f"{safe_filename}{file_extension}"
 
     return FileResponse(
@@ -304,7 +487,10 @@ async def get_playlist_videos_page(request: Request, playlist_name: str):
             "cuck_playlist.html", {"request": request, "data": [], "error": "Playlist not found"}
         )
 
-    videos = get_playlist_videos(playlist_name)
+    videos, total_count = get_playlist_videos(playlist_name, 0)
+    pagination = calculate_pagination(0, total_count)
+    page_range = get_pagination_range(0, pagination.total_pages)
+
     video_data = []
     for playlist_video, youtube_video in videos:
         # Format view count
@@ -331,7 +517,64 @@ async def get_playlist_videos_page(request: Request, playlist_name: str):
 
     return templates.TemplateResponse(
         "cuck_playlist_videos.html",
-        {"request": request, "playlist_name": playlist_name, "videos": video_data}
+        {
+            "request": request,
+            "playlist_name": playlist_name,
+            "videos": video_data,
+            "pagination": pagination,
+            "page_range": page_range,
+            "base_url": f"/playlist/{playlist_name}"
+        }
+    )
+
+
+@log_decorator
+@app.get("/playlist/{playlist_name}/page/{page}", response_class=HTMLResponse)
+async def get_playlist_videos_page_num(request: Request, playlist_name: str, page: int):
+    playlist = get_playlist_by_name(playlist_name)
+    if not playlist:
+        return templates.TemplateResponse(
+            "cuck_playlist.html", {"request": request, "data": [], "error": "Playlist not found"}
+        )
+
+    videos, total_count = get_playlist_videos(playlist_name, page)
+    pagination = calculate_pagination(page, total_count)
+    page_range = get_pagination_range(page, pagination.total_pages)
+
+    video_data = []
+    for playlist_video, youtube_video in videos:
+        # Format view count
+        views_formatted = ""
+        if youtube_video.views:
+            views_count = youtube_video.views
+            if views_count >= 1000000:
+                views_formatted = f"{views_count / 1000000:.1f}M"
+            elif views_count >= 1000:
+                views_formatted = f"{views_count / 1000:.1f}K"
+            else:
+                views_formatted = str(views_count)
+
+        video_data.append({
+            "id": youtube_video.id,  # Internal ID for watch URL
+            "title": playlist_video.title,
+            "vid_url": playlist_video.vid_url,
+            "vid_path": playlist_video.vid_path,
+            "thumb_path": youtube_video.thumb_path,
+            "channel": youtube_video.channel,
+            "views": views_formatted,
+            "pub_date": youtube_video.pub_date
+        })
+
+    return templates.TemplateResponse(
+        "cuck_playlist_videos.html",
+        {
+            "request": request,
+            "playlist_name": playlist_name,
+            "videos": video_data,
+            "pagination": pagination,
+            "page_range": page_range,
+            "base_url": f"/playlist/{playlist_name}"
+        }
     )
 
 

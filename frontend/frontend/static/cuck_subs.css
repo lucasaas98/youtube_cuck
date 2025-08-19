@@ -159,6 +159,65 @@ li a:hover {
     background-color: var(--btn-danger-bg-hover);
 }
 
+.modal-content button {
+    padding: 12px 20px;
+    background-color: var(--btn-primary-bg, #007bff);
+    color: var(--btn-primary-text, white);
+    border: none;
+    border-radius: var(--radius-small);
+    font-size: 16px;
+    cursor: pointer;
+    min-height: 44px;
+    margin: 5px 0;
+}
+
+.modal-content button:hover {
+    background-color: var(--btn-primary-bg-hover, #0056b3);
+}
+
+.modal-content button:disabled {
+    background-color: var(--btn-disabled-bg, #6c757d);
+    cursor: not-allowed;
+}
+
+#channel_preview {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-small);
+    border: 1px solid var(--border-secondary, #444);
+}
+
+#preview_content {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#preview_content h3,
+#preview_content h4,
+#preview_content h5 {
+    color: var(--text-primary, white);
+    margin-top: 0;
+}
+
+#preview_content p {
+    color: var(--text-secondary, #ccc);
+    line-height: 1.4;
+}
+
+#preview_content img {
+    max-width: 100%;
+    height: auto;
+}
+
+#confirm_add_btn {
+    background-color: var(--btn-success-bg, #28a745) !important;
+}
+
+#confirm_add_btn:hover {
+    background-color: var(--btn-success-bg-hover, #218838) !important;
+}
+
 /* The Close Button */
 .close {
     color: var(--text-muted);
@@ -261,6 +320,17 @@ li a:hover {
         margin: 10% auto;
         width: 95%;
         padding: 15px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    #channel_preview {
+        padding: 10px;
+        margin-top: 15px;
+    }
+
+    #preview_content {
+        max-height: 300px;
     }
 
     #channels {
@@ -300,6 +370,24 @@ li a:hover {
         margin: 5% auto;
         width: 98%;
         padding: 12px;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+
+    #channel_preview {
+        padding: 8px;
+        margin-top: 10px;
+    }
+
+    #preview_content {
+        max-height: 250px;
+        font-size: 14px;
+    }
+
+    .modal-content button {
+        padding: 10px 16px;
+        font-size: 14px;
+        min-height: 40px;
     }
 
     #channels {

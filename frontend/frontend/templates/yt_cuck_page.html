@@ -90,39 +90,25 @@
                 <div class="modal-content">
                     <span class="close">&times;</span>
                     <form id="channel_form">
-                        <label for="channel_name" style="color:white;">Channel name:</label>
-                        <input type="text" id="channel_name" name="channel_name">
+                        <label for="channel_input" style="color:white;">Channel URL, ID, or @handle:</label>
+                        <input type="text" id="channel_input" name="channel_input" placeholder="https://youtube.com/c/channelname or UCxxxxxxx or @username">
                         <br>
                         <br>
-                        <label for="channel_id" style="color:white;">Channel ID:</label>
-                        <input type="text" id="channel_id" name="channel_id">
+                        <button type="button" id="preview_btn">Preview Channel</button>
                         <br>
                         <br>
-                        <input type="submit" value="Submit">
+                        <div id="channel_preview" style="display:none;">
+                            <h3 style="color:white;">Channel Preview</h3>
+                            <div id="preview_content"></div>
+                            <br>
+                            <button type="button" id="confirm_add_btn" style="display:none;">Add This Channel</button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
         <div style="padding-top: 15px;"></div>
-        <ul class="nice_ul">
-            {% if data[1] != 0 %}
-                {% if data[1]-1 == 0 %}
-                    <li>
-                        <a href="../">Home</a>
-                    </li>
-                {% else %}
-                    <li>
-                        <a href="../page/{{ data[1]-1 }}">{{ data[1]-1 }}</a>
-                    </li>
-                {% endif %}
-            {% endif %}
-            <li>
-                <a class="active" href="../page/{{ data[1] }}">{{ data[1] }}</a>
-            </li>
-            <li>
-                <a href="../page/{{ data[1]+1 }}">{{ data[1]+1 }}</a>
-            </li>
-        </ul>
+        {% include 'pagination.html' %}
         <script src="../static/add_channel_modal.js"></script>
         <script src="../static/refresh_rss.js"></script>
         <script src="../static/keyboard_controls.js"></script>

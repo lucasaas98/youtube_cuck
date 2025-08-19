@@ -122,30 +122,15 @@
                     <h3>Add New Channel</h3>
                     <form id="channel_form">
                         <div class="form-group">
-                            <label for="channel_name" class="form-label">Channel name</label>
-                            <input
-                                type="text"
-                                id="channel_name"
-                                name="channel_name"
-                                class="form-input"
-                                placeholder="Enter channel name"
-                                required
-                                autocomplete="off"
-                            />
+                            <label for="channel_input" class="form-label">Channel URL, ID, or @handle:</label>
+                            <input type="text" id="channel_input" name="channel_input" class="form-input" placeholder="https://youtube.com/c/channelname or UCxxxxxxx or @username" required autocomplete="off">
                         </div>
-                        <div class="form-group">
-                            <label for="channel_id" class="form-label">Channel ID</label>
-                            <input
-                                type="text"
-                                id="channel_id"
-                                name="channel_id"
-                                class="form-input"
-                                placeholder="Enter YouTube channel ID"
-                                required
-                                autocomplete="off"
-                            />
+                        <button type="button" id="preview_btn" class="btn btn-primary">Preview Channel</button>
+                        <div id="channel_preview" style="display:none;">
+                            <h4>Channel Preview</h4>
+                            <div id="preview_content"></div>
+                            <button type="button" id="confirm_add_btn" class="btn btn-success" style="display:none;">Add This Channel</button>
                         </div>
-                        <button type="submit" class="btn btn-success">Add Channel</button>
                     </form>
                 </div>
             </div>
@@ -169,6 +154,10 @@
                 </div>
             </div>
         </div>
+
+        <!-- Pagination -->
+        {% include 'pagination.html' %}
+
         <script src="../static/add_channel_modal.js"></script>
         <script src="../static/keyboard_controls.js"></script>
         <script src="../static/hamburger_menu.js"></script>

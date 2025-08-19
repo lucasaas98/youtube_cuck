@@ -339,3 +339,78 @@ def remove_video_from_playlist(playlist_name, video_url):
     except Exception as error:
         logger.error(f"Failed to remove video {video_url} from playlist {playlist_name}", error)
         return False, "Failed to remove video from playlist"
+
+
+def add_channel_to_db(channel_id, channel_url, channel_name):
+    """
+    Add a channel to the database.
+
+    :param channel_id: YouTube channel ID
+    :param channel_url: Channel URL
+    :param channel_name: Channel display name
+    :return: Tuple of (success, message)
+    """
+    try:
+        with session_scope() as session:
+            # Check if channel already exists
+            existing = session.execute(
+                select(Channel).where(Channel.channel_id == channel_id)
+            ).first()
+            if existing:
+                return False, "Channel already exists in database"
+
+            # Add channel to database
+            new_channel = Channel(
+                channel_id=channel_id,
+                channel_url=channel_url,
+                channel_name=channel_name,
+                keep=False,
+                inserted_at=int(time())
+            )
+            session.add(new_channel)
+            session.commit()
+            return True, "Channel added successfully"
+    except Exception as error:
+        logger.error(f"Failed to add channel {channel_name} to database", error)
+        return False, "Failed to add channel to database"
+
+
+def get_channel_by_id(channel_id):
+    """
+    Get a channel by its ID.
+
+    :param channel_id: YouTube channel ID
+    :return: Channel object or None
+    """
+    try:
+        with session_scope() as session:
+            data = session.execute(
+                select(Channel).where(Channel.channel_id == channel_id)
+            ).first()
+            return data[0] if data else None
+    except Exception as error:
+        logger.error(f"Failed to get channel {channel_id}", error)
+        return None
+
+
+def remove_channel_from_db(channel_id):
+    """
+    Remove a channel from the database.
+
+    :param channel_id: YouTube channel ID
+    :return: Tuple of (success, message)
+    """
+    try:
+        with session_scope() as session:
+            result = session.execute(
+                select(Channel).where(Channel.channel_id == channel_id)
+            ).delete()
+
+            session.commit()
+            if result:
+                return True, "Channel removed successfully"
+            else:
+                return False, "Channel not found"
+    except Exception as error:
+        logger.error(f"Failed to remove channel {channel_id}", error)
+        return False, "Failed to remove channel"

@@ -12,7 +12,7 @@ autogen-migration:
 
 migrate-dev:
 	echo "Migrating to last version"
-	cd backend && source .venv/bin/activate && ENV_FILE=.dev.env alembic upgrade head 
+	cd backend && source .venv/bin/activate && ENV_FILE=.dev.env alembic upgrade head
 
 downgrade-dev:
 	echo "Downgrading to last version"
@@ -22,7 +22,7 @@ build-dev:
 	docker compose -f docker-compose.dev.yml build
 
 build-dev-nginx:
-	SERVER_IP=$(shell ./nginx_server/get-ip.sh) docker compose -f docker-compose.dev.yml build yt_nginx_dev 
+	SERVER_IP=$(shell ./nginx_server/get-ip.sh) docker compose -f docker-compose.dev.yml build yt_nginx_dev
 
 run-dev-db:
 	docker compose -f docker-compose.dev.yml up -d yt_mysql_dev
@@ -31,7 +31,7 @@ run-dev-db:
 
 run-dev-nginx:
 	$(MAKE) build-dev-nginx
-	docker compose -f docker-compose.dev.yml up yt_nginx_dev 
+	docker compose -f docker-compose.dev.yml up -d yt_nginx_dev
 
 run-dev-backend:
 	cd backend && source .venv/bin/activate && ENV_FILE=.dev.env uvicorn backend.server:app --host 0.0.0.0 --port 11014 --reload
@@ -46,7 +46,7 @@ run-migrate-frontend:
 	cd frontend && source .venv/bin/activate && ENV_FILE=.migrate.env uvicorn frontend.main:app --host 0.0.0.0 --port 11013 --reload
 
 stop-dev:
-	docker compose -f docker-compose.dev.yml down 
+	docker compose -f docker-compose.dev.yml down
 
 create-data:
 	mkdir -p data/mysql
@@ -57,7 +57,7 @@ create-data:
 remove-data:
 	rm -rf data
 
-format: 
+format:
 	echo "Formatting Backend"
 	cd backend && source .venv/bin/activate && black . && isort . && djlint . --reformat --format-css --format-js --profile=jinja
 	echo "Formatting Frontend"
@@ -88,7 +88,7 @@ build-prod:
 	$(MAKE) build-prod-nginx
 
 build-prod-nginx:
-	SERVER_IP=yt_frontend docker compose -f docker-compose.prod.yml build yt_nginx 
+	SERVER_IP=yt_frontend docker compose -f docker-compose.prod.yml build yt_nginx
 
 run-prod-nginx:
 	docker compose -f docker-compose.prod.yml up -d yt_nginx
@@ -98,7 +98,7 @@ run-prod:
 
 migrate-prod:
 	echo "Migrating to last version"
-	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env alembic upgrade head 
+	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env alembic upgrade head
 
 run-prod-db:
 	docker compose -f docker-compose.prod.yml up -d yt_mysql
@@ -133,7 +133,7 @@ run-prod-less:
 
 migrate-prod-less:
 	echo "Migrating to last version"
-	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env alembic upgrade head 
+	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env alembic upgrade head
 
 run-prod-db-less:
 	docker compose -f docker-compose.prod_less.yml up -d yt_mysql_less_good
@@ -168,7 +168,7 @@ run-prod-vpn:
 
 migrate-prod-vpn:
 	echo "Migrating to last version"
-	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env alembic upgrade head 
+	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env alembic upgrade head
 
 run-prod-db-vpn:
 	docker compose -f docker-compose.prod_vpn.yml up -d yt_mysql

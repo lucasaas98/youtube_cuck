@@ -678,6 +678,107 @@ h1 {
     font-style: italic;
 }
 
+/* Pagination Styles */
+.pagination-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin: 30px 0;
+    padding: 20px;
+}
+
+.pagination {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.page-item {
+    display: inline-block;
+}
+
+.page-link {
+    display: block;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: var(--text-color, #fff);
+    background-color: var(--nav-bg, #333);
+    border: 1px solid var(--border-color, #555);
+    border-radius: var(--radius-small, 4px);
+    transition: all 0.3s ease;
+    min-width: 44px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.page-link:hover {
+    background-color: var(--nav-bg-hover, #444);
+    border-color: var(--primary-color, #0066cc);
+    transform: translateY(-1px);
+}
+
+.page-item.active .page-link {
+    background-color: var(--primary-color, #0066cc);
+    border-color: var(--primary-color, #0066cc);
+    color: white;
+    cursor: default;
+}
+
+.page-item.active .page-link:hover {
+    transform: none;
+}
+
+.pagination-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-muted, #ccc);
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.pagination-info .separator {
+    opacity: 0.5;
+}
+
+/* Mobile responsive pagination */
+@media (max-width: 768px) {
+    .pagination {
+        gap: 3px;
+    }
+
+    .page-link {
+        padding: 8px 12px;
+        font-size: 13px;
+        min-width: 40px;
+    }
+
+    .pagination-info {
+        font-size: 13px;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .pagination-info .separator {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-link {
+        padding: 6px 10px;
+        font-size: 12px;
+        min-width: 36px;
+    }
+}
+
 /* Success/Error messages */
 .alert {
     padding: 12px 16px;

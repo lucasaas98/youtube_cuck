@@ -1,6 +1,7 @@
 import logging as _logging
 import threading
 from time import time
+from sqlalchemy import func
 
 from frontend.engine import session_scope
 from frontend.logging import logging
@@ -23,60 +24,90 @@ def get_video_by_id(identifier):
         return []
 
 
-def get_channel_videos(channel_name):
+def get_channel_videos(channel_name, page=0, items_per_page=35):
     try:
         with session_scope() as session:
+            # Get total count
+            total_count = (
+                session.query(func.count(YoutubeVideo.id))
+                .filter_by(channel=channel_name)
+                .scalar()
+            )
+
+            # Get paginated data
+            offset = page * items_per_page
             data = (
                 session.query(YoutubeVideo)
                 .filter_by(channel=channel_name)
                 .order_by(YoutubeVideo.pub_date.desc())
+                .limit(items_per_page)
+                .offset(offset)
+                .all()
             )
-            return data
+            return data, total_count
     except Exception as error:
         logger.warn(
             f"Failed to select videos from downloaded_videos table from {channel_name}",
             error,
         )
-        return []
+        return [], 0
 
 
-def get_recent_videos(page):
+def get_recent_videos(page, items_per_page=35):
     try:
         with session_scope() as session:
-            selection = (int(page) + 1) * 35
+            # Get total count
+            total_count = (
+                session.query(func.count(YoutubeVideo.id))
+                .filter(YoutubeVideo.short.is_(False))
+                .scalar()
+            )
+
+            # Get paginated data
+            offset = int(page) * items_per_page
             ordered_query = (
                 session.query(YoutubeVideo).filter(YoutubeVideo.short.is_(False))
             ).order_by(YoutubeVideo.downloaded_at.desc())
 
-            data = ordered_query.limit(35).offset(selection - 35).all()
-            return data
+            data = ordered_query.limit(items_per_page).offset(offset).all()
+            return data, total_count
     except Exception as error:
         logger.warn(
             "Failed to select recent videos from downloaded_videos table", error
         )
-        return []
+        return [], 0
 
 
-def get_recent_shorts(page):
+def get_recent_shorts(page, items_per_page=35):
     try:
         with session_scope() as session:
-            selection = (int(page) + 1) * 35
+            # Get total count
+            total_count = (
+                session.query(func.count(YoutubeVideo.id))
+                .filter(YoutubeVideo.vid_path != "NA")
+                .filter(YoutubeVideo.short.is_(True))
+                .filter(YoutubeVideo.livestream.is_(False))
+                .scalar()
+            )
+
+            # Get paginated data
+            offset = int(page) * items_per_page
             data = (
                 session.query(YoutubeVideo)
                 .filter(YoutubeVideo.vid_path != "NA")
                 .filter(YoutubeVideo.short.is_(True))
                 .filter(YoutubeVideo.livestream.is_(False))
                 .order_by(YoutubeVideo.pub_date.desc())
-                .limit(35)
-                .offset(selection - 35)
+                .limit(items_per_page)
+                .offset(offset)
                 .all()
             )
-            return data
+            return data, total_count
     except Exception as error:
         logger.warn(
             "Failed to select recent shorts from downloaded_videos table", error
         )
-        return []
+        return [], 0
 
 
 def get_rss_date():
@@ -186,23 +217,33 @@ def get_playlist_by_name(playlist_name):
         return None
 
 
-def get_playlist_videos(playlist_name):
+def get_playlist_videos(playlist_name, page=0, items_per_page=35):
     try:
         with session_scope() as session:
-            # Join with YoutubeVideo to get internal ID and thumbnail
+            # Get total count
+            total_count = (
+                session.query(func.count(PlaylistVideo.id))
+                .filter(PlaylistVideo.playlist_name == playlist_name)
+                .scalar()
+            )
+
+            # Get paginated data
+            offset = page * items_per_page
             data = (
                 session.query(PlaylistVideo, YoutubeVideo)
                 .join(YoutubeVideo, PlaylistVideo.vid_url == YoutubeVideo.vid_url)
                 .filter(PlaylistVideo.playlist_name == playlist_name)
+                .limit(items_per_page)
+                .offset(offset)
                 .all()
             )
-            return data
+            return data, total_count
     except Exception as error:
         logger.warn(
             f"Failed to select videos from playlist_video table for playlist {playlist_name}",
             error,
         )
-        return []
+        return [], 0
 
 
 def create_playlist(playlist_name):
