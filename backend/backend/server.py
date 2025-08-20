@@ -5,6 +5,8 @@ import uvicorn
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 
+from backend.download_config import config
+from backend.download_monitor import download_monitor, resource_monitor
 from backend.engine import close_engine
 from backend.env_vars import PORT
 from backend.logging import logging
@@ -14,7 +16,6 @@ from backend.repo import (
     create_playlist,
     delete_playlist,
     get_all_playlists,
-    get_channel_by_id,
     get_playlist_by_name,
     get_playlist_videos,
     remove_channel_from_db,
@@ -58,8 +59,146 @@ def startup():
 @log_decorator
 @app.get("/api/working_threads")
 def get_size():
-    size = get_queue_size()
-    return {"size": size, "still_fetching": size != 0}
+    try:
+        size = get_queue_size()
+        return {"size": size, "still_fetching": size != 0}
+    except Exception as e:
+        logger.error(f"Failed to get queue size: {e}")
+        return {"size": 0, "still_fetching": False}
+
+
+@app.get("/api/download_status")
+def get_download_status():
+    """Get comprehensive download status including queue and active downloads."""
+    try:
+        from backend.download_monitor import download_monitor
+        from backend.utils import video_executor
+
+        queue_size = get_queue_size()
+        stats = download_monitor.get_stats_summary()
+
+        return {
+            "queue_size": queue_size,
+            "active_downloads": (
+                len(video_executor._threads)
+                if hasattr(video_executor, "_threads")
+                else 0
+            ),
+            "max_workers": video_executor._max_workers,
+            "stats": stats,
+            "is_downloading": queue_size > 0 or stats.get("total_downloads", 0) > 0,
+        }
+    except Exception as e:
+        logger.error(f"Failed to get download status: {e}")
+        return {
+            "queue_size": 0,
+            "active_downloads": 0,
+            "max_workers": 1,
+            "stats": {},
+            "is_downloading": False,
+        }
+
+
+@app.get("/api/system_status")
+def get_system_status():
+    """Get comprehensive system status for monitoring."""
+    try:
+        from backend.download_monitor import download_monitor, resource_monitor
+        from backend.error_reporter import error_reporter
+
+        system_status = resource_monitor.get_system_status()
+        recent_errors = error_reporter.generate_error_summary(hours=1)
+
+        return {
+            "system": system_status,
+            "recent_errors": {
+                "total_errors": recent_errors.get("total_errors", 0),
+                "error_categories": recent_errors.get("errors_by_category", {}),
+                "most_common": recent_errors.get("most_common_errors", [])[:5],
+            },
+            "health_score": (
+                error_reporter._calculate_health_score(
+                    recent_errors, system_status, download_monitor.get_stats_summary()
+                )
+                if hasattr(error_reporter, "_calculate_health_score")
+                else 100
+            ),
+        }
+    except Exception as e:
+        logger.error(f"Failed to get system status: {e}")
+        return {
+            "system": {},
+            "recent_errors": {
+                "total_errors": 0,
+                "error_categories": {},
+                "most_common": [],
+            },
+            "health_score": 0,
+        }
+
+
+@app.get("/api/download_history")
+def get_download_history():
+    """Get recent download history for monitoring."""
+    try:
+        from backend.download_monitor import download_monitor
+
+        stats = download_monitor.get_stats_summary()
+        recent_downloads = list(download_monitor.recent_downloads)[
+            -20:
+        ]  # Last 20 downloads
+
+        return {
+            "recent_downloads": recent_downloads,
+            "statistics": stats,
+            "success_rates": {
+                "last_hour": download_monitor.get_recent_success_rate(60),
+                "last_6_hours": download_monitor.get_recent_success_rate(360),
+                "last_24_hours": download_monitor.get_recent_success_rate(1440),
+                "overall": download_monitor.get_success_rate(),
+            },
+        }
+    except Exception as e:
+        logger.error(f"Failed to get download history: {e}")
+        return {
+            "recent_downloads": [],
+            "statistics": {},
+            "success_rates": {
+                "last_hour": 0,
+                "last_6_hours": 0,
+                "last_24_hours": 0,
+                "overall": 0,
+            },
+        }
+
+
+@app.get("/api/download_status/widget")
+def get_widget_status():
+    """Lightweight endpoint for download status widget."""
+    try:
+        queue_size = get_queue_size()
+
+        # Get basic download info without heavy processing
+        from backend.utils import video_executor
+
+        active_downloads = (
+            len(video_executor._threads) if hasattr(video_executor, "_threads") else 0
+        )
+
+        return {
+            "queue_size": queue_size,
+            "active_downloads": active_downloads,
+            "is_downloading": queue_size > 0 or active_downloads > 0,
+            "timestamp": int(__import__("time").time()),
+        }
+    except Exception as e:
+        logger.error(f"Failed to get widget status: {e}")
+        return {
+            "queue_size": 0,
+            "active_downloads": 0,
+            "is_downloading": False,
+            "timestamp": int(__import__("time").time()),
+        }
 
 
 @log_decorator
@@ -74,6 +213,68 @@ def get_video_and_keep(video_id: str):
 def unkeep_video(video_id: str):
     unkeep(video_id)
     return {"text": "Downloading video!"}
+
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint with system status."""
+    system_status = resource_monitor.get_system_status()
+    download_stats = download_monitor.get_stats_summary()
+
+    # Determine overall health
+    is_healthy = True
+    issues = []
+
+    if system_status.get("is_overloaded", False):
+        is_healthy = False
+        issues.append("System is overloaded")
+
+    if download_stats.get("recent_success_rate_percent", 100) < 70:
+        is_healthy = False
+        issues.append(
+            f"Low recent success rate: {download_stats.get('recent_success_rate_percent', 0):.1f}%"
+        )
+
+    disk_info = system_status.get("disk", {})
+    if disk_info.get("percent_used", 0) > 95:
+        is_healthy = False
+        issues.append(
+            f"Disk space critical: {disk_info.get('percent_used', 0):.1f}% used"
+        )
+
+    return {
+        "status": "healthy" if is_healthy else "unhealthy",
+        "issues": issues,
+        "system": system_status,
+        "downloads": download_stats,
+        "timestamp": system_status.get("timestamp"),
+    }
+
+
+@app.get("/stats")
+def get_download_stats():
+    """Get detailed download statistics."""
+    return {
+        "download_stats": download_monitor.get_stats_summary(),
+        "system_status": resource_monitor.get_system_status(),
+        "config": {
+            "max_retries": config.retry.max_retries,
+            "max_requests_per_minute": config.rate_limit.max_requests_per_minute,
+            "max_concurrent_downloads": config.system_limits.max_concurrent_downloads,
+            "max_video_height": config.quality.max_height,
+        },
+    }
+
+
+@app.get("/stats/recent")
+def get_recent_stats():
+    """Get recent download performance metrics."""
+    return {
+        "success_rate_1h": download_monitor.get_recent_success_rate(60),
+        "success_rate_6h": download_monitor.get_recent_success_rate(360),
+        "success_rate_24h": download_monitor.get_recent_success_rate(1440),
+        "overall_success_rate": download_monitor.get_success_rate(),
+    }
 
 
 @log_decorator

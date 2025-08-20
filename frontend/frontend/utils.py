@@ -62,10 +62,93 @@ def unkeep_video_request(video_id):
 
 @log_decorator
 def get_queue_size():
-    data = requests.get(
-        f"http://{BACKEND_URL}:{BACKEND_PORT}/api/working_threads"
-    ).json()
-    return (data["size"], data["still_fetching"])
+    try:
+        data = requests.get(
+            f"http://{BACKEND_URL}:{BACKEND_PORT}/api/download_status"
+        ).json()
+        return (data["queue_size"], data["is_downloading"])
+    except Exception as e:
+        logger.error(f"Failed to get queue size: {e}")
+        return (0, False)
+
+
+@log_decorator
+def get_download_status():
+    """Get comprehensive download status including active downloads and statistics."""
+    try:
+        response = requests.get(
+            f"http://{BACKEND_URL}:{BACKEND_PORT}/api/download_status"
+        )
+        return response.json()
+    except Exception as e:
+        logger.error(f"Failed to get download status: {e}")
+        return {
+            "queue_size": 0,
+            "active_downloads": 0,
+            "max_workers": 1,
+            "stats": {},
+            "is_downloading": False,
+        }
+
+
+@log_decorator
+def get_system_status():
+    """Get system health and resource usage."""
+    try:
+        response = requests.get(
+            f"http://{BACKEND_URL}:{BACKEND_PORT}/api/system_status"
+        )
+        return response.json()
+    except Exception as e:
+        logger.error(f"Failed to get system status: {e}")
+        return {
+            "system": {},
+            "recent_errors": {
+                "total_errors": 0,
+                "error_categories": {},
+                "most_common": [],
+            },
+            "health_score": 0,
+        }
+
+
+@log_decorator
+def get_download_history():
+    """Get recent download history and performance metrics."""
+    try:
+        response = requests.get(
+            f"http://{BACKEND_URL}:{BACKEND_PORT}/api/download_history"
+        )
+        return response.json()
+    except Exception as e:
+        logger.error(f"Failed to get download history: {e}")
+        return {
+            "recent_downloads": [],
+            "statistics": {},
+            "success_rates": {
+                "last_hour": 0,
+                "last_6_hours": 0,
+                "last_24_hours": 0,
+                "overall": 0,
+            },
+        }
+
+
+@log_decorator
+def get_health_status():
+    """Get overall system health status."""
+    try:
+        response = requests.get(f"http://{BACKEND_URL}:{BACKEND_PORT}/health")
+        return response.json()
+    except Exception as e:
+        logger.error(f"Failed to get health status: {e}")
+        return {
+            "status": "unknown",
+            "issues": ["Failed to connect to backend"],
+            "system": {},
+            "downloads": {},
+            "timestamp": None,
+        }
 
 
 @log_decorator

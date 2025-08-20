@@ -43,16 +43,33 @@
                     <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
                        href="playlist">Playlists</a>
                 </li>
+                <li>
+                    <a {% if request.url.path.endswith('stats') %}class="active"{% endif %}
+                       href="stats">Stats</a>
+                </li>
                 <li class="right">
                     <a id="add">Add Channel</a>
                 </li>
+                <li class="right">
+                    <div id="download-status-widget" class="download-widget">
+                        <span id="download-indicator"
+                              class="download-indicator {{ 'active' if data[4] else 'idle' }}"></span>
+                        <span id="download-text">
+                            {% if data[4] %}
+                                Downloading ({{ data[3] }} queued)
+                            {% else %}
+                                Idle ({{ data[3] }} queued)
+                            {% endif %}
+                        </span>
+                    </div>
+                </li>
                 {% if data[4] %}
                     <li>
-                        <a id="rss_ref" class="active" onclick="refresh_rss()">Last Refresh - {{ data[2] }} -> {{ data[3] }}</a>
+                        <a id="rss_ref" class="active" onclick="refresh_rss()">Last Refresh - {{ data[2] }} | Queue: {{ data[3] }}</a>
                     </li>
                 {% else %}
                     <li>
-                        <a id="rss_ref" onclick="refresh_rss()">Last Refresh - {{ data[2] }}</a>
+                        <a id="rss_ref" onclick="refresh_rss()">Last Refresh - {{ data[2] }} | Queue: {{ data[3] }}</a>
                     </li>
                 {% endif %}
             </div>
@@ -118,5 +135,6 @@
         <script src="../static/refresh_rss.js"></script>
         <script src="../static/keyboard_controls.js"></script>
         <script src="../static/hamburger_menu.js"></script>
+        <script src="../static/download_status_widget.js"></script>
     </body>
 </html>

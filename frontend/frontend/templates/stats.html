@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+        <meta content="utf-8" http-equiv="encoding" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>System Stats - Youtube Cuck</title>
+        <meta name="description"
+              content="System monitoring and download statistics" />
+        <meta name="author" content="Repi Gamer" />
+        <link rel="shortcut icon" href="../static/favicon.ico" />
+        <link rel="stylesheet" href="../static/base.css" />
+        <link rel="stylesheet" href="../static/stats.css" />
+    </head>
+    <body>
+        <ul class="nav_bar">
+            <button class="hamburger" id="hamburger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="nav-menu">
+                <li>
+                    <a href="/">Home</a>
+                </li>
+                <li>
+                    <a href="shorts">Shorts</a>
+                </li>
+                <li>
+                    <a href="most_recent_video">Continue</a>
+                </li>
+                <li>
+                    <a href="most_recent_videos">History</a>
+                </li>
+                <li>
+                    <a href="subs">Subscriptions</a>
+                </li>
+                <li>
+                    <a href="playlist">Playlists</a>
+                </li>
+                <li>
+                    <a class="active" href="stats">Stats</a>
+                </li>
+                <li class="right">
+                    <a id="refresh-stats" onclick="refreshStats()">🔄 Refresh</a>
+                </li>
+            </div>
+        </ul>
+        <div class="stats-container">
+            <h1>System Stats & Monitoring</h1>
+            <div class="last-updated">
+                Last updated:
+                <span id="last-updated">{{ stats.health_status.timestamp or 'Never' }}</span>
+                <button id="auto-refresh-toggle" onclick="toggleAutoRefresh()">Auto-refresh: OFF</button>
+            </div>
+            <!-- Health Overview -->
+            <div class="stats-section">
+                <h2>System Health</h2>
+                <div class="health-overview">
+                    <div class="health-card">
+                        <div class="health-status {{ 'healthy' if stats.health_status.status == 'healthy' else 'unhealthy' }}">
+                            <div class="status-indicator"></div>
+                            <span>{{ stats.health_status.status.title() }}</span>
+                        </div>
+                        <div class="health-score">
+                            Score:
+                            <span class="score-value">{{ "%.1f"|format(stats.system_status.health_score) 
+                            }}/100</span>
+                        </div>
+                    </div>
+                    {% if stats.health_status.issues %}
+                        <div class="health-issues">
+                            <h4>Issues:</h4>
+                            <ul>
+                                {% for issue in stats.health_status.issues %}<li>{{ issue }}</li>{% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- Download Status -->
+            <div class="stats-section">
+                <h2>Download Status</h2>
+                <div class="download-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">Queue Size</div>
+                        <div class="stat-value" id="queue-size">{{ stats.download_status.queue_size }}</div>
+                        <div class="stat-subtitle">Videos waiting</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Active Downloads</div>
+                        <div class="stat-value" id="active-downloads">{{ stats.download_status.active_downloads }}</div>
+                        <div class="stat-subtitle">Currently downloading</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Max Workers</div>
+                        <div class="stat-value">{{ stats.download_status.max_workers }}</div>
+                        <div class="stat-subtitle">Concurrent limit</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Status</div>
+                        <div class="stat-value {{ 'downloading' if stats.download_status.is_downloading else 'idle' }}">
+                            {{ 'Active' if stats.download_status.is_downloading
+                            else 'Idle' }}
+                        </div>
+                        <div class="stat-subtitle">Download system</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Performance Metrics -->
+            <div class="stats-section">
+                <h2>Performance Metrics</h2>
+                <div class="performance-grid">
+                    <div class="metric-card">
+                        <h3>Success Rates</h3>
+                        <div class="metric-row">
+                            <span>Last Hour:</span>
+                            <span class="metric-value success-rate"
+                                  data-rate="{{ stats.download_history.success_rates.last_hour }}">
+                                {{ "%.1f"|format(stats.download_history.success_rates.last_hour) 
+                                }}%
+                            </span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Last 6 Hours:</span>
+                            <span class="metric-value success-rate"
+                                  data-rate="{{ stats.download_history.success_rates.last_6_hours }}">
+                                {{ "%.1f"|format(stats.download_history.success_rates.last_6_hours) 
+                                }}%
+                            </span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Last 24 Hours:</span>
+                            <span class="metric-value success-rate"
+                                  data-rate="{{ stats.download_history.success_rates.last_24_hours }}">
+                                {{ "%.1f"|format(stats.download_history.success_rates.last_24_hours) 
+                                }}%
+                            </span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Overall:</span>
+                            <span class="metric-value success-rate"
+                                  data-rate="{{ stats.download_history.success_rates.overall }}">
+                                {{ "%.1f"|format(stats.download_history.success_rates.overall) 
+                                }}%
+                            </span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Download Statistics</h3>
+                        <div class="metric-row">
+                            <span>Total Downloads:</span>
+                            <span class="metric-value">{{ stats.download_status.stats.total_downloads
+                            or 0 }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Successful:</span>
+                            <span class="metric-value">{{
+                                stats.download_status.stats.successful_downloads
+                            or 0 }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Failed:</span>
+                            <span class="metric-value">{{ stats.download_status.stats.failed_downloads
+                            or 0 }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Total Size:</span>
+                            <span class="metric-value">{{ "%.2f"|format(stats.download_status.stats.total_size_gb
+                            or 0) }} GB</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Avg Downloads/Hour:</span>
+                            <span class="metric-value">{{ "%.1f"|format(stats.download_status.stats.avg_downloads_per_hour
+                            or 0) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- System Resources -->
+            <div class="stats-section">
+                <h2>System Resources</h2>
+                <div class="resource-grid">
+                    {% if stats.system_status.system.cpu_percent is defined %}
+                        <div class="resource-card">
+                            <h3>CPU Usage</h3>
+                            <div class="progress-ring">
+                                <div class="progress-circle"
+                                     data-percentage="{{ stats.system_status.system.cpu_percent }}">
+                                    <span class="progress-text">{{ "%.1f"|format(stats.system_status.system.cpu_percent) 
+                                    }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if stats.system_status.system.memory %}
+                        <div class="resource-card">
+                            <h3>Memory Usage</h3>
+                            <div class="progress-ring">
+                                <div class="progress-circle"
+                                     data-percentage="{{ stats.system_status.system.memory.percent_used }}">
+                                    <span class="progress-text">{{ "%.1f"|format(stats.system_status.system.memory.percent_used) 
+                                    }}%</span>
+                                </div>
+                            </div>
+                            <div class="resource-details">
+                                <div>
+                                    Available: {{ "%.1f"|format(stats.system_status.system.memory.available_gb) 
+                                    }} GB
+                                </div>
+                                <div>
+                                    Total: {{ "%.1f"|format(stats.system_status.system.memory.total_gb) 
+                                    }} GB
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if stats.system_status.system.disk %}
+                        <div class="resource-card">
+                            <h3>Disk Usage</h3>
+                            <div class="progress-ring">
+                                <div class="progress-circle"
+                                     data-percentage="{{ stats.system_status.system.disk.percent_used }}">
+                                    <span class="progress-text">{{ "%.1f"|format(stats.system_status.system.disk.percent_used) 
+                                    }}%</span>
+                                </div>
+                            </div>
+                            <div class="resource-details">
+                                <div>
+                                    Free: {{ "%.1f"|format(stats.system_status.system.disk.free_gb) 
+                                    }} GB
+                                </div>
+                                <div>
+                                    Total: {{ "%.1f"|format(stats.system_status.system.disk.total_gb) 
+                                    }} GB
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- Recent Errors -->
+            {% if stats.system_status.recent_errors.total_errors > 0 %}
+                <div class="stats-section">
+                    <h2>Recent Errors (Last Hour)</h2>
+                    <div class="error-summary">
+                        <div class="error-count">
+                            Total Errors:
+                            <span class="error-number">{{ stats.system_status.recent_errors.total_errors
+                            }}</span>
+                        </div>
+                        {% if stats.system_status.recent_errors.error_categories %}
+                            <div class="error-categories">
+                                <h4>By Category:</h4>
+                                <div class="category-grid">
+                                    {% for category, count in
+                                        stats.system_status.recent_errors.error_categories.items()
+                                        %}
+                                        <div class="category-item">
+                                            <span class="category-name">{{ category.replace('_', ' ').title() 
+                                            }}</span>
+                                            <span class="category-count">{{ count }}</span>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if
+                            stats.system_status.recent_errors.most_common %}
+                            <div class="most-common-errors">
+                                <h4>Most Common Errors:</h4>
+                                {% for error in
+                                    stats.system_status.recent_errors.most_common %}
+                                    <div class="error-item">
+                                        <span class="error-message">{{ error.message[:100] }}
+                                            {% if
+                                                error.message|length > 100 %}
+                                                ...
+                                            {% endif
+                                            %}
+                                        </span>
+                                        <span class="error-count-badge">{{ error.count }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+            <!-- Recent Downloads -->
+            <div class="stats-section">
+                <h2>Recent Download Activity</h2>
+                <div class="recent-downloads">
+                    {% if stats.download_history.recent_downloads %}
+                        <div class="downloads-table">
+                            <div class="table-header">
+                                <div>Video</div>
+                                <div>Status</div>
+                                <div>Size</div>
+                                <div>Time</div>
+                            </div>
+                            {% for download in
+                                stats.download_history.recent_downloads[-10:] %}
+                                <div class="table-row {{ download.status }}">
+                                    <div class="download-info">
+                                        <div class="download-url">{{ download.file_name }}</div>
+                                    </div>
+                                    <div class="download-status">
+                                        <span class="status-badge {{ download.status }}">{{ download.status.title() }}</span>
+                                    </div>
+                                    <div class="download-size">
+                                        {% if download.get('size_mb') %}
+                                            {{ "%.1f"|format(download.size_mb) }} MB
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </div>
+                                    <div class="download-time">
+                                        {% if download.get('end_time') %}
+                                            {{
+                                            download.end_time | int | timestamp_to_time }}
+                                        {% else %}
+                                            In progress...
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="no-data">No recent download activity</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <script src="../static/stats.js"></script>
+        <script src="../static/hamburger_menu.js"></script>
+        <!-- Custom filter for timestamp formatting -->
+        <script>
+            // Simple timestamp to time conversion (you might want to use a proper library)
+            function timestampToTime(timestamp) {
+                const date = new Date(timestamp * 1000);
+                return date.toLocaleTimeString();
+            }
+
+            // Apply the filter to elements that need it
+            document.addEventListener("DOMContentLoaded", function() {
+                document
+                    .querySelectorAll("[data-timestamp]")
+                    .forEach(function(el) {
+                        const timestamp = parseInt(
+                            el.getAttribute("data-timestamp"),
+                        );
+                        el.textContent = timestampToTime(timestamp);
+                    });
+            });
+        </script>
+    </body>
+</html>

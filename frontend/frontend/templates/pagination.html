@@ -1,0 +1,165 @@
+<!-- Pagination Template -->
+{% if pagination.total_pages > 1 %}
+    <div class="pagination-container">
+        <div class="pagination">
+            <!-- Previous Button -->
+            {% if pagination.has_prev %}
+                <a href="?page={{ pagination.prev_page }}"
+                   class="pagination-btn pagination-prev">← Previous</a>
+            {% else %}
+                <span class="pagination-btn pagination-prev disabled">← Previous</span>
+            {% endif %}
+            <!-- Page Numbers -->
+            <div class="pagination-numbers">
+                {% for page_num in page_range %}
+                    {% if page_num == pagination.current_page %}
+                        <span class="pagination-btn current">{{ page_num + 1 }}</span>
+                    {% else %}
+                        <a href="?page={{ page_num }}" class="pagination-btn">{{ page_num + 1 }}</a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <!-- Next Button -->
+            {% if pagination.has_next %}
+                <a href="?page={{ pagination.next_page }}"
+                   class="pagination-btn pagination-next">Next →</a>
+            {% else %}
+                <span class="pagination-btn pagination-next disabled">Next →</span>
+            {% endif %}
+        </div>
+        <!-- Pagination Info -->
+        <div class="pagination-info">
+            <span></span>
+            Page {{ pagination.current_page + 1 }} of {{ pagination.total_pages }}
+            ({{ pagination.total_items }} total items)
+        </span>
+    </div>
+</div>
+<style>
+    .pagination-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 30px 0;
+        gap: 15px;
+    }
+
+    .pagination {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--bg-secondary);
+        padding: 15px 20px;
+        border-radius: 8px;
+        border: 1px solid var(--accent-color);
+    }
+
+    .pagination-numbers {
+        display: flex;
+        gap: 5px;
+    }
+
+    .pagination-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 12px;
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        text-decoration: none;
+        border-radius: 6px;
+        border: 1px solid var(--accent-color);
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .pagination-btn:hover:not(.disabled):not(.current) {
+        background: var(--bg-hover);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        transform: translateY(-1px);
+    }
+
+    .pagination-btn.current {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+        cursor: default;
+    }
+
+    .pagination-btn.disabled {
+        background: var(--bg-input);
+        color: var(--text-secondary);
+        border-color: var(--accent-color-dark);
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .pagination-prev,
+    .pagination-next {
+        font-weight: 600;
+    }
+
+    .pagination-info {
+        color: var(--text-secondary);
+        font-size: 0.9em;
+        text-align: center;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .pagination {
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 10px 15px;
+            gap: 8px;
+        }
+
+        .pagination-numbers {
+            order: 3;
+            flex-basis: 100%;
+            justify-content: center;
+            margin-top: 10px;
+            gap: 3px;
+        }
+
+        .pagination-btn {
+            min-width: 36px;
+            height: 36px;
+            font-size: 0.9em;
+        }
+
+        .pagination-prev {
+            order: 1;
+        }
+
+        .pagination-next {
+            order: 2;
+        }
+
+        .pagination-info {
+            font-size: 0.8em;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .pagination-numbers {
+            gap: 2px;
+        }
+
+        .pagination-btn {
+            min-width: 32px;
+            height: 32px;
+            font-size: 0.8em;
+            padding: 0 8px;
+        }
+
+        .pagination-container {
+            margin: 20px 0;
+        }
+    }
+</style>
+{% endif %}

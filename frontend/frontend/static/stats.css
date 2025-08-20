@@ -1,0 +1,636 @@
+/* Stats Page Styling */
+
+.stats-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    color: var(--text-primary);
+}
+
+.stats-container h1 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+
+.last-updated {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--accent-color);
+}
+
+#auto-refresh-toggle {
+    margin-left: 15px;
+    padding: 5px 10px;
+    background: var(--secondary-color);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#auto-refresh-toggle:hover {
+    background: var(--secondary-color-hover);
+}
+
+#auto-refresh-toggle.active {
+    background: var(--primary-color);
+}
+
+/* Stats Sections */
+.stats-section {
+    margin-bottom: 40px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 25px;
+    border: 1px solid var(--accent-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.stats-section h2 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-size: 1.8em;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 10px;
+}
+
+/* Health Overview */
+.health-overview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.health-card {
+    flex: 1;
+    min-width: 250px;
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--accent-color);
+}
+
+.health-status {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+    font-weight: bold;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.health-status.healthy .status-indicator {
+    background: #4CAF50;
+    box-shadow: 0 0 8px #4CAF50;
+}
+
+.health-status.unhealthy .status-indicator {
+    background: var(--danger-color);
+    box-shadow: 0 0 8px var(--danger-color);
+}
+
+.health-score {
+    font-size: 1.1em;
+}
+
+.score-value {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.health-issues {
+    flex: 2;
+    min-width: 300px;
+}
+
+.health-issues ul {
+    list-style: none;
+    padding: 0;
+}
+
+.health-issues li {
+    background: var(--bg-tertiary);
+    padding: 8px 12px;
+    margin: 5px 0;
+    border-left: 4px solid var(--warning-color);
+    border-radius: 4px;
+}
+
+/* Download Grid */
+.download-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid var(--accent-color);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.stat-title {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-value {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.stat-value.downloading {
+    color: #4CAF50;
+    animation: pulse 2s infinite;
+}
+
+.stat-value.idle {
+    color: var(--text-secondary);
+}
+
+.stat-subtitle {
+    font-size: 0.8em;
+    color: var(--text-secondary);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Performance Grid */
+.performance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.metric-card {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--accent-color);
+}
+
+.metric-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--accent-color-dark);
+}
+
+.metric-row:last-child {
+    border-bottom: none;
+}
+
+.metric-value {
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.success-rate {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.success-rate[data-rate] {
+    background: var(--danger-color);
+}
+
+.success-rate[data-rate]:is([data-rate*="9"]) {
+    background: #4CAF50;
+}
+
+.success-rate[data-rate]:is([data-rate*="8"]) {
+    background: #FF9800;
+}
+
+/* Resource Grid */
+.resource-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+}
+
+.resource-card {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid var(--accent-color);
+}
+
+.resource-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+/* Progress Rings */
+.progress-ring {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.progress-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(
+        var(--primary-color) 0deg,
+        var(--primary-color) calc(var(--percentage, 0) * 3.6deg),
+        var(--bg-tertiary) calc(var(--percentage, 0) * 3.6deg),
+        var(--bg-tertiary) 360deg
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.progress-circle::before {
+    content: '';
+    width: 90px;
+    height: 90px;
+    background: var(--bg-secondary);
+    border-radius: 50%;
+    position: absolute;
+}
+
+.progress-text {
+    position: relative;
+    z-index: 1;
+    font-weight: bold;
+    font-size: 1.1em;
+    color: var(--text-primary);
+}
+
+/* Set progress circle colors based on percentage */
+.progress-circle[data-percentage] {
+    background: conic-gradient(
+        #4CAF50 0deg,
+        #4CAF50 calc(attr(data-percentage number, 0) * 3.6deg),
+        var(--bg-tertiary) calc(attr(data-percentage number, 0) * 3.6deg),
+        var(--bg-tertiary) 360deg
+    );
+}
+
+/* JavaScript will handle the actual percentage coloring */
+
+.resource-details {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+}
+
+.resource-details div {
+    margin: 5px 0;
+}
+
+/* Error Summary */
+.error-summary {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--danger-color);
+}
+
+.error-count {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.error-number {
+    color: var(--danger-color);
+    font-weight: bold;
+    font-size: 1.3em;
+}
+
+.error-categories h4,
+.most-common-errors h4 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-tertiary);
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 3px solid var(--warning-color);
+}
+
+.category-name {
+    font-size: 0.9em;
+}
+
+.category-count {
+    background: var(--warning-color);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.error-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-tertiary);
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 4px;
+    border-left: 3px solid var(--danger-color);
+}
+
+.error-message {
+    flex: 1;
+    font-family: monospace;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+}
+
+.error-count-badge {
+    background: var(--danger-color);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+/* Recent Downloads */
+.recent-downloads {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--accent-color);
+}
+
+.downloads-table {
+    width: 100%;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 15px;
+    background: var(--bg-tertiary);
+    padding: 15px;
+    font-weight: bold;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--accent-color);
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 15px;
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--accent-color-dark);
+    transition: background-color 0.3s;
+}
+
+.table-row:hover {
+    background: var(--bg-hover);
+}
+
+.table-row.success {
+    border-left: 4px solid #4CAF50;
+}
+
+.table-row.failed {
+    border-left: 4px solid var(--danger-color);
+}
+
+.table-row.started {
+    border-left: 4px solid #FF9800;
+}
+
+.download-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.download-url {
+    font-family: monospace;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    word-break: break-all;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.status-badge.success {
+    background: #4CAF50;
+    color: white;
+}
+
+.status-badge.failed {
+    background: var(--danger-color);
+    color: white;
+}
+
+.status-badge.started {
+    background: #FF9800;
+    color: white;
+}
+
+.download-size,
+.download-time {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+}
+
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .stats-container {
+        padding: 10px;
+    }
+
+    .download-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+
+    .performance-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .resource-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .table-header,
+    .table-row {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .table-header {
+        display: none;
+    }
+
+    .table-row {
+        border: 1px solid var(--accent-color);
+        margin-bottom: 10px;
+        border-radius: 4px;
+    }
+
+    .download-info::before {
+        content: "Video: ";
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+
+    .download-status::before {
+        content: "Status: ";
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+
+    .download-size::before {
+        content: "Size: ";
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+
+    .download-time::before {
+        content: "Time: ";
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+
+    .progress-circle {
+        width: 100px;
+        height: 100px;
+    }
+
+    .progress-circle::before {
+        width: 75px;
+        height: 75px;
+    }
+
+    .progress-text {
+        font-size: 1em;
+    }
+
+    .health-overview {
+        flex-direction: column;
+    }
+
+    .health-card {
+        min-width: unset;
+    }
+
+    .category-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .error-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .error-count-badge {
+        margin-left: 0;
+        align-self: flex-end;
+    }
+}
+
+/* Animation for loading states */
+@keyframes skeleton {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.loading {
+    animation: skeleton 1.5s ease-in-out infinite;
+}
+
+/* Utility classes */
+.text-success { color: #4CAF50; }
+.text-warning { color: #FF9800; }
+.text-danger { color: var(--danger-color); }
+.text-muted { color: var(--text-secondary); }
+
+.bg-success { background-color: #4CAF50; }
+.bg-warning { background-color: #FF9800; }
+.bg-danger { background-color: var(--danger-color); }
+
+.hidden { display: none; }
+.visible { display: block; }
+
+/* Refresh button styling */
+#refresh-stats {
+    background: var(--secondary-color);
+    padding: 8px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+#refresh-stats:hover {
+    background: var(--secondary-color-hover);
+}

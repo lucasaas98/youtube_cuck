@@ -7,13 +7,14 @@ WORKDIR /code
 #Copy the dependencies file to the working directory
 COPY requirements.txt .
 
+#Plus FFMPEG for youtube-dl
+RUN apk update \
+    && apk add ffmpeg \
+    && apk add gcc musl-dev linux-headers
+
 #Install the dependencies
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
-
-#Plus FFMPEG for youtube-dl
-RUN apk update \
-    && apk add ffmpeg 
 
 #Copy the Flask app code to the working directory
 COPY . .

@@ -314,3 +314,69 @@ select {
 .radius-lg {
     border-radius: var(--radius-large);
 }
+
+/* Download Status Widget */
+.download-widget {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent-color);
+    border-radius: var(--radius-small);
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    transition: var(--transition-fast);
+}
+
+.download-widget:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary-color);
+}
+
+.download-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    transition: var(--transition-fast);
+}
+
+.download-indicator.idle {
+    background: var(--text-secondary);
+    opacity: 0.6;
+}
+
+.download-indicator.active {
+    background: #4caf50;
+    box-shadow: 0 0 8px #4caf50;
+    animation: pulse-indicator 2s infinite;
+}
+
+@keyframes pulse-indicator {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
+#download-text {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Responsive behavior for download widget */
+@media (max-width: 768px) {
+    .download-widget {
+        padding: 4px 8px;
+        font-size: 0.8em;
+    }
+
+    #download-text {
+        display: none;
+    }
+}

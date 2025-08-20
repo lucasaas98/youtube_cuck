@@ -30,9 +30,13 @@ from frontend.utils import (
     Progress,
     calculate_pagination,
     get_all_channels,
+    get_download_history,
+    get_download_status,
+    get_health_status,
     get_pagination_range,
     get_queue_size,
     get_rss_feed,
+    get_system_status,
     is_valid_url,
     keep_video_request,
     log_decorator,
@@ -659,6 +663,45 @@ async def remove_video_from_existing_playlist(
     else:
         response.status_code = 400
         return {"text": message}
+
+
+@log_decorator
+@app.get("/stats", response_class=HTMLResponse)
+async def stats_page(request: Request):
+    """Comprehensive stats and monitoring page."""
+    download_status = get_download_status()
+    system_status = get_system_status()
+    health_status = get_health_status()
+    download_history = get_download_history()
+
+    # Format data for template
+    stats_data = {
+        "download_status": download_status,
+        "system_status": system_status,
+        "health_status": health_status,
+        "download_history": download_history,
+        "page_title": "System Stats & Monitoring",
+    }
+
+    return templates.TemplateResponse(
+        "stats.html", {"request": request, "stats": stats_data}
+    )
+
+
+@log_decorator
+@app.get("/api/stats/live")
+async def live_stats_api():
+    """API endpoint for live stats updates (for AJAX)."""
+    download_status = get_download_status()
+    system_status = get_system_status()
+    health_status = get_health_status()
+
+    return {
+        "download_status": download_status,
+        "system_status": system_status,
+        "health_status": health_status,
+        "timestamp": health_status.get("timestamp"),
+    }
 
 
 @log_decorator
