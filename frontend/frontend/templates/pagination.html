@@ -1,0 +1,183 @@
+<!-- Pagination Template -->
+{% if pagination.total_pages > 1 %}
+<div class="pagination-container">
+    <div class="pagination">
+        <!-- Previous Button -->
+        {% if pagination.has_prev %}
+        <a
+            href="{% if base_url %}{{ base_url }}/page/{{ pagination.prev_page }}{% elif pagination.prev_page == 0 %}/{% else %}/page/{{ pagination.prev_page }}{% endif %}"
+            class="pagination-btn pagination-prev"
+            >← Previous</a
+        >
+        {% else %}
+        <span class="pagination-btn pagination-prev disabled">← Previous</span>
+        {% endif %}
+
+        <!-- Page Numbers -->
+        <div class="pagination-numbers">
+            {% for page_num in page_range %} {% if page_num ==
+            pagination.current_page %}
+            <span class="pagination-btn current">{{ page_num + 1 }}</span>
+            {% else %}
+            <a
+                href="{% if base_url %}{{ base_url }}/page/{{ page_num }}{% elif page_num == 0 %}/{% else %}/page/{{ page_num }}{% endif %}"
+                class="pagination-btn"
+                >{{ page_num + 1 }}</a
+            >
+            {% endif %} {% endfor %}
+        </div>
+
+        <!-- Next Button -->
+        {% if pagination.has_next %}
+        <a
+            href="{% if base_url %}{{ base_url }}/page/{{ pagination.next_page }}{% elif pagination.next_page == 0 %}/{% else %}/page/{{ pagination.next_page }}{% endif %}"
+            class="pagination-btn pagination-next"
+            >Next →</a
+        >
+        {% else %}
+        <span class="pagination-btn pagination-next disabled">Next →</span>
+        {% endif %}
+    </div>
+
+    <!-- Pagination Info -->
+    <div class="pagination-info">
+        Page {{ pagination.current_page + 1 }} of {{ pagination.total_pages }}
+        ({{ pagination.total_items }} total items)
+    </div>
+</div>
+
+<style>
+    .pagination-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 30px 0;
+        gap: 15px;
+    }
+
+    .pagination {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--bg-secondary);
+        padding: 15px 20px;
+        border-radius: var(--radius-large);
+        border: 1px solid var(--border-secondary);
+    }
+
+    .pagination-numbers {
+        display: flex;
+        gap: 5px;
+    }
+
+    .pagination-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 12px;
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        text-decoration: none;
+        border-radius: var(--radius-medium);
+        border: 1px solid var(--border-primary);
+        font-size: var(--font-size-base);
+        font-weight: 500;
+        transition: all var(--transition-fast);
+        cursor: pointer;
+    }
+
+    .pagination-btn:hover:not(.disabled):not(.current) {
+        background: var(--bg-hover);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        transform: translateY(-1px);
+    }
+
+    .pagination-btn.current {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+        cursor: default;
+    }
+
+    .pagination-btn.disabled {
+        background: var(--bg-input);
+        color: var(--text-disabled);
+        border-color: var(--border-dark);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .pagination-prev,
+    .pagination-next {
+        font-weight: 600;
+        min-width: 80px;
+    }
+
+    .pagination-info {
+        color: var(--text-secondary);
+        font-size: var(--font-size-sm);
+        text-align: center;
+    }
+
+    /* Mobile Responsive Design */
+    @media (max-width: 768px) {
+        .pagination {
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 10px 15px;
+            gap: 8px;
+        }
+
+        .pagination-numbers {
+            order: 3;
+            flex-basis: 100%;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .pagination-btn {
+            min-width: 36px;
+            height: 36px;
+            font-size: var(--font-size-sm);
+        }
+
+        .pagination-prev {
+            order: 1;
+        }
+
+        .pagination-next {
+            order: 2;
+        }
+
+        .pagination-info {
+            font-size: var(--font-size-xs);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .pagination-numbers {
+            gap: 2px;
+        }
+
+        .pagination-btn {
+            min-width: 32px;
+            height: 32px;
+            font-size: var(--font-size-xs);
+            padding: 0 8px;
+        }
+
+        .pagination-prev,
+        .pagination-next {
+            min-width: 60px;
+            font-size: var(--font-size-xs);
+        }
+
+        .pagination-container {
+            margin: 20px 0;
+        }
+    }
+</style>
+{% endif %}
