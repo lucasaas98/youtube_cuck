@@ -7,6 +7,9 @@ var player = document.getElementById("video_player");
 // };
 
 window.onload = function () {
+    // Setup auto-scroll on play functionality
+    setupAutoScrollOnPlay();
+
     window.onkeydown = function (gfg) {
         gfg.preventDefault();
         handleKeyPress(gfg);
@@ -70,6 +73,47 @@ window.onload = function () {
         }
     }
 };
+
+function setupAutoScrollOnPlay() {
+    if (!player) return;
+
+    // Add play event listener to handle auto-scroll
+    player.addEventListener("play", function () {
+        // Check if video is out of view (user has scrolled down)
+        const videoRect = player.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const navHeight =
+            document.querySelector(".nav_bar")?.offsetHeight || 60;
+
+        // If the video is completely above the viewport or mostly out of view
+        // Also consider if we've scrolled significantly past the video
+        const isVideoOutOfView =
+            videoRect.bottom < navHeight || // Video is above the nav bar
+            videoRect.top < -videoRect.height * 0.3 || // Video is mostly scrolled past
+            window.scrollY > videoRect.height + navHeight; // We've scrolled significantly
+
+        // Optional debug logging (uncomment for debugging)
+        // console.log("Video play detected - checking scroll position:", {
+        //     videoRect: videoRect,
+        //     scrollY: window.scrollY,
+        //     navHeight: navHeight,
+        //     isVideoOutOfView: isVideoOutOfView
+        // });
+
+        if (isVideoOutOfView) {
+            // Scroll to the video smoothly, accounting for nav bar
+            const viewer = document.querySelector(".viewer");
+            if (viewer) {
+                const offsetTop = viewer.offsetTop - navHeight - 10; // 10px padding
+                // console.log("Auto-scrolling to video at offset:", offsetTop);
+                window.scrollTo({
+                    top: Math.max(0, offsetTop),
+                    behavior: "smooth",
+                });
+            }
+        }
+    });
+}
 
 function setupProgressSaving() {
     if (!player) return;
@@ -458,6 +502,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (player) {
         initializeChapters();
         setupProgressSaving();
+        setupAutoScrollOnPlay();
     }
 });
 

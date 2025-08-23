@@ -154,7 +154,7 @@ deploy-less:
 
 # prod_vpn
 build-prod-vpn:
-	docker compose -f docker-compose.prod_vpn.yml build yt_frontend yt_backend
+	docker compose -f docker-compose.prod_vpn.yml build yt_frontend yt_backend --no-cache
 	$(MAKE) build-prod-nginx-vpn
 
 build-prod-nginx-vpn:
@@ -176,7 +176,10 @@ run-prod-db-vpn:
 	$(MAKE) migrate-prod-vpn
 
 stop-prod-vpn:
-	docker compose -f docker-compose.prod_vpn.yml down
+	docker compose -f docker-compose.prod_vpn.yml down yt_nginx yt_mysql yt_glueton-vpn
+
+stop-prod-vpn-rebuildables:
+	docker compose -f docker-compose.prod_vpn.yml down --rmi yt_frontend yt_backend
 
 shell-prod-vpn:
 	cd backend && source .venv/bin/activate && ENV_FILE=.migrate.env python3
@@ -188,6 +191,7 @@ rebuild-frontend:
 
 deploy-vpn:
 	$(MAKE) stop-prod-vpn
+	$(MAKE) stop-prod-vpn-rebuildables
 	$(MAKE) run-prod-db-vpn
 	$(MAKE) build-prod-vpn
 	$(MAKE) run-prod-vpn
