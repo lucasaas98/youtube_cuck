@@ -1,3 +1,4 @@
+import os
 import threading
 
 import uvicorn
@@ -6,7 +7,6 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from typing_extensions import Annotated
-import os
 
 from frontend.env_vars import DATA_FOLDER, PORT
 from frontend.repo import (
@@ -28,7 +28,9 @@ from frontend.repo import (
 )
 from frontend.utils import (
     Progress,
+    calculate_pagination,
     get_all_channels,
+    get_pagination_range,
     get_queue_size,
     get_rss_feed,
     is_valid_url,
@@ -36,11 +38,9 @@ from frontend.utils import (
     log_decorator,
     prepare_for_template,
     prepare_for_watch,
+    preview_channel_info_frontend,
     ready_up_request,
     unkeep_video_request,
-    preview_channel_info_frontend,
-    calculate_pagination,
-    get_pagination_range,
 )
 
 app = FastAPI()
@@ -68,13 +68,14 @@ async def index(request: Request):
     )
 
     return templates.TemplateResponse(
-        "yt_cuck.html", {
+        "yt_cuck.html",
+        {
             "request": request,
             "data": data,
             "is_short": False,
             "pagination": pagination,
-            "page_range": page_range
-        }
+            "page_range": page_range,
+        },
     )
 
 
@@ -97,14 +98,15 @@ async def get_shorts(request: Request):
     )
 
     return templates.TemplateResponse(
-        "yt_cuck.html", {
+        "yt_cuck.html",
+        {
             "request": request,
             "data": data,
             "is_short": True,
             "pagination": pagination,
             "page_range": page_range,
-            "base_url": "/shorts"
-        }
+            "base_url": "/shorts",
+        },
     )
 
 
@@ -128,12 +130,13 @@ async def next_page(page, request: Request):
     )
 
     return templates.TemplateResponse(
-        "yt_cuck_page.html", {
+        "yt_cuck_page.html",
+        {
             "request": request,
             "data": data,
             "pagination": pagination,
-            "page_range": page_range
-        }
+            "page_range": page_range,
+        },
     )
 
 
@@ -175,13 +178,14 @@ async def channel_video_watch(request: Request, channel_name: str):
     ]
 
     return templates.TemplateResponse(
-        "cuck_channel.html", {
+        "cuck_channel.html",
+        {
             "request": request,
             "data": data,
             "pagination": pagination,
             "page_range": page_range,
-            "base_url": f"/channel/{channel_name}"
-        }
+            "base_url": f"/channel/{channel_name}",
+        },
     )
 
 
@@ -198,13 +202,14 @@ async def channel_video_page(request: Request, channel_name: str, page: int):
     ]
 
     return templates.TemplateResponse(
-        "cuck_channel.html", {
+        "cuck_channel.html",
+        {
             "request": request,
             "data": data,
             "pagination": pagination,
             "page_range": page_range,
-            "base_url": f"/channel/{channel_name}"
-        }
+            "base_url": f"/channel/{channel_name}",
+        },
     )
 
 
@@ -227,14 +232,15 @@ async def shorts_page(request: Request, page: int):
     )
 
     return templates.TemplateResponse(
-        "yt_cuck_page.html", {
+        "yt_cuck_page.html",
+        {
             "request": request,
             "data": data,
             "is_short": True,
             "pagination": pagination,
             "page_range": page_range,
-            "base_url": "/shorts"
-        }
+            "base_url": "/shorts",
+        },
     )
 
 
@@ -264,6 +270,7 @@ async def add_channel_legacy(
     This endpoint is deprecated and should use the new preview flow.
     """
     import requests
+
     from frontend.env_vars import BACKEND_URL
 
     try:
@@ -273,15 +280,17 @@ async def add_channel_legacy(
         backend_response = requests.post(
             f"{BACKEND_URL}/api/add_channel",
             params={
-                'channel_id': channel_id,
-                'channel_url': channel_url,
-                'channel_name': channel_name
-            }
+                "channel_id": channel_id,
+                "channel_url": channel_url,
+                "channel_name": channel_name,
+            },
         )
 
         if backend_response.status_code == 200:
             result = backend_response.json()
-            return {"text": "Channel added successfully! (Note: Please use the new preview system for better experience)"}
+            return {
+                "text": "Channel added successfully! (Note: Please use the new preview system for better experience)"
+            }
         else:
             result = backend_response.json()
             response.status_code = 400
@@ -289,21 +298,25 @@ async def add_channel_legacy(
 
     except Exception as e:
         response.status_code = 500
-        return {"text": "There was an error adding that channel. Please try the new preview system."}
+        return {
+            "text": "There was an error adding that channel. Please try the new preview system."
+        }
 
 
 @log_decorator
 @app.post("/api/preview_channel")
-async def preview_channel_frontend(channel_input: Annotated[str, Form()], response: Response):
+async def preview_channel_frontend(
+    channel_input: Annotated[str, Form()], response: Response
+):
     """
     Preview channel information before adding it.
     """
     result = preview_channel_info_frontend(channel_input)
-    if result['success']:
-        return {"success": True, "channel_info": result['channel_info']}
+    if result["success"]:
+        return {"success": True, "channel_info": result["channel_info"]}
     else:
         response.status_code = 400
-        return {"success": False, "error": result['error']}
+        return {"success": False, "error": result["error"]}
 
 
 @log_decorator
@@ -318,25 +331,26 @@ async def add_channel_confirmed(
     Add a confirmed channel to the system.
     """
     import requests
+
     from frontend.env_vars import BACKEND_URL
 
     try:
         backend_response = requests.post(
             f"{BACKEND_URL}/api/add_channel",
             params={
-                'channel_id': channel_id,
-                'channel_url': channel_url,
-                'channel_name': channel_name
-            }
+                "channel_id": channel_id,
+                "channel_url": channel_url,
+                "channel_name": channel_name,
+            },
         )
 
         if backend_response.status_code == 200:
             result = backend_response.json()
-            return {"success": True, "message": result['message']}
+            return {"success": True, "message": result["message"]}
         else:
             result = backend_response.json()
             response.status_code = 400
-            return {"success": False, "error": result.get('error', 'Unknown error')}
+            return {"success": False, "error": result.get("error", "Unknown error")}
 
     except Exception as e:
         response.status_code = 500
@@ -358,13 +372,14 @@ async def most_recent_video_watch(request: Request):
 
     # Fallback to home page if no recent video
     return templates.TemplateResponse(
-        "yt_cuck.html", {
+        "yt_cuck.html",
+        {
             "request": request,
             "data": ([], 0, "", 0, False),
             "is_short": False,
             "pagination": calculate_pagination(0, 0),
-            "page_range": []
-        }
+            "page_range": [],
+        },
     )
 
 
@@ -394,13 +409,14 @@ async def most_recent_videos_page(request: Request):
     )
 
     return templates.TemplateResponse(
-        "yt_cuck.html", {
+        "yt_cuck.html",
+        {
             "request": request,
             "data": data,
             "is_short": False,
             "pagination": pagination,
-            "page_range": page_range
-        }
+            "page_range": page_range,
+        },
     )
 
 
@@ -449,7 +465,9 @@ async def download_video(video_id: str):
         return {"error": "Video file not found on disk"}, 404
 
     # Clean filename for download
-    safe_filename = "".join(c for c in video.title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+    safe_filename = "".join(
+        c for c in video.title if c.isalnum() or c in (" ", "-", "_")
+    ).rstrip()
     safe_filename = safe_filename[:100]  # Limit length
     file_extension = os.path.splitext(video.vid_path or "")[1]
     download_filename = f"{safe_filename}{file_extension}"
@@ -457,7 +475,7 @@ async def download_video(video_id: str):
     return FileResponse(
         path=video_file_path,
         filename=download_filename,
-        media_type='application/octet-stream'
+        media_type="application/octet-stream",
     )
 
 
@@ -465,7 +483,11 @@ async def download_video(video_id: str):
 @app.get("/api/playlists")
 async def get_playlists_api():
     playlists = get_all_playlists()
-    return {"playlists": [{"id": playlist.id, "name": playlist.name} for playlist in playlists]}
+    return {
+        "playlists": [
+            {"id": playlist.id, "name": playlist.name} for playlist in playlists
+        ]
+    }
 
 
 @log_decorator
@@ -484,7 +506,8 @@ async def get_playlist_videos_page(request: Request, playlist_name: str):
     playlist = get_playlist_by_name(playlist_name)
     if not playlist:
         return templates.TemplateResponse(
-            "cuck_playlist.html", {"request": request, "data": [], "error": "Playlist not found"}
+            "cuck_playlist.html",
+            {"request": request, "data": [], "error": "Playlist not found"},
         )
 
     videos, total_count = get_playlist_videos(playlist_name, 0)
@@ -504,16 +527,18 @@ async def get_playlist_videos_page(request: Request, playlist_name: str):
             else:
                 views_formatted = str(views_count)
 
-        video_data.append({
-            "id": youtube_video.id,  # Internal ID for watch URL
-            "title": playlist_video.title,
-            "vid_url": playlist_video.vid_url,
-            "vid_path": playlist_video.vid_path,
-            "thumb_path": youtube_video.thumb_path,
-            "channel": youtube_video.channel,
-            "views": views_formatted,
-            "pub_date": youtube_video.pub_date
-        })
+        video_data.append(
+            {
+                "id": youtube_video.id,  # Internal ID for watch URL
+                "title": playlist_video.title,
+                "vid_url": playlist_video.vid_url,
+                "vid_path": playlist_video.vid_path,
+                "thumb_path": youtube_video.thumb_path,
+                "channel": youtube_video.channel,
+                "views": views_formatted,
+                "pub_date": youtube_video.pub_date,
+            }
+        )
 
     return templates.TemplateResponse(
         "cuck_playlist_videos.html",
@@ -523,8 +548,8 @@ async def get_playlist_videos_page(request: Request, playlist_name: str):
             "videos": video_data,
             "pagination": pagination,
             "page_range": page_range,
-            "base_url": f"/playlist/{playlist_name}"
-        }
+            "base_url": f"/playlist/{playlist_name}",
+        },
     )
 
 
@@ -534,7 +559,8 @@ async def get_playlist_videos_page_num(request: Request, playlist_name: str, pag
     playlist = get_playlist_by_name(playlist_name)
     if not playlist:
         return templates.TemplateResponse(
-            "cuck_playlist.html", {"request": request, "data": [], "error": "Playlist not found"}
+            "cuck_playlist.html",
+            {"request": request, "data": [], "error": "Playlist not found"},
         )
 
     videos, total_count = get_playlist_videos(playlist_name, page)
@@ -554,16 +580,18 @@ async def get_playlist_videos_page_num(request: Request, playlist_name: str, pag
             else:
                 views_formatted = str(views_count)
 
-        video_data.append({
-            "id": youtube_video.id,  # Internal ID for watch URL
-            "title": playlist_video.title,
-            "vid_url": playlist_video.vid_url,
-            "vid_path": playlist_video.vid_path,
-            "thumb_path": youtube_video.thumb_path,
-            "channel": youtube_video.channel,
-            "views": views_formatted,
-            "pub_date": youtube_video.pub_date
-        })
+        video_data.append(
+            {
+                "id": youtube_video.id,  # Internal ID for watch URL
+                "title": playlist_video.title,
+                "vid_url": playlist_video.vid_url,
+                "vid_path": playlist_video.vid_path,
+                "thumb_path": youtube_video.thumb_path,
+                "channel": youtube_video.channel,
+                "views": views_formatted,
+                "pub_date": youtube_video.pub_date,
+            }
+        )
 
     return templates.TemplateResponse(
         "cuck_playlist_videos.html",
@@ -573,8 +601,8 @@ async def get_playlist_videos_page_num(request: Request, playlist_name: str, pag
             "videos": video_data,
             "pagination": pagination,
             "page_range": page_range,
-            "base_url": f"/playlist/{playlist_name}"
-        }
+            "base_url": f"/playlist/{playlist_name}",
+        },
     )
 
 

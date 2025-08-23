@@ -176,7 +176,9 @@ class PaginationInfo(BaseModel):
 
 
 @log_decorator
-def calculate_pagination(current_page: int, total_items: int, items_per_page: int = 35) -> PaginationInfo:
+def calculate_pagination(
+    current_page: int, total_items: int, items_per_page: int = 35
+) -> PaginationInfo:
     """Calculate pagination metadata"""
     total_pages = max(1, (total_items + items_per_page - 1) // items_per_page)
     current_page = max(0, min(current_page, total_pages - 1))
@@ -194,12 +196,14 @@ def calculate_pagination(current_page: int, total_items: int, items_per_page: in
         has_prev=has_prev,
         has_next=has_next,
         prev_page=prev_page,
-        next_page=next_page
+        next_page=next_page,
     )
 
 
 @log_decorator
-def get_pagination_range(current_page: int, total_pages: int, max_links: int = 5) -> list:
+def get_pagination_range(
+    current_page: int, total_pages: int, max_links: int = 5
+) -> list:
     """Get a range of page numbers to display in pagination"""
     if total_pages <= max_links:
         return list(range(total_pages))
@@ -229,7 +233,7 @@ def preview_channel_info_frontend(channel_input):
     try:
         response = requests.post(
             f"http://{BACKEND_URL}:{BACKEND_PORT}/api/preview_channel",
-            params={'channel_input': channel_input}
+            params={"channel_input": channel_input},
         )
 
         if response.status_code == 200:
@@ -237,12 +241,9 @@ def preview_channel_info_frontend(channel_input):
         else:
             error_data = response.json()
             return {
-                'success': False,
-                'error': error_data.get('error', 'Unknown error occurred')
+                "success": False,
+                "error": error_data.get("error", "Unknown error occurred"),
             }
     except Exception as e:
         logger.error(f"Error previewing channel: {e}")
-        return {
-            'success': False,
-            'error': 'Failed to connect to backend service'
-        }
+        return {"success": False, "error": "Failed to connect to backend service"}

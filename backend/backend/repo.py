@@ -7,7 +7,14 @@ from sqlalchemy import and_, select
 from backend.constants import LIVE_DELAY
 from backend.engine import session_scope
 from backend.logging import logging
-from backend.models import Channel, JsonData, Playlist, PlaylistVideo, RSSFeedDate, YoutubeVideo
+from backend.models import (
+    Channel,
+    JsonData,
+    Playlist,
+    PlaylistVideo,
+    RSSFeedDate,
+    YoutubeVideo,
+)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(_logging.INFO)
@@ -223,7 +230,9 @@ def get_playlist_videos(playlist_name):
     try:
         with session_scope() as session:
             data = session.execute(
-                select(PlaylistVideo).where(PlaylistVideo.playlist_name == playlist_name)
+                select(PlaylistVideo).where(
+                    PlaylistVideo.playlist_name == playlist_name
+                )
             ).all()
             return data
     except Exception as error:
@@ -254,7 +263,9 @@ def delete_playlist(playlist_name):
         with session_scope() as session:
             # Delete playlist videos first
             session.execute(
-                select(PlaylistVideo).where(PlaylistVideo.playlist_name == playlist_name)
+                select(PlaylistVideo).where(
+                    PlaylistVideo.playlist_name == playlist_name
+                )
             ).delete()
 
             # Delete playlist
@@ -294,7 +305,7 @@ def add_video_to_playlist(playlist_name, video_id):
                 select(PlaylistVideo).where(
                     and_(
                         PlaylistVideo.playlist_name == playlist_name,
-                        PlaylistVideo.vid_url == video[0].vid_url
+                        PlaylistVideo.vid_url == video[0].vid_url,
                     )
                 )
             ).first()
@@ -309,13 +320,15 @@ def add_video_to_playlist(playlist_name, video_id):
                 vid_url=video[0].vid_url,
                 vid_path=video[0].vid_path,
                 title=video[0].title,
-                playlist_name=playlist_name
+                playlist_name=playlist_name,
             )
             session.add(playlist_video)
             session.commit()
             return True, "Video added to playlist and marked as kept"
     except Exception as error:
-        logger.error(f"Failed to add video {video_id} to playlist {playlist_name}", error)
+        logger.error(
+            f"Failed to add video {video_id} to playlist {playlist_name}", error
+        )
         return False, "Failed to add video to playlist"
 
 
@@ -326,7 +339,7 @@ def remove_video_from_playlist(playlist_name, video_url):
                 select(PlaylistVideo).where(
                     and_(
                         PlaylistVideo.playlist_name == playlist_name,
-                        PlaylistVideo.vid_url == video_url
+                        PlaylistVideo.vid_url == video_url,
                     )
                 )
             ).delete()
@@ -337,7 +350,9 @@ def remove_video_from_playlist(playlist_name, video_url):
             else:
                 return False, "Video not found in playlist"
     except Exception as error:
-        logger.error(f"Failed to remove video {video_url} from playlist {playlist_name}", error)
+        logger.error(
+            f"Failed to remove video {video_url} from playlist {playlist_name}", error
+        )
         return False, "Failed to remove video from playlist"
 
 
@@ -365,7 +380,7 @@ def add_channel_to_db(channel_id, channel_url, channel_name):
                 channel_url=channel_url,
                 channel_name=channel_name,
                 keep=False,
-                inserted_at=int(time())
+                inserted_at=int(time()),
             )
             session.add(new_channel)
             session.commit()
