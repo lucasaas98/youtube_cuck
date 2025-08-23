@@ -71,7 +71,7 @@ check-formatting:
 
 lint:
 	echo "Linting Backend"
-	cd backend && source .venv/bin/activate && flake8 . --exclude=.venv --ignore=E501 --per-file-ignores="__init__.py:F401"
+	cd backend && source .venv/bin/activate && flake8 . --exclude=.venv --ignore=E501,W503 --per-file-ignores="__init__.py:F401"
 	echo "Linting Frontend"
 	cd frontend && source .venv/bin/activate && flake8 . --exclude=.venv --ignore=E501 --per-file-ignores="__init__.py:F401"
 

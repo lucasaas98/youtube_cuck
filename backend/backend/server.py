@@ -14,7 +14,6 @@ from backend.repo import (
     create_playlist,
     delete_playlist,
     get_all_playlists,
-    get_channel_by_id,
     get_playlist_by_name,
     get_playlist_videos,
     remove_channel_from_db,

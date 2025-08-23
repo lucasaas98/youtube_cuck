@@ -33,7 +33,6 @@ from frontend.utils import (
     get_pagination_range,
     get_queue_size,
     get_rss_feed,
-    is_valid_url,
     keep_video_request,
     log_decorator,
     prepare_for_template,
@@ -296,7 +295,7 @@ async def add_channel_legacy(
             response.status_code = 400
             return {"text": f"Error: {result.get('error', 'Failed to add channel')}"}
 
-    except Exception as e:
+    except Exception:
         response.status_code = 500
         return {
             "text": "There was an error adding that channel. Please try the new preview system."
@@ -352,7 +351,7 @@ async def add_channel_confirmed(
             response.status_code = 400
             return {"success": False, "error": result.get("error", "Unknown error")}
 
-    except Exception as e:
+    except Exception:
         response.status_code = 500
         return {"success": False, "error": "Failed to communicate with backend"}
 
