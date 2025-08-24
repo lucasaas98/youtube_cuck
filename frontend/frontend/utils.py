@@ -247,3 +247,116 @@ def preview_channel_info_frontend(channel_input):
     except Exception as e:
         logger.error(f"Error previewing channel: {e}")
         return {"success": False, "error": "Failed to connect to backend service"}
+
+
+@log_decorator
+def get_filtered_videos_from_backend(
+    page=0,
+    items_per_page=35,
+    search_query=None,
+    sort_by="downloaded_at",
+    sort_order="desc",
+    filter_kept=None,
+    include_shorts=True,
+):
+    """
+    Get filtered videos by calling the backend API.
+
+    :param page: Page number (0-based)
+    :param items_per_page: Number of items per page
+    :param search_query: Search query for title, description, or channel
+    :param sort_by: Field to sort by (downloaded_at, pub_date, title, views)
+    :param sort_order: Sort order (asc or desc)
+    :param filter_kept: Filter by keep status (True, False, or None for all)
+    :param include_shorts: Whether to include shorts
+    :return: Dictionary containing videos and pagination info
+    """
+    try:
+        # Prepare parameters
+        params = {
+            "page": page,
+            "items_per_page": items_per_page,
+            "sort_by": sort_by,
+            "sort_order": sort_order,
+            "include_shorts": include_shorts,
+        }
+
+        if search_query:
+            params["search_query"] = search_query
+
+        if filter_kept is not None:
+            params["filter_kept"] = "true" if filter_kept else "false"
+
+        response = requests.get(
+            f"http://{BACKEND_URL}:{BACKEND_PORT}/api/videos/filtered",
+            params=params,
+        )
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            logger.error(f"Backend API error: {response.status_code}")
+            return {
+                "videos": [],
+                "pagination": {
+                    "current_page": page,
+                    "total_pages": 1,
+                    "total_items": 0,
+                    "items_per_page": items_per_page,
+                    "has_prev": False,
+                    "has_next": False,
+                },
+                "filters": {},
+            }
+
+    except Exception as e:
+        logger.error(f"Error getting filtered videos from backend: {e}")
+        return {
+            "videos": [],
+            "pagination": {
+                "current_page": page,
+                "total_pages": 1,
+                "total_items": 0,
+                "items_per_page": items_per_page,
+                "has_prev": False,
+                "has_next": False,
+            },
+            "filters": {},
+        }
+
+
+@log_decorator
+def build_url_with_params(base_path, page=None, **params):
+    """
+    Build a URL with preserved query parameters.
+
+    :param base_path: The base path (e.g., "/" or "/shorts")
+    :param page: Page number (None for page 0)
+    :param params: Additional query parameters
+    :return: URL string
+    """
+    from urllib.parse import urlencode
+
+    # Build query parameters
+    query_params = {}
+
+    # Add page parameter if not 0
+    if page is not None and page > 0:
+        query_params["page"] = page
+
+    # Add other parameters
+    for key, value in params.items():
+        if value is not None and value != "":
+            query_params[key] = value
+
+    # Build URL
+    if page is None or page == 0:
+        url = base_path if base_path != "/" else "/"
+    else:
+        url = f"{base_path}/page/{page}" if base_path != "/" else f"/page/{page}"
+
+    # Add query string if there are parameters
+    if query_params:
+        url += f"?{urlencode(query_params)}"
+
+    return url

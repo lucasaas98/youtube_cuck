@@ -57,6 +57,56 @@
                 {% endif %}
             </div>
         </ul>
+        <!-- Search and Filter Controls -->
+        <div class="filter-controls">
+            <button class="filter-toggle-btn" id="filter-toggle">
+                <span class="filter-toggle-icon">🔍</span>
+                <span class="filter-toggle-text">Search & Filters</span>
+                <span class="filter-toggle-arrow">▼</span>
+            </button>
+            <div class="filter-content" id="filter-content">
+                <div class="search-section">
+                    <input type="text"
+                           id="search-input"
+                           placeholder="Search videos, descriptions, or channels..."
+                           value="{{ filters.search }}"
+                           class="search-input">
+                    <button id="search-btn" class="search-btn">Search</button>
+                    <button id="clear-search-btn" class="clear-btn">Clear</button>
+                </div>
+                <div class="filter-section">
+                    <select id="sort-by" class="filter-select">
+                        <option value="downloaded_at"
+                                {% if filters.sort_by == 'downloaded_at' %}selected{% endif %}>
+                            Sort by Download Date
+                        </option>
+                        <option value="pub_date"
+                                {% if filters.sort_by == 'pub_date' %}selected{% endif %}>Sort by Upload Date</option>
+                        <option value="title" {% if filters.sort_by == 'title' %}selected{% endif %}>Sort by Title</option>
+                        <option value="views" {% if filters.sort_by == 'views' %}selected{% endif %}>Sort by Views</option>
+                    </select>
+                    <select id="sort-order" class="filter-select">
+                        <option value="desc" {% if filters.sort_order == 'desc' %}selected{% endif %}>Newest First</option>
+                        <option value="asc" {% if filters.sort_order == 'asc' %}selected{% endif %}>Oldest First</option>
+                    </select>
+                    <select id="filter-kept" class="filter-select">
+                        <option value="" {% if filters.filter_kept == '' %}selected{% endif %}>All Videos</option>
+                        <option value="true"
+                                {% if filters.filter_kept == 'true' %}selected{% endif %}>Kept Videos Only</option>
+                        <option value="false"
+                                {% if filters.filter_kept == 'false' %}selected{% endif %}>
+                            Non-Kept Videos Only
+                        </option>
+                    </select>
+                    <label class="checkbox-label">
+                        <input type="checkbox"
+                               id="include-shorts"
+                               {% if filters.include_shorts %}checked{% endif %}>
+                        Include Shorts
+                    </label>
+                </div>
+            </div>
+        </div>
         <div class="grid-container">
             {% for row in data[0] %}
                 <div class="card">
@@ -118,5 +168,7 @@
         <script src="../static/refresh_rss.js"></script>
         <script src="../static/keyboard_controls.js"></script>
         <script src="../static/hamburger_menu.js"></script>
+        <script src="../static/video_filters.js"></script>
+        <script src="../static/mobile_filter_toggle.js"></script>
     </body>
 </html>

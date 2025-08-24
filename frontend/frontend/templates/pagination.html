@@ -4,27 +4,119 @@
         <div class="pagination">
             <!-- Previous Button -->
             {% if pagination.has_prev %}
-                <a href="{% if base_url %}{{ base_url }}/page/{{ pagination.prev_page }}{% elif pagination.prev_page == 0 %}/{% else %}/page/{{ pagination.prev_page }}{% endif %}"
-                   class="pagination-btn pagination-prev">← Previous</a>
+                {% set prev_url = "/" if pagination.prev_page == 0 else "/page/" + pagination.prev_page|string %}
+                {% if current_params.search %}
+                    {% set prev_url = prev_url + "?search=" + current_params.search|urlencode %}
+                {% endif %}
+                {% if current_params.sort_by != "downloaded_at" %}
+                    {% if "?" in prev_url %}
+                        {% set prev_url = prev_url + "&sort_by=" + current_params.sort_by|urlencode %}
+                    {% else %}
+                        {% set prev_url = prev_url + "?sort_by=" + current_params.sort_by|urlencode %}
+                    {% endif %}
+                {% endif %}
+                {% if current_params.sort_order != "desc" %}
+                    {% if "?" in prev_url %}
+                        {% set prev_url = prev_url + "&sort_order=" + current_params.sort_order|urlencode %}
+                    {% else %}
+                        {% set prev_url = prev_url + "?sort_order=" + current_params.sort_order|urlencode %}
+                    {% endif %}
+                {% endif %}
+                {% if current_params.filter_kept %}
+                    {% if "?" in prev_url %}
+                        {% set prev_url = prev_url + "&filter_kept=" + current_params.filter_kept|urlencode %}
+                    {% else %}
+                        {% set prev_url = prev_url + "?filter_kept=" + current_params.filter_kept|urlencode %}
+                    {% endif %}
+                {% endif %}
+                {% if current_params.include_shorts != "true" %}
+                    {% if "?" in prev_url %}
+                        {% set prev_url = prev_url + "&include_shorts=" + current_params.include_shorts|urlencode %}
+                    {% else %}
+                        {% set prev_url = prev_url + "?include_shorts=" + current_params.include_shorts|urlencode %}
+                    {% endif %}
+                {% endif %}
+                <a href="{{ prev_url }}" class="pagination-btn pagination-prev">← Previous</a>
             {% else %}
                 <span class="pagination-btn pagination-prev disabled">← Previous</span>
             {% endif %}
             <!-- Page Numbers -->
             <div class="pagination-numbers">
                 {% for page_num in page_range %}
-                    {% if page_num ==
-                        pagination.current_page %}
+                    {% if page_num == pagination.current_page %}
                         <span class="pagination-btn current">{{ page_num + 1 }}</span>
                     {% else %}
-                        <a href="{% if base_url %}{{ base_url }}/page/{{ page_num }}{% elif page_num == 0 %}/{% else %}/page/{{ page_num }}{% endif %}"
-                           class="pagination-btn">{{ page_num + 1 }}</a>
+                        {% set page_url = "/" if page_num == 0 else "/page/" + page_num|string %}
+                        {% if current_params.search %}
+                            {% set page_url = page_url + "?search=" + current_params.search|urlencode %}
+                        {% endif %}
+                        {% if current_params.sort_by != "downloaded_at" %}
+                            {% if "?" in page_url %}
+                                {% set page_url = page_url + "&sort_by=" + current_params.sort_by|urlencode %}
+                            {% else %}
+                                {% set page_url = page_url + "?sort_by=" + current_params.sort_by|urlencode %}
+                            {% endif %}
+                        {% endif %}
+                        {% if current_params.sort_order != "desc" %}
+                            {% if "?" in page_url %}
+                                {% set page_url = page_url + "&sort_order=" + current_params.sort_order|urlencode %}
+                            {% else %}
+                                {% set page_url = page_url + "?sort_order=" + current_params.sort_order|urlencode %}
+                            {% endif %}
+                        {% endif %}
+                        {% if current_params.filter_kept %}
+                            {% if "?" in page_url %}
+                                {% set page_url = page_url + "&filter_kept=" + current_params.filter_kept|urlencode %}
+                            {% else %}
+                                {% set page_url = page_url + "?filter_kept=" + current_params.filter_kept|urlencode %}
+                            {% endif %}
+                        {% endif %}
+                        {% if current_params.include_shorts != "true" %}
+                            {% if "?" in page_url %}
+                                {% set page_url = page_url + "&include_shorts=" + current_params.include_shorts|urlencode %}
+                            {% else %}
+                                {% set page_url = page_url + "?include_shorts=" + current_params.include_shorts|urlencode %}
+                            {% endif %}
+                        {% endif %}
+                        <a href="{{ page_url }}" class="pagination-btn">{{ page_num + 1 }}</a>
                     {% endif %}
                 {% endfor %}
             </div>
             <!-- Next Button -->
             {% if pagination.has_next %}
-                <a href="{% if base_url %}{{ base_url }}/page/{{ pagination.next_page }}{% elif pagination.next_page == 0 %}/{% else %}/page/{{ pagination.next_page }}{% endif %}"
-                   class="pagination-btn pagination-next">Next →</a>
+                {% set next_url = "/" if pagination.next_page == 0 else "/page/" + pagination.next_page|string %}
+                {% if current_params.search %}
+                    {% set next_url = next_url + "?search=" + current_params.search|urlencode %}
+                {% endif %}
+                {% if current_params.sort_by != "downloaded_at" %}
+                    {% if "?" in next_url %}
+                        {% set next_url = next_url + "&sort_by=" + current_params.sort_by|urlencode %}
+                    {% else %}
+                        {% set next_url = next_url + "?sort_by=" + current_params.sort_by|urlencode %}
+                    {% endif %}
+                {% endif %}
+                {% if current_params.sort_order != "desc" %}
+                    {% if "?" in next_url %}
+                        {% set next_url = next_url + "&sort_order=" + current_params.sort_order|urlencode %}
+                    {% else %}
+                        {% set next_url = next_url + "?sort_order=" + current_params.sort_order|urlencode %}
+                    {% endif %}
+                {% endif %}
+                {% if current_params.filter_kept %}
+                    {% if "?" in next_url %}
+                        {% set next_url = next_url + "&filter_kept=" + current_params.filter_kept|urlencode %}
+                    {% else %}
+                        {% set next_url = next_url + "?filter_kept=" + current_params.filter_kept|urlencode %}
+                    {% endif %}
+                {% endif %}
+                {% if current_params.include_shorts != "true" %}
+                    {% if "?" in next_url %}
+                        {% set next_url = next_url + "&include_shorts=" + current_params.include_shorts|urlencode %}
+                    {% else %}
+                        {% set next_url = next_url + "?include_shorts=" + current_params.include_shorts|urlencode %}
+                    {% endif %}
+                {% endif %}
+                <a href="{{ next_url }}" class="pagination-btn pagination-next">Next →</a>
             {% else %}
                 <span class="pagination-btn pagination-next disabled">Next →</span>
             {% endif %}

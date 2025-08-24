@@ -2,7 +2,7 @@ import logging as _logging
 import threading
 from time import time
 
-from sqlalchemy import func
+from sqlalchemy import desc, func, or_
 
 from frontend.engine import session_scope
 from frontend.logging import logging
@@ -352,3 +352,80 @@ def remove_video_from_playlist(playlist_name, video_url):
             f"Failed to remove video {video_url} from playlist {playlist_name}", error
         )
         return False, "Failed to remove video from playlist"
+
+
+def get_filtered_videos(
+    page=0,
+    items_per_page=35,
+    search_query=None,
+    sort_by="downloaded_at",
+    sort_order="desc",
+    filter_kept=None,
+    include_shorts=True,
+):
+    """
+    Get videos with filtering, sorting, and search capabilities.
+
+    :param page: Page number (0-based)
+    :param items_per_page: Number of items per page
+    :param search_query: Search query to match against title, description, or channel
+    :param sort_by: Field to sort by (downloaded_at, pub_date, title, views)
+    :param sort_order: Sort order (asc or desc)
+    :param filter_kept: Filter by keep status (True, False, or None for all)
+    :param include_shorts: Whether to include shorts (True/False)
+    :return: Tuple of (videos, total_count)
+    """
+    try:
+        with session_scope() as session:
+            # Base query - include all videos for compatibility with original behavior
+            # Only filter out videos without vid_path if they're "NA"
+            query = session.query(YoutubeVideo).filter(YoutubeVideo.vid_path != "NA")
+
+            # Filter shorts - match original behavior
+            if not include_shorts:
+                query = query.filter(YoutubeVideo.short.is_(False))
+
+            # Filter by keep status
+            if filter_kept is not None:
+                query = query.filter(YoutubeVideo.keep.is_(filter_kept))
+
+            # Search functionality
+            if search_query and search_query.strip():
+                search_term = f"%{search_query.strip()}%"
+                query = query.filter(
+                    or_(
+                        YoutubeVideo.title.ilike(search_term),
+                        YoutubeVideo.description.ilike(search_term),
+                        YoutubeVideo.channel.ilike(search_term),
+                    )
+                )
+
+            # Get total count before applying pagination
+            total_count = query.count()
+
+            # Apply sorting
+            if sort_by == "downloaded_at":
+                sort_field = YoutubeVideo.downloaded_at
+            elif sort_by == "pub_date":
+                sort_field = YoutubeVideo.pub_date
+            elif sort_by == "title":
+                sort_field = YoutubeVideo.title
+            elif sort_by == "views":
+                sort_field = YoutubeVideo.views
+            else:
+                sort_field = YoutubeVideo.downloaded_at
+
+            if sort_order == "desc":
+                query = query.order_by(desc(sort_field))
+            else:
+                query = query.order_by(sort_field)
+
+            # Apply pagination
+            offset = page * items_per_page
+            videos = query.limit(items_per_page).offset(offset).all()
+
+            return videos, total_count
+
+    except Exception as error:
+        logger.warn("Failed to get filtered videos", error)
+        return [], 0

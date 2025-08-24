@@ -14,6 +14,7 @@ from backend.repo import (
     create_playlist,
     delete_playlist,
     get_all_playlists,
+    get_filtered_videos,
     get_playlist_by_name,
     get_playlist_videos,
     remove_channel_from_db,
@@ -155,6 +156,9 @@ def add_channel_to_system(channel_id: str, channel_url: str, channel_name: str):
     """
     Add a channel to both the database and OPML subscription file.
     """
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+
     try:
         # First add to database
         db_success, db_message = add_channel_to_db(
@@ -163,22 +167,60 @@ def add_channel_to_system(channel_id: str, channel_url: str, channel_name: str):
         if not db_success:
             return {"success": False, "error": db_message}, 400
 
-        # Then add to OPML file
+        # Then add to OPML file using proper XML parsing
         from backend.env_vars import DATA_FOLDER
 
         feed_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
+        opml_file_path = f"{DATA_FOLDER}/subscription_manager"
 
         try:
-            with open(f"{DATA_FOLDER}/subscription_manager", "r") as fi:
-                sub_data = fi.readlines()
+            # Read and parse the existing OPML file
+            with open(opml_file_path, "r") as f:
+                content = f.read()
 
-            with open(f"{DATA_FOLDER}/subscription_manager", "w") as fo:
-                data = sub_data[0]
-                data += sub_data[1].split("</outline></body></opml>")[0]
-                data += f'<outline text="{channel_name}" title="{channel_name}" type="rss" xmlUrl="{feed_url}" />'
-                data += "</outline></body></opml>"
-                fo.write(data)
+            # Parse XML properly
+            root = ET.fromstring(content)
 
+            # Find the main outline container (the one with subscriptions)
+            body = root.find("body")
+            main_outline = body.find("outline")
+
+            # Escape special characters in channel name for XML
+            escaped_name = (
+                channel_name.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace('"', "&quot;")
+                .replace("'", "&#39;")
+            )
+
+            # Create new channel outline element
+            new_outline = ET.SubElement(main_outline, "outline")
+            new_outline.set("text", escaped_name)
+            new_outline.set("title", escaped_name)
+            new_outline.set("type", "rss")
+            new_outline.set("xmlUrl", feed_url)
+
+            # Convert back to string with proper formatting
+            rough_string = ET.tostring(root, encoding="unicode")
+
+            # Pretty print for better formatting
+            dom = minidom.parseString(rough_string)
+            pretty_xml = dom.toprettyxml(indent="    ")
+
+            # Clean up extra blank lines and XML declaration
+            lines = [line for line in pretty_xml.split("\n") if line.strip()]
+            # Remove XML declaration line and add our own
+            if lines[0].startswith("<?xml"):
+                lines = lines[1:]
+
+            final_content = "\n".join(lines)
+
+            # Write back to file
+            with open(opml_file_path, "w") as f:
+                f.write(final_content)
+
+            logger.info(f"Successfully added channel {channel_name} to OPML file")
             return {"success": True, "message": "Channel added successfully"}
 
         except Exception as e:
@@ -193,6 +235,95 @@ def add_channel_to_system(channel_id: str, channel_url: str, channel_name: str):
     except Exception as e:
         logger.error(f"Error adding channel: {e}")
         return {"success": False, "error": "Internal server error"}, 500
+
+
+@log_decorator
+@app.get("/api/videos/filtered")
+def get_videos_filtered(
+    page: int = 0,
+    items_per_page: int = 35,
+    search_query: str = None,
+    sort_by: str = "downloaded_at",
+    sort_order: str = "desc",
+    filter_kept: str = None,
+    include_shorts: bool = True,
+):
+    """
+    Get filtered and sorted videos with search capability.
+
+    :param page: Page number (0-based)
+    :param items_per_page: Number of items per page
+    :param search_query: Search query for title, description, or channel
+    :param sort_by: Field to sort by (downloaded_at, pub_date, title, views)
+    :param sort_order: Sort order (asc or desc)
+    :param filter_kept: Filter by keep status ('true', 'false', or None for all)
+    :param include_shorts: Whether to include shorts
+    :return: Filtered videos with pagination info
+    """
+    # Convert filter_kept string to boolean or None
+    kept_filter = None
+    if filter_kept == "true":
+        kept_filter = True
+    elif filter_kept == "false":
+        kept_filter = False
+
+    videos, total_count = get_filtered_videos(
+        page=page,
+        items_per_page=items_per_page,
+        search_query=search_query,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        filter_kept=kept_filter,
+        include_shorts=include_shorts,
+    )
+
+    # Convert videos to JSON-serializable format
+    video_data = []
+    for video in videos:
+        video_data.append(
+            {
+                "id": video.id,
+                "vid_url": video.vid_url,
+                "vid_path": video.vid_path,
+                "thumb_url": video.thumb_url,
+                "thumb_path": video.thumb_path,
+                "pub_date": video.pub_date,
+                "pub_date_human": video.pub_date_human,
+                "title": video.title,
+                "views": video.views,
+                "description": video.description,
+                "channel": video.channel,
+                "channel_id": video.channel_id,
+                "short": video.short,
+                "livestream": video.livestream,
+                "progress_seconds": video.progress_seconds,
+                "inserted_at": video.inserted_at,
+                "downloaded_at": video.downloaded_at,
+                "size": video.size,
+                "keep": video.keep,
+            }
+        )
+
+    total_pages = max(1, (total_count + items_per_page - 1) // items_per_page)
+
+    return {
+        "videos": video_data,
+        "pagination": {
+            "current_page": page,
+            "total_pages": total_pages,
+            "total_items": total_count,
+            "items_per_page": items_per_page,
+            "has_prev": page > 0,
+            "has_next": page < total_pages - 1,
+        },
+        "filters": {
+            "search_query": search_query,
+            "sort_by": sort_by,
+            "sort_order": sort_order,
+            "filter_kept": filter_kept,
+            "include_shorts": include_shorts,
+        },
+    }
 
 
 @log_decorator

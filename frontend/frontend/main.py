@@ -1,6 +1,7 @@
 import os
 import threading
 
+import requests
 import uvicorn
 from fastapi import FastAPI, Form, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse
@@ -8,13 +9,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from typing_extensions import Annotated
 
-from frontend.env_vars import DATA_FOLDER, PORT
+from frontend.env_vars import BACKEND_PORT, BACKEND_URL, DATA_FOLDER, PORT
 from frontend.repo import (
     add_video_to_playlist,
     create_playlist,
     delete_playlist,
     get_all_playlists,
     get_channel_videos,
+    get_filtered_videos,
     get_playlist_by_name,
     get_playlist_videos,
     get_recent_shorts,
@@ -50,17 +52,53 @@ app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
 @log_decorator
 @app.get("/", response_class=HTMLResponse)
+@app.get("/")
 async def index(request: Request):
-    videos, total_count = get_recent_videos(0)
+    # Get query parameters from URL
+    page = int(request.query_params.get("page", 0))
+    search = request.query_params.get("search")
+    sort_by = request.query_params.get("sort_by", "downloaded_at")
+    sort_order = request.query_params.get("sort_order", "desc")
+    filter_kept = request.query_params.get("filter_kept")
+    include_shorts = (
+        request.query_params.get("include_shorts", "true").lower() == "true"
+    )
+
+    # Convert filter_kept string to boolean or None
+    kept_filter = None
+    if filter_kept == "true":
+        kept_filter = True
+    elif filter_kept == "false":
+        kept_filter = False
+
+    # Use filtered videos function for consistent behavior
+    videos, total_count = get_filtered_videos(
+        page=page,
+        search_query=search,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        filter_kept=kept_filter,
+        include_shorts=include_shorts,
+    )
+
     rss_date = get_rss_date()
     (queue_size, queue_fetching) = get_queue_size()
 
-    pagination = calculate_pagination(0, total_count)
-    page_range = get_pagination_range(0, pagination.total_pages)
+    pagination = calculate_pagination(page, total_count)
+    page_range = get_pagination_range(page, pagination.total_pages)
+
+    # Prepare filter context for template
+    filters = {
+        "search": search or "",
+        "sort_by": sort_by,
+        "sort_order": sort_order,
+        "filter_kept": filter_kept or "",
+        "include_shorts": include_shorts,
+    }
 
     data = (
         [prepare_for_template(youtube_video, True) for youtube_video in videos],
-        0,
+        page,
         rss_date.date_human,
         queue_size,
         queue_fetching,
@@ -74,6 +112,14 @@ async def index(request: Request):
             "is_short": False,
             "pagination": pagination,
             "page_range": page_range,
+            "filters": filters,
+            "current_params": {
+                "search": search,
+                "sort_by": sort_by,
+                "sort_order": sort_order,
+                "filter_kept": filter_kept,
+                "include_shorts": str(include_shorts).lower(),
+            },
         },
     )
 
@@ -113,15 +159,50 @@ async def get_shorts(request: Request):
 @app.get("/page/{page}", response_class=HTMLResponse)
 async def next_page(page, request: Request):
     page_num = int(page)
-    videos, total_count = get_recent_videos(page_num)
+
+    # Get query parameters from URL for filtering
+    search = request.query_params.get("search")
+    sort_by = request.query_params.get("sort_by", "downloaded_at")
+    sort_order = request.query_params.get("sort_order", "desc")
+    filter_kept = request.query_params.get("filter_kept")
+    include_shorts = (
+        request.query_params.get("include_shorts", "true").lower() == "true"
+    )
+
+    # Convert filter_kept string to boolean or None
+    kept_filter = None
+    if filter_kept == "true":
+        kept_filter = True
+    elif filter_kept == "false":
+        kept_filter = False
+
+    # Use filtered videos function for consistent behavior
+    videos, total_count = get_filtered_videos(
+        page=page_num,
+        search_query=search,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        filter_kept=kept_filter,
+        include_shorts=include_shorts,
+    )
+
     rss_date = get_rss_date()
     (queue_size, queue_fetching) = get_queue_size()
 
     pagination = calculate_pagination(page_num, total_count)
     page_range = get_pagination_range(page_num, pagination.total_pages)
 
+    # Prepare filter context for template
+    filters = {
+        "search": search or "",
+        "sort_by": sort_by,
+        "sort_order": sort_order,
+        "filter_kept": filter_kept or "",
+        "include_shorts": include_shorts,
+    }
+
     data = (
-        [prepare_for_template(video) for video in videos],
+        [prepare_for_template(video, True) for video in videos],
         page_num,
         rss_date.date_human,
         queue_size,
@@ -129,12 +210,21 @@ async def next_page(page, request: Request):
     )
 
     return templates.TemplateResponse(
-        "yt_cuck_page.html",
+        "yt_cuck.html",
         {
             "request": request,
             "data": data,
+            "is_short": False,
             "pagination": pagination,
             "page_range": page_range,
+            "filters": filters,
+            "current_params": {
+                "search": search,
+                "sort_by": sort_by,
+                "sort_order": sort_order,
+                "filter_kept": filter_kept,
+                "include_shorts": str(include_shorts).lower(),
+            },
         },
     )
 
@@ -329,31 +419,56 @@ async def add_channel_confirmed(
     """
     Add a confirmed channel to the system.
     """
-    import requests
+    import logging
 
-    from frontend.env_vars import BACKEND_URL
+    logger = logging.getLogger(__name__)
 
     try:
+        logger.info(f"Attempting to add channel: {channel_name} (ID: {channel_id})")
+        backend_url = f"http://{BACKEND_URL}:{BACKEND_PORT}/api/add_channel"
+        logger.info(f"Backend URL: {backend_url}")
+
         backend_response = requests.post(
-            f"{BACKEND_URL}/api/add_channel",
+            backend_url,
             params={
                 "channel_id": channel_id,
                 "channel_url": channel_url,
                 "channel_name": channel_name,
             },
+            timeout=30,
         )
+
+        logger.info(f"Backend response status: {backend_response.status_code}")
 
         if backend_response.status_code == 200:
             result = backend_response.json()
+            logger.info(f"Successfully added channel: {channel_name}")
             return {"success": True, "message": result["message"]}
         else:
-            result = backend_response.json()
-            response.status_code = 400
-            return {"success": False, "error": result.get("error", "Unknown error")}
+            try:
+                result = backend_response.json()
+                error_msg = result.get("error", "Unknown error")
+            except Exception:
+                error_msg = (
+                    f"HTTP {backend_response.status_code}: {backend_response.text}"
+                )
 
-    except Exception:
+            logger.error(f"Backend error: {error_msg}")
+            response.status_code = 400
+            return {"success": False, "error": error_msg}
+
+    except requests.exceptions.Timeout:
+        logger.error("Backend request timeout")
+        response.status_code = 500
+        return {"success": False, "error": "Backend request timeout"}
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f"Failed to connect to backend: {e}")
         response.status_code = 500
         return {"success": False, "error": "Failed to communicate with backend"}
+    except Exception as e:
+        logger.error(f"Unexpected error in add_channel_confirmed: {e}")
+        response.status_code = 500
+        return {"success": False, "error": "Internal server error"}
 
 
 @log_decorator
@@ -661,7 +776,7 @@ async def remove_video_from_existing_playlist(
 
 
 @log_decorator
-@app.on_event("startup")
+@app.get("/ready_up_server")
 async def ready_up_server():
     t1 = threading.Thread(target=ready_up_request)
     t1.start()
