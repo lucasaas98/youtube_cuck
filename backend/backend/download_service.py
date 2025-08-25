@@ -27,7 +27,7 @@ logger.setLevel(_logging.INFO)
 
 
 class DownloadService:
-    def __init__(self, max_concurrent_downloads=3):
+    def __init__(self, max_concurrent_downloads=1):
         """
         Initialize the download service.
 
