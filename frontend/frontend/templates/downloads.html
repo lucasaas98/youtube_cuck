@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+        <meta content="utf-8" http-equiv="encoding">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Download Monitor - Youtube Cuck</title>
+        <meta name="description" content="Monitor download jobs">
+        <meta name="author" content="Repi Gamer">
+        <link rel="shortcut icon" href="../static/favicon.ico">
+        <link rel="stylesheet" href="../static/base.css">
+        <link rel="stylesheet" href="../static/yt_cuck.css">
+        <style>
+            .downloads-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+
+            .stat-card {
+                background: #2a2a2a;
+                border-radius: 8px;
+                padding: 20px;
+                text-align: center;
+                border: 1px solid #444;
+            }
+
+            .stat-number {
+                font-size: 2em;
+                font-weight: bold;
+                color: #fff;
+                margin-bottom: 10px;
+            }
+
+            .stat-label {
+                color: #ccc;
+                font-size: 0.9em;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+
+            .service-status {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .status-indicator {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+            }
+
+            .status-running {
+                background-color: #4CAF50;
+            }
+
+            .status-stopped {
+                background-color: #f44336;
+            }
+
+            .filters {
+                margin-bottom: 20px;
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+
+            .filter-select {
+                background: #2a2a2a;
+                color: #fff;
+                border: 1px solid #444;
+                padding: 8px 12px;
+                border-radius: 4px;
+            }
+
+            .jobs-table {
+                width: 100%;
+                background: #2a2a2a;
+                border-radius: 8px;
+                overflow: hidden;
+                border: 1px solid #444;
+            }
+
+            .jobs-table table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .jobs-table th {
+                background: #1a1a1a;
+                color: #fff;
+                padding: 15px;
+                text-align: left;
+                border-bottom: 1px solid #444;
+                font-weight: bold;
+            }
+
+            .jobs-table td {
+                padding: 12px 15px;
+                border-bottom: 1px solid #333;
+                color: #ccc;
+                vertical-align: top;
+            }
+
+            .jobs-table tr:hover {
+                background: #333;
+            }
+
+            .status-badge {
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 0.8em;
+                font-weight: bold;
+                text-transform: uppercase;
+            }
+
+            .status-pending {
+                background: #ff9800;
+                color: #000;
+            }
+
+            .status-downloading {
+                background: #2196F3;
+                color: #fff;
+            }
+
+            .status-completed {
+                background: #4CAF50;
+                color: #fff;
+            }
+
+            .status-failed {
+                background: #f44336;
+                color: #fff;
+            }
+
+            .status-retrying {
+                background: #9C27B0;
+                color: #fff;
+            }
+
+            .video-title {
+                max-width: 300px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .error-message {
+                color: #f44336;
+                font-size: 0.8em;
+                max-width: 200px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                cursor: help;
+            }
+
+            .retry-btn {
+                background: #ff9800;
+                color: #fff;
+                border: none;
+                padding: 4px 8px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.8em;
+            }
+
+            .retry-btn:hover {
+                background: #f57c00;
+            }
+
+            .retry-btn:disabled {
+                background: #666;
+                cursor: not-allowed;
+            }
+
+            .date-time {
+                font-size: 0.8em;
+                color: #999;
+            }
+
+            .no-jobs {
+                text-align: center;
+                padding: 40px;
+                color: #999;
+            }
+
+            .pagination {
+                margin-top: 20px;
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .pagination a,
+            .pagination span {
+                padding: 8px 12px;
+                background: #2a2a2a;
+                color: #fff;
+                text-decoration: none;
+                border-radius: 4px;
+                border: 1px solid #444;
+            }
+
+            .pagination .current {
+                background: #1976D2;
+            }
+
+            .pagination a:hover {
+                background: #333;
+            }
+        </style>
+    </head>
+    <body>
+        <ul class="nav_bar">
+            <button class="hamburger" id="hamburger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="nav-menu">
+                <li>
+                    <a href="/">Home</a>
+                </li>
+                <li>
+                    <a href="shorts">Shorts</a>
+                </li>
+                <li>
+                    <a href="most_recent_video">Continue</a>
+                </li>
+                <li>
+                    <a href="most_recent_videos">History</a>
+                </li>
+                <li>
+                    <a href="subs">Subscriptions</a>
+                </li>
+                <li>
+                    <a href="playlist">Playlists</a>
+                </li>
+                <li>
+                    <a class="active" href="downloads">Downloads</a>
+                </li>
+                <li class="right">
+                    <a id="refresh-stats">Refresh</a>
+                </li>
+            </div>
+        </ul>
+        <div class="downloads-container">
+            <h1>Download Monitor</h1>
+            {% if error %}
+                <div class="error-message"
+                     style="background: #f44336;
+                            color: #fff;
+                            padding: 15px;
+                            border-radius: 8px;
+                            margin-bottom: 20px">{{ error }}</div>
+            {% endif %}
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.job_stats.get('pending', 0) }}</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.job_stats.get('downloading', 0) }}</div>
+                    <div class="stat-label">Downloading</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.job_stats.get('completed', 0) }}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.job_stats.get('failed', 0) }}</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="service-status">
+                        <div class="status-indicator {{ 'status-running' if stats.service_status.get('running', False) else 'status-stopped' }}">
+                        </div>
+                        <div>
+                            <div class="stat-number">
+                                {{ stats.service_status.get('active_downloads', 0) }}/{{ stats.service_status.get('max_concurrent', 3) }}
+                            </div>
+                            <div class="stat-label">Service {{ 'Running' if stats.service_status.get('running', False) else 'Stopped' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Filters -->
+            <div class="filters">
+                <label for="status-filter">Filter by status:</label>
+                <select id="status-filter" class="filter-select" onchange="filterByStatus()">
+                    <option value="">All</option>
+                    {% for status_option in status_options %}
+                        <option value="{{ status_option }}"
+                                {% if current_status == status_option %}selected{% endif %}>
+                            {{ status_option.title() }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Jobs Table -->
+            <div class="jobs-table">
+                {% if jobs %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Video</th>
+                                <th>Channel</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Progress</th>
+                                <th>Retries</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in jobs %}
+                                <tr>
+                                    <td>
+                                        <div class="video-title" title="{{ job.video_title }}">{{ job.video_title }}</div>
+                                    </td>
+                                    <td>{{ job.channel_name }}</td>
+                                    <td>
+                                        <span class="status-badge status-{{ job.status }}">{{ job.status }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="date-time">
+                                            {% if job.created_at %}
+                                                {% set created_dt = job.created_at | timestamp_to_datetime %}
+                                                {{ created_dt.strftime("%Y-%m-%d %H:%M") }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if job.started_at and not job.completed_at %}
+                                            <div class="date-time">Started: {{ (job.started_at | timestamp_to_datetime).strftime("%H:%M") }}</div>
+                                        {% elif job.completed_at %}
+                                            <div class="date-time">Completed: {{ (job.completed_at | timestamp_to_datetime).strftime("%H:%M") }}</div>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                        {% if job.error_message %}
+                                            <div class="error-message" title="{{ job.error_message }}">{{ job.error_message }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ job.retry_count }}/{{ job.max_retries }}</td>
+                                    <td>
+                                        {% if job.status == 'failed' and job.retry_count < job.max_retries %}
+                                            <button class="retry-btn" onclick="retryJob({{ job.id }})">Retry</button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="no-jobs">
+                        {% if current_status %}
+                            No {{ current_status }} download jobs found.
+                        {% else %}
+                            No download jobs found.
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            <!-- Pagination -->
+            {% if pagination.total_pages > 1 %}
+                <div class="pagination">
+                    {% if pagination.has_prev %}
+                        <a href="?page={{ pagination.current_page - 1 }}{% if current_status %}&status={{ current_status }}{% endif %}">« Previous</a>
+                    {% endif %}
+                    {% for page_num in pagination_range %}
+                        {% if page_num == pagination.current_page %}
+                            <span class="current">{{ page_num + 1 }}</span>
+                        {% else %}
+                            <a href="?page={{ page_num }}{% if current_status %}&status={{ current_status }}{% endif %}">{{ page_num + 1 }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    {% if pagination.has_next %}
+                        <a href="?page={{ pagination.current_page + 1 }}{% if current_status %}&status={{ current_status }}{% endif %}">Next »</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+        <script>
+            // Hamburger menu functionality
+            document.getElementById('hamburger-menu').addEventListener('click', function() {
+                document.getElementById('nav-menu').classList.toggle('active');
+            });
+
+            // Filter by status
+            function filterByStatus() {
+                const statusFilter = document.getElementById('status-filter');
+                const currentUrl = new URL(window.location);
+
+                if (statusFilter.value) {
+                    currentUrl.searchParams.set('status', statusFilter.value);
+                } else {
+                    currentUrl.searchParams.delete('status');
+                }
+                currentUrl.searchParams.delete('page'); // Reset to first page
+
+                window.location.href = currentUrl.toString();
+            }
+
+            // Retry job
+            function retryJob(jobId) {
+                const button = event.target;
+                button.disabled = true;
+                button.textContent = 'Retrying...';
+
+                fetch(`/downloads/retry/${jobId}`, {
+                        method: 'POST'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.text) {
+                            // Success - reload page to show updated status
+                            window.location.reload();
+                        } else {
+                            alert('Failed to retry download: ' + (data.error || 'Unknown error'));
+                            button.disabled = false;
+                            button.textContent = 'Retry';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Failed to retry download');
+                        button.disabled = false;
+                        button.textContent = 'Retry';
+                    });
+            }
+
+            // Auto-refresh stats every 30 seconds
+            setInterval(function() {
+                // Only refresh if not on a specific page or filter to avoid disrupting user
+                if (window.location.search === '' || window.location.search === '?page=0') {
+                    window.location.reload();
+                }
+            }, 30000);
+
+            // Refresh button
+            document.getElementById('refresh-stats').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.reload();
+            });
+        </script>
+    </body>
+</html>

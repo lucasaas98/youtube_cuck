@@ -42,6 +42,10 @@
                     <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
                        href="../playlist">Playlists</a>
                 </li>
+                <li>
+                    <a {% if request.url.path.endswith('downloads') %}class="active"{% endif %}
+                       href="../downloads">Downloads</a>
+                </li>
                 <li class="right">
                     <a id="add">Add Channel</a>
                 </li>
@@ -70,6 +74,14 @@
                         <span class="checkmark"></span>
                     </label>
                     <button id="add-to-playlist-btn">Add to Playlist</button>
+                    <button id="queue-download-btn"
+                            style="background-color: #ff9800;
+                                   color: white;
+                                   border: none;
+                                   padding: 8px 16px;
+                                   border-radius: 4px;
+                                   cursor: pointer;
+                                   margin-left: 10px">Queue Download</button>
                 </div>
             </div>
             <div class="info">
@@ -248,6 +260,39 @@
                     event.preventDefault();
                 }
             });
+
+            // Queue download functionality
+            document.getElementById("queue-download-btn").onclick = function() {
+                var btn = this;
+                btn.disabled = true;
+                btn.textContent = "Queueing...";
+
+                fetch(`../downloads/queue/{{ data['id'] }}`, {
+                        method: 'POST'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.text) {
+                            btn.textContent = "Queued!";
+                            btn.style.backgroundColor = "#4CAF50";
+                            setTimeout(function() {
+                                btn.disabled = false;
+                                btn.textContent = "Queue Download";
+                                btn.style.backgroundColor = "#ff9800";
+                            }, 3000);
+                        } else {
+                            alert('Failed to queue download: ' + (data.error || 'Unknown error'));
+                            btn.disabled = false;
+                            btn.textContent = "Queue Download";
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Failed to queue download');
+                        btn.disabled = false;
+                        btn.textContent = "Queue Download";
+                    });
+            };
 
             // Prevent event bubbling on all modal interactions
             playlistModal.addEventListener('keydown', function(event) {

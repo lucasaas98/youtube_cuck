@@ -42,6 +42,10 @@
                     <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
                        href="../playlist">Playlists</a>
                 </li>
+                <li>
+                    <a {% if request.url.path.endswith('downloads') %}class="active"{% endif %}
+                       href="../downloads">Downloads</a>
+                </li>
                 <li class="right">
                     <a id="add">Add Channel</a>
                 </li>

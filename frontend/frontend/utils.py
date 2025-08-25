@@ -360,3 +360,70 @@ def build_url_with_params(base_path, page=None, **params):
         url += f"?{urlencode(query_params)}"
 
     return url
+
+
+@log_decorator
+def get_download_stats():
+    """Get download job statistics from backend."""
+    try:
+        response = requests.get(
+            f"http://{BACKEND_URL}:{BACKEND_PORT}/api/downloads/stats"
+        )
+        if response.status_code == 200:
+            return response.json()
+        else:
+            logger.error(f"Failed to get download stats: {response.status_code}")
+            return {"job_stats": {}, "service_status": {}}
+    except Exception as e:
+        logger.error(f"Error getting download stats: {e}")
+        return {"job_stats": {}, "service_status": {}}
+
+
+@log_decorator
+def get_download_jobs(page=0, items_per_page=50, status=None):
+    """Get download jobs from backend with pagination."""
+    try:
+        params = {
+            "page": page,
+            "items_per_page": items_per_page,
+        }
+        if status:
+            params["status"] = status
+
+        response = requests.get(
+            f"http://{BACKEND_URL}:{BACKEND_PORT}/api/downloads/jobs", params=params
+        )
+        if response.status_code == 200:
+            return response.json()
+        else:
+            logger.error(f"Failed to get download jobs: {response.status_code}")
+            return {"jobs": [], "pagination": {}}
+    except Exception as e:
+        logger.error(f"Error getting download jobs: {e}")
+        return {"jobs": [], "pagination": {}}
+
+
+@log_decorator
+def retry_download_job(job_id):
+    """Retry a failed download job."""
+    try:
+        response = requests.post(
+            f"http://{BACKEND_URL}:{BACKEND_PORT}/api/downloads/retry/{job_id}"
+        )
+        return response.status_code == 200, response.json()
+    except Exception as e:
+        logger.error(f"Error retrying download job: {e}")
+        return False, {"error": "Failed to retry download"}
+
+
+@log_decorator
+def queue_video_download(video_id):
+    """Queue a video for download."""
+    try:
+        response = requests.post(
+            f"http://{BACKEND_URL}:{BACKEND_PORT}/api/downloads/queue/{video_id}"
+        )
+        return response.status_code == 200, response.json()
+    except Exception as e:
+        logger.error(f"Error queueing video download: {e}")
+        return False, {"error": "Failed to queue video for download"}

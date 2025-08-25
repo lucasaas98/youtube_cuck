@@ -166,38 +166,66 @@ def get_channel_data(channel):
 @log_decorator
 def get_video():
     """
-    Download videos from the channels based on the DELAY value.
+    Queue videos for async download based on the DELAY value.
     """
-    logger.info("Downloading videos!")
+    logger.info("Queueing videos for download!")
     try:
+        from backend.download_service import queue_download
+
         down_vid_urls = get_downloaded_video_urls()
         min_date = time() - DELAY
         json_video_data = json.loads(get_json())
+
+        queued_count = 0
+        updated_count = 0
 
         futures = []
         for channel in json_video_data.keys():
             for video in json_video_data[channel]:
                 url = video["video_url"]
                 if url in down_vid_urls:
+                    # Still update view counts for existing videos
                     futures.append(
                         update_count_executor.submit(update_view_count, video)
                     )
+                    updated_count += 1
                     continue
                 if float(video["epoch_date"]) < min_date:
                     continue
                 if "/shorts/" in url:
                     continue
-                futures.append(
-                    video_executor.submit(video_download_thread, video, channel)
+
+                # Queue video for async download instead of downloading immediately
+                success, message, job_id = queue_download(
+                    video_url=url,
+                    video_title=video.get("title", "Unknown Title"),
+                    channel_name=channel,
+                    video_data=video,
+                    priority=0,
                 )
 
+                if success:
+                    queued_count += 1
+                    logger.info(
+                        f"Queued download job {job_id} for video: {video.get('title', 'Unknown')}"
+                    )
+                else:
+                    logger.warning(
+                        f"Failed to queue video {video.get('title', 'Unknown')}: {message}"
+                    )
+
+        # Wait for view count updates to complete
         for future in futures:
             future.result()
 
+        logger.info(
+            f"Queued {queued_count} videos for download, updated {updated_count} view counts"
+        )
+
     except Exception as error:
-        logger.error("Failed to get new videos", error)
+        logger.error("Failed to queue new videos for download", error)
     finally:
-        logger.info("Videos Downloaded!")
+        logger.info("Video queueing completed!")
 
 
 @log_decorator

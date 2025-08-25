@@ -76,3 +76,27 @@ class Channel(Base):
     channel_name = Column(String(255))
     keep = Column(Boolean, default=False)
     inserted_at = Column(Integer)
+
+
+class DownloadJob(Base):
+    __tablename__ = "download_job"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    video_url = Column(String(300), nullable=False)
+    video_title = Column(String(1000))
+    channel_name = Column(String(1000))
+    status = Column(
+        String(50), default="pending"
+    )  # pending, downloading, completed, failed, retrying
+    priority = Column(Integer, default=0)  # Higher numbers = higher priority
+    created_at = Column(Integer, nullable=False)
+    started_at = Column(Integer)
+    completed_at = Column(Integer)
+    error_message = Column(Text)
+    retry_count = Column(Integer, default=0)
+    max_retries = Column(Integer, default=3)
+    video_data = Column(JSON)  # Store the full video data from RSS
+
+    # Add indexes for performance
+    index_status = Index("idx_download_job_status", status)
+    index_created_at = Index("idx_download_job_created_at", created_at)
+    index_priority_status = Index("idx_download_job_priority_status", priority, status)

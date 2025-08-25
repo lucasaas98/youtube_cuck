@@ -9,6 +9,7 @@ from backend.engine import session_scope
 from backend.logging import logging
 from backend.models import (
     Channel,
+    DownloadJob,
     JsonData,
     Playlist,
     PlaylistVideo,
@@ -507,3 +508,250 @@ def get_filtered_videos(
     except Exception as error:
         logger.error("Failed to get filtered videos", error)
         return [], 0
+
+
+def create_download_job(video_url, video_title, channel_name, video_data, priority=0):
+    """
+    Create a new download job for async processing.
+
+    :param video_url: URL of the video to download
+    :param video_title: Title of the video
+    :param channel_name: Channel name
+    :param video_data: Full video data from RSS
+    :param priority: Job priority (higher = more important)
+    :return: Tuple of (success, message, job_id)
+    """
+    try:
+        with session_scope() as session:
+            # Check if job already exists for this video
+            existing = session.execute(
+                select(DownloadJob).where(
+                    and_(
+                        DownloadJob.video_url == video_url,
+                        DownloadJob.status.in_(["pending", "downloading", "retrying"]),
+                    )
+                )
+            ).first()
+
+            if existing:
+                return (
+                    False,
+                    "Download job already exists for this video",
+                    existing[0].id,
+                )
+
+            # Create new download job
+            download_job = DownloadJob(
+                video_url=video_url,
+                video_title=video_title,
+                channel_name=channel_name,
+                status="pending",
+                priority=priority,
+                created_at=int(time()),
+                video_data=json.dumps(video_data),
+            )
+
+            session.add(download_job)
+            session.commit()
+            session.refresh(download_job)
+
+            logger.info(f"Created download job for video: {video_title}")
+            return True, "Download job created successfully", download_job.id
+
+    except Exception as error:
+        logger.error(f"Failed to create download job for {video_url}", error)
+        return False, "Failed to create download job", None
+
+
+def get_pending_download_jobs(limit=10):
+    """
+    Get pending download jobs ordered by priority and creation time.
+
+    :param limit: Maximum number of jobs to return
+    :return: List of download jobs
+    """
+    try:
+        with session_scope() as session:
+            data = session.execute(
+                select(DownloadJob)
+                .where(DownloadJob.status == "pending")
+                .order_by(desc(DownloadJob.priority), DownloadJob.created_at)
+                .limit(limit)
+            ).all()
+            return [job[0] for job in data]
+    except Exception as error:
+        logger.error("Failed to get pending download jobs", error)
+        return []
+
+
+def get_retry_download_jobs(limit=10):
+    """
+    Get download jobs marked for retry.
+
+    :param limit: Maximum number of jobs to return
+    :return: List of download jobs
+    """
+    try:
+        with session_scope() as session:
+            data = session.execute(
+                select(DownloadJob)
+                .where(DownloadJob.status == "retrying")
+                .order_by(desc(DownloadJob.priority), DownloadJob.created_at)
+                .limit(limit)
+            ).all()
+            return [job[0] for job in data]
+    except Exception as error:
+        logger.error("Failed to get retry download jobs", error)
+        return []
+
+
+def update_download_job_status(job_id, status, error_message=None):
+    """
+    Update the status of a download job.
+
+    :param job_id: ID of the download job
+    :param status: New status
+    :param error_message: Error message if status is failed
+    :return: True if successful, False otherwise
+    """
+    try:
+        with session_scope() as session:
+            job = session.query(DownloadJob).filter(DownloadJob.id == job_id).first()
+            if not job:
+                return False
+
+            job.status = status
+
+            if status == "downloading":
+                job.started_at = int(time())
+            elif status in ["completed", "failed"]:
+                job.completed_at = int(time())
+
+            if error_message:
+                job.error_message = error_message
+
+            session.commit()
+            return True
+
+    except Exception as error:
+        logger.error(f"Failed to update download job status for job {job_id}", error)
+        return False
+
+
+def retry_download_job(job_id):
+    """
+    Mark a failed download job for retry if it hasn't exceeded max retries.
+
+    :param job_id: ID of the download job
+    :return: Tuple of (success, message)
+    """
+    try:
+        with session_scope() as session:
+            job = session.query(DownloadJob).filter(DownloadJob.id == job_id).first()
+            if not job:
+                return False, "Download job not found"
+
+            if job.retry_count >= job.max_retries:
+                return False, "Maximum retries exceeded"
+
+            job.status = "retrying"
+            job.retry_count += 1
+            job.error_message = None
+            job.started_at = None
+            job.completed_at = None
+
+            session.commit()
+            return True, "Download job marked for retry"
+
+    except Exception as error:
+        logger.error(f"Failed to retry download job {job_id}", error)
+        return False, "Failed to mark job for retry"
+
+
+def get_download_job_stats():
+    """
+    Get statistics about download jobs.
+
+    :return: Dictionary with job counts by status
+    """
+    try:
+        with session_scope() as session:
+            stats = {}
+
+            # Count jobs by status
+            for status in ["pending", "downloading", "completed", "failed", "retrying"]:
+                count = (
+                    session.query(DownloadJob)
+                    .filter(DownloadJob.status == status)
+                    .count()
+                )
+                stats[status] = count
+
+            return stats
+
+    except Exception as error:
+        logger.error("Failed to get download job stats", error)
+        return {}
+
+
+def get_download_jobs_paginated(page=0, items_per_page=50, status_filter=None):
+    """
+    Get download jobs with pagination and optional status filtering.
+
+    :param page: Page number (0-based)
+    :param items_per_page: Items per page
+    :param status_filter: Filter by status (optional)
+    :return: Tuple of (jobs, total_count)
+    """
+    try:
+        with session_scope() as session:
+            query = session.query(DownloadJob)
+
+            if status_filter:
+                query = query.filter(DownloadJob.status == status_filter)
+
+            total_count = query.count()
+
+            jobs = (
+                query.order_by(desc(DownloadJob.created_at))
+                .offset(page * items_per_page)
+                .limit(items_per_page)
+                .all()
+            )
+
+            return jobs, total_count
+
+    except Exception as error:
+        logger.error("Failed to get paginated download jobs", error)
+        return [], 0
+
+
+def delete_old_download_jobs(days_old=30):
+    """
+    Delete completed and failed download jobs older than specified days.
+
+    :param days_old: Number of days to keep jobs
+    :return: Number of jobs deleted
+    """
+    try:
+        with session_scope() as session:
+            cutoff_time = int(time()) - (days_old * 24 * 60 * 60)
+
+            deleted_count = (
+                session.query(DownloadJob)
+                .filter(
+                    and_(
+                        DownloadJob.status.in_(["completed", "failed"]),
+                        DownloadJob.created_at < cutoff_time,
+                    )
+                )
+                .delete()
+            )
+
+            session.commit()
+            logger.info(f"Deleted {deleted_count} old download jobs")
+            return deleted_count
+
+    except Exception as error:
+        logger.error("Failed to delete old download jobs", error)
+        return 0

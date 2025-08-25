@@ -1,5 +1,7 @@
+import logging as _logging
 import os
 import threading
+from datetime import datetime
 
 import requests
 import uvicorn
@@ -10,6 +12,7 @@ from fastapi.templating import Jinja2Templates
 from typing_extensions import Annotated
 
 from frontend.env_vars import BACKEND_PORT, BACKEND_URL, DATA_FOLDER, PORT
+from frontend.logging import logging
 from frontend.repo import (
     add_video_to_playlist,
     create_playlist,
@@ -32,6 +35,8 @@ from frontend.utils import (
     Progress,
     calculate_pagination,
     get_all_channels,
+    get_download_jobs,
+    get_download_stats,
     get_pagination_range,
     get_queue_size,
     get_rss_feed,
@@ -40,13 +45,30 @@ from frontend.utils import (
     prepare_for_template,
     prepare_for_watch,
     preview_channel_info_frontend,
+    queue_video_download,
     ready_up_request,
+    retry_download_job,
     unkeep_video_request,
 )
+
+logger = logging.getLogger(__name__)
+logger.setLevel(_logging.INFO)
 
 app = FastAPI()
 
 templates = Jinja2Templates(directory="frontend/templates")
+
+
+# Add custom filters to templates
+def timestamp_to_datetime(timestamp):
+    """Convert Unix timestamp to datetime object."""
+    if timestamp:
+        return datetime.fromtimestamp(int(timestamp))
+    return None
+
+
+templates.env.filters["timestamp_to_datetime"] = timestamp_to_datetime
+
 app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
 
@@ -151,6 +173,13 @@ async def get_shorts(request: Request):
             "pagination": pagination,
             "page_range": page_range,
             "base_url": "/shorts",
+            "current_params": {
+                "search": "",
+                "sort_by": "downloaded_at",
+                "sort_order": "desc",
+                "filter_kept": None,
+                "include_shorts": True,
+            },
         },
     )
 
@@ -274,6 +303,13 @@ async def channel_video_watch(request: Request, channel_name: str):
             "pagination": pagination,
             "page_range": page_range,
             "base_url": f"/channel/{channel_name}",
+            "current_params": {
+                "search": "",
+                "sort_by": "downloaded_at",
+                "sort_order": "desc",
+                "filter_kept": None,
+                "include_shorts": True,
+            },
         },
     )
 
@@ -298,6 +334,13 @@ async def channel_video_page(request: Request, channel_name: str, page: int):
             "pagination": pagination,
             "page_range": page_range,
             "base_url": f"/channel/{channel_name}",
+            "current_params": {
+                "search": "",
+                "sort_by": "downloaded_at",
+                "sort_order": "desc",
+                "filter_kept": None,
+                "include_shorts": True,
+            },
         },
     )
 
@@ -329,6 +372,13 @@ async def shorts_page(request: Request, page: int):
             "pagination": pagination,
             "page_range": page_range,
             "base_url": "/shorts",
+            "current_params": {
+                "search": "",
+                "sort_by": "downloaded_at",
+                "sort_order": "desc",
+                "filter_kept": None,
+                "include_shorts": True,
+            },
         },
     )
 
@@ -493,6 +543,13 @@ async def most_recent_video_watch(request: Request):
             "is_short": False,
             "pagination": calculate_pagination(0, 0),
             "page_range": [],
+            "current_params": {
+                "search": "",
+                "sort_by": "downloaded_at",
+                "sort_order": "desc",
+                "filter_kept": None,
+                "include_shorts": True,
+            },
         },
     )
 
@@ -530,6 +587,13 @@ async def most_recent_videos_page(request: Request):
             "is_short": False,
             "pagination": pagination,
             "page_range": page_range,
+            "current_params": {
+                "search": "",
+                "sort_by": "downloaded_at",
+                "sort_order": "desc",
+                "filter_kept": None,
+                "include_shorts": True,
+            },
         },
     )
 
@@ -780,6 +844,93 @@ async def remove_video_from_existing_playlist(
 async def ready_up_server():
     t1 = threading.Thread(target=ready_up_request)
     t1.start()
+
+
+@log_decorator
+@app.get("/downloads")
+async def downloads_page(request: Request, page: int = 0, status: str = None):
+    """Download monitoring page."""
+    try:
+        # Get download stats
+        stats_data = get_download_stats()
+
+        # Get download jobs
+        jobs_data = get_download_jobs(page=page, items_per_page=50, status=status)
+
+        # Calculate pagination
+        pagination = jobs_data.get("pagination", {})
+        pagination_range = get_pagination_range(
+            pagination.get("current_page", 0), pagination.get("total_pages", 1)
+        )
+
+        return templates.TemplateResponse(
+            "downloads.html",
+            {
+                "request": request,
+                "jobs": jobs_data.get("jobs", []),
+                "pagination": pagination,
+                "pagination_range": pagination_range,
+                "stats": stats_data,
+                "current_status": status,
+                "status_options": [
+                    "pending",
+                    "downloading",
+                    "completed",
+                    "failed",
+                    "retrying",
+                ],
+            },
+        )
+    except Exception as e:
+        logger.error(f"Error in downloads page: {e}")
+        return templates.TemplateResponse(
+            "downloads.html",
+            {
+                "request": request,
+                "jobs": [],
+                "pagination": {},
+                "pagination_range": [],
+                "stats": {"job_stats": {}, "service_status": {}},
+                "current_status": status,
+                "status_options": [
+                    "pending",
+                    "downloading",
+                    "completed",
+                    "failed",
+                    "retrying",
+                ],
+                "error": "Failed to load download data",
+            },
+        )
+
+
+@log_decorator
+@app.get("/downloads/page/{page}")
+async def downloads_page_with_page(request: Request, page: int, status: str = None):
+    """Download monitoring page with specific page number."""
+    return await downloads_page(request, page, status)
+
+
+@log_decorator
+@app.post("/downloads/retry/{job_id}")
+async def retry_download_frontend(job_id: int):
+    """Retry a failed download job."""
+    success, response = retry_download_job(job_id)
+    if success:
+        return {"text": "Download job marked for retry!"}
+    else:
+        return {"error": response.get("error", "Failed to retry download")}, 400
+
+
+@log_decorator
+@app.post("/downloads/queue/{video_id}")
+async def queue_video_download_frontend(video_id: str):
+    """Queue a video for download."""
+    success, response = queue_video_download(video_id)
+    if success:
+        return {"text": "Video queued for download!"}
+    else:
+        return {"error": response.get("error", "Failed to queue video")}, 400
 
 
 if __name__ == "__main__":

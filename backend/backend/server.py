@@ -5,6 +5,11 @@ import uvicorn
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 
+from backend.download_service import (
+    get_download_service,
+    start_download_service,
+    stop_download_service,
+)
 from backend.engine import close_engine
 from backend.env_vars import PORT
 from backend.logging import logging
@@ -12,13 +17,17 @@ from backend.repo import (
     add_channel_to_db,
     add_video_to_playlist,
     create_playlist,
+    delete_old_download_jobs,
     delete_playlist,
     get_all_playlists,
+    get_download_job_stats,
+    get_download_jobs_paginated,
     get_filtered_videos,
     get_playlist_by_name,
     get_playlist_videos,
     remove_channel_from_db,
     remove_video_from_playlist,
+    retry_download_job,
 )
 from backend.utils import (
     download_and_keep,
@@ -34,6 +43,14 @@ logger = logging.getLogger(__name__)
 logger.setLevel(_logging.INFO)
 
 app = FastAPI()
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Start the download service when the application starts."""
+    logger.info("Starting download service and scheduler on application startup...")
+    activate_schedule()
+    logger.info("Download service and scheduler started successfully")
 
 
 @log_decorator
@@ -65,8 +82,64 @@ def get_size():
 @log_decorator
 @app.get("/api/fetch_and_keep/{video_id}")
 def get_video_and_keep(video_id: str):
-    download_and_keep(video_id)
-    return {"text": "Downloading video!"}
+    from backend.download_service import queue_download
+    from backend.repo import get_video_by_id
+
+    try:
+        # Get video info from database
+        video_data = get_video_by_id(video_id)
+        if not video_data:
+            return {"error": "Video not found"}, 404
+
+        video = video_data[0]
+
+        # If video is already downloaded, just mark as kept
+        if video.vid_path and video.vid_path != "NA":
+            # Use the original download_and_keep logic for already downloaded videos
+            download_and_keep(video_id)
+            return {"text": "Video marked as kept!"}
+
+        # Create video data for queue
+        video_info = {
+            "video_url": video.vid_url,
+            "title": video.title,
+            "thumbnail": video.thumb_url,
+            "epoch_date": str(video.pub_date),
+            "human_date": video.pub_date_human,
+            "views": str(video.views),
+            "description": video.description,
+        }
+
+        success, message, job_id = queue_download(
+            video_url=video.vid_url,
+            video_title=video.title,
+            channel_name=video.channel,
+            video_data=video_info,
+            priority=10,  # High priority for keep requests
+        )
+
+        if success:
+            # Also mark the video as kept in the database
+            from backend.engine import session_scope
+            from backend.models import YoutubeVideo
+
+            with session_scope() as session:
+                session.query(YoutubeVideo).filter(YoutubeVideo.id == video.id).update(
+                    {"keep": True}
+                )
+                session.commit()
+
+            return {
+                "text": f"Video queued for download and marked as kept! Job ID: {job_id}"
+            }
+        else:
+            return {"error": message}, 400
+
+    except Exception as e:
+        logger.error(f"Error in fetch_and_keep: {e}")
+        # Fallback to original behavior if queue fails
+        download_and_keep(video_id)
+        return {"text": "Video processed using fallback method!"}
 
 
 @log_decorator
@@ -327,19 +400,140 @@ def get_videos_filtered(
 
 
 @log_decorator
+@app.get("/api/downloads/stats")
+def get_download_stats():
+    """Get download job statistics."""
+    stats = get_download_job_stats()
+    service = get_download_service()
+    service_status = service.get_service_status()
+
+    return {"job_stats": stats, "service_status": service_status}
+
+
+@log_decorator
+@app.get("/api/downloads/jobs")
+def get_download_jobs(page: int = 0, items_per_page: int = 50, status: str = None):
+    """Get download jobs with pagination and optional status filtering."""
+    jobs, total_count = get_download_jobs_paginated(
+        page=page, items_per_page=items_per_page, status_filter=status
+    )
+
+    # Convert jobs to JSON-serializable format
+    job_data = []
+    for job in jobs:
+        job_data.append(
+            {
+                "id": job.id,
+                "video_url": job.video_url,
+                "video_title": job.video_title,
+                "channel_name": job.channel_name,
+                "status": job.status,
+                "priority": job.priority,
+                "created_at": job.created_at,
+                "started_at": job.started_at,
+                "completed_at": job.completed_at,
+                "error_message": job.error_message,
+                "retry_count": job.retry_count,
+                "max_retries": job.max_retries,
+            }
+        )
+
+    total_pages = max(1, (total_count + items_per_page - 1) // items_per_page)
+
+    return {
+        "jobs": job_data,
+        "pagination": {
+            "current_page": page,
+            "total_pages": total_pages,
+            "total_items": total_count,
+            "items_per_page": items_per_page,
+            "has_prev": page > 0,
+            "has_next": page < total_pages - 1,
+        },
+    }
+
+
+@log_decorator
+@app.post("/api/downloads/retry/{job_id}")
+def retry_download(job_id: int):
+    """Retry a failed download job."""
+    success, message = retry_download_job(job_id)
+    if success:
+        return {"text": message}
+    else:
+        return {"error": message}, 400
+
+
+@log_decorator
+@app.post("/api/downloads/queue/{video_id}")
+def queue_video_download(video_id: str):
+    """Queue a specific video for download (for manual downloads)."""
+    from backend.download_service import queue_download
+    from backend.repo import get_video_by_id
+
+    try:
+        # Get video info from database
+        video_data = get_video_by_id(video_id)
+        if not video_data:
+            return {"error": "Video not found"}, 404
+
+        video = video_data[0]
+
+        # Create video data for queue
+        video_info = {
+            "video_url": video.vid_url,
+            "title": video.title,
+            "thumbnail": video.thumb_url,
+            "epoch_date": str(video.pub_date),
+            "human_date": video.pub_date_human,
+            "views": str(video.views),
+            "description": video.description,
+        }
+
+        success, message, job_id = queue_download(
+            video_url=video.vid_url,
+            video_title=video.title,
+            channel_name=video.channel,
+            video_data=video_info,
+            priority=1,  # Higher priority for manual downloads
+        )
+
+        if success:
+            return {"text": f"Video queued for download. Job ID: {job_id}"}
+        else:
+            return {"error": message}, 400
+
+    except Exception as e:
+        logger.error(f"Error queuing video download: {e}")
+        return {"error": "Failed to queue video for download"}, 500
+
+
+@log_decorator
 def activate_schedule():
     scheduler = BackgroundScheduler()
     # Schedule to remove videos older than X time
     scheduler.add_job(func=remove_old_videos, trigger="interval", seconds=86400)
+    # Schedule to clean up old download jobs (every 24 hours)
+    scheduler.add_job(
+        func=delete_old_download_jobs,
+        trigger="interval",
+        seconds=86400,
+        kwargs={"days_old": 30},
+    )
     # first_run = datetime.datetime.now() + datetime.timedelta(hours=1)
     # scheduler.add_job(func=download_old_livestreams, trigger="interval", seconds=86400, next_run_time=first_run)
     # Schedule to get RSS feed automatically
     # scheduler.add_job(func=get_rss_feed, trigger="interval", seconds=600)
     scheduler.start()
 
+    # Start the download service
+    start_download_service()
+
     # Shut down the scheduler when exiting the app
     atexit.register(scheduler.shutdown)
-    # Shut down the scheduler when exiting the app
+    # Shut down the download service when exiting the app
+    atexit.register(stop_download_service)
+    # Shut down the engine when exiting the app
     atexit.register(close_engine)
 
 
