@@ -46,7 +46,9 @@ class DownloadService:
             return
 
         self.running = True
-        logger.info(f"Starting download service with {self.max_concurrent_downloads} max concurrent downloads")
+        logger.info(
+            f"Starting download service with {self.max_concurrent_downloads} max concurrent downloads"
+        )
         self.service_thread = threading.Thread(target=self._process_download_queue)
         self.service_thread.daemon = True
         self.service_thread.start()
