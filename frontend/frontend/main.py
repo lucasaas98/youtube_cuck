@@ -26,6 +26,7 @@ from frontend.repo import (
     get_recent_videos,
     get_rss_date,
     get_video_by_id,
+    get_video_by_youtube_id,
     most_recent_video,
     most_recent_videos,
     remove_video_from_playlist,
@@ -272,6 +273,8 @@ async def next_page(page, request: Request):
 @app.get("/video/{identifier}", response_class=HTMLResponse)
 async def video_watch(request: Request, identifier: str):
     video = get_video_by_id(identifier)
+    if not video:
+        video = get_video_by_youtube_id(identifier)
     data = prepare_for_watch(video)
 
     return templates.TemplateResponse(
@@ -872,12 +875,16 @@ async def downloads_page(request: Request, page: int = 0, status: str = None):
         pagination_range = get_pagination_range(
             pagination.get("current_page", 0), pagination.get("total_pages", 1)
         )
+        jobs = jobs_data.get("jobs", [])
+        jobs = [
+            dict(job, **{"video_url": job["video_url"].split("=")[-1]}) for job in jobs
+        ]
 
         return templates.TemplateResponse(
             "downloads.html",
             {
                 "request": request,
-                "jobs": jobs_data.get("jobs", []),
+                "jobs": jobs,
                 "pagination": pagination,
                 "pagination_range": pagination_range,
                 "stats": stats_data,

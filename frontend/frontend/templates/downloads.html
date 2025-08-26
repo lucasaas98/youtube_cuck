@@ -330,9 +330,13 @@
                             {% for job in jobs %}
                                 <tr>
                                     <td>
-                                        <div class="video-title" title="{{ job.video_title }}">{{ job.video_title }}</div>
+                                        <div class="video-title" title="{{ job.video_title }}">
+                                            <a href="/video/{{ job.video_url }}">{{ job.video_title }}</a>
+                                        </div>
                                     </td>
-                                    <td>{{ job.channel_name }}</td>
+                                    <td>
+                                        <a href="/channel/{{ job.channel_name }}">{{ job.channel_name }}</a>
+                                    </td>
                                     <td>
                                         <span class="status-badge status-{{ job.status }}">{{ job.status }}</span>
                                     </td>

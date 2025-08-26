@@ -31,6 +31,23 @@ def get_video_by_id(identifier):
         return []
 
 
+def get_video_by_youtube_id(identifier):
+    try:
+        with session_scope() as session:
+            data = (
+                session.query(YoutubeVideo)
+                .filter(YoutubeVideo.vid_url.like(f"%{identifier}"))
+                .first()
+            )
+            return data
+    except Exception as error:
+        logger.warn(
+            f"Failed to select videos from downloaded_videos table with id={identifier}",
+            error,
+        )
+        return []
+
+
 def get_channel_videos(channel_name, page=0, items_per_page=35):
     try:
         with session_scope() as session:
