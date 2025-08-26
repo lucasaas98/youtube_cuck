@@ -578,7 +578,11 @@ def get_pending_download_jobs(limit=10):
                 .order_by(desc(DownloadJob.priority), DownloadJob.created_at)
                 .limit(limit)
             ).all()
-            return [job[0] for job in data]
+            jobs = [job[0] for job in data]
+            logger.info(f"Found {len(jobs)} pending jobs in database")
+            for job in jobs:
+                logger.info(f"Pending job {job.id}: {job.video_title} (status: {job.status})")
+            return jobs
     except Exception as error:
         logger.error("Failed to get pending download jobs", error)
         return []
@@ -599,7 +603,11 @@ def get_retry_download_jobs(limit=10):
                 .order_by(desc(DownloadJob.priority), DownloadJob.created_at)
                 .limit(limit)
             ).all()
-            return [job[0] for job in data]
+            jobs = [job[0] for job in data]
+            logger.info(f"Found {len(jobs)} retry jobs in database")
+            for job in jobs:
+                logger.info(f"Retry job {job.id}: {job.video_title} (status: {job.status})")
+            return jobs
     except Exception as error:
         logger.error("Failed to get retry download jobs", error)
         return []

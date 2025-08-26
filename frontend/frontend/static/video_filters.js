@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const sortOrderSelect = document.getElementById("sort-order");
     const filterKeptSelect = document.getElementById("filter-kept");
     const includeShortsCheckbox = document.getElementById("include-shorts");
+    const includeDeletedCheckbox = document.getElementById("include-deleted");
 
     // Update sort order options based on sort by selection
     function updateSortOrderOptions() {
@@ -63,6 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         url.searchParams.set("include_shorts", includeShortsCheckbox.checked);
+        url.searchParams.set("include_deleted", includeDeletedCheckbox.checked);
 
         // Always reset to page 0 when filters change
         url.searchParams.delete("page");
@@ -107,6 +109,10 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     includeShortsCheckbox.addEventListener("change", function () {
+        navigateWithFilters();
+    });
+
+    includeDeletedCheckbox.addEventListener("change", function () {
         navigateWithFilters();
     });
 

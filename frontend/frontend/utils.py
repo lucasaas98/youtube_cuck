@@ -113,6 +113,7 @@ def format_video_size(video):
 @log_decorator
 def prepare_for_template(video, main_page=False):
     is_live_without_video = video.vid_path == "NA" and video.livestream
+    is_deleted = video.vid_path == "NA" and not video.livestream
 
     vid_thumb_path = video.thumb_path if video.thumb_path else "NA"
 
@@ -134,7 +135,8 @@ def prepare_for_template(video, main_page=False):
         "description": video.description,
         "channel": video.channel,
         "progress_percentage": progress_percentage(video),
-        "size": format_video_size(video),
+        "size": format_video_size(video) if not is_deleted else "DELETED",
+        "is_deleted": is_deleted,
     }
 
 
@@ -258,6 +260,7 @@ def get_filtered_videos_from_backend(
     sort_order="desc",
     filter_kept=None,
     include_shorts=True,
+    include_deleted=False,
 ):
     """
     Get filtered videos by calling the backend API.
@@ -269,6 +272,7 @@ def get_filtered_videos_from_backend(
     :param sort_order: Sort order (asc or desc)
     :param filter_kept: Filter by keep status (True, False, or None for all)
     :param include_shorts: Whether to include shorts
+    :param include_deleted: Whether to include deleted videos (videos with vid_path == "NA")
     :return: Dictionary containing videos and pagination info
     """
     try:
@@ -279,6 +283,7 @@ def get_filtered_videos_from_backend(
             "sort_by": sort_by,
             "sort_order": sort_order,
             "include_shorts": include_shorts,
+            "include_deleted": include_deleted,
         }
 
         if search_query:

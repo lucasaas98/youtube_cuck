@@ -362,6 +362,7 @@ def get_filtered_videos(
     sort_order="desc",
     filter_kept=None,
     include_shorts=True,
+    include_deleted=False,
 ):
     """
     Get videos with filtering, sorting, and search capabilities.
@@ -373,13 +374,15 @@ def get_filtered_videos(
     :param sort_order: Sort order (asc or desc)
     :param filter_kept: Filter by keep status (True, False, or None for all)
     :param include_shorts: Whether to include shorts (True/False)
+    :param include_deleted: Whether to include deleted videos (videos with vid_path == "NA")
     :return: Tuple of (videos, total_count)
     """
     try:
         with session_scope() as session:
-            # Base query - include all videos for compatibility with original behavior
-            # Only filter out videos without vid_path if they're "NA"
-            query = session.query(YoutubeVideo).filter(YoutubeVideo.vid_path != "NA")
+            # Base query - conditionally filter out deleted videos
+            query = session.query(YoutubeVideo)
+            if not include_deleted:
+                query = query.filter(YoutubeVideo.vid_path != "NA")
 
             # Filter shorts - match original behavior
             if not include_shorts:

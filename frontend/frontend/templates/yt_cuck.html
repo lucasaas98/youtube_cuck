@@ -10,6 +10,9 @@
         <link rel="shortcut icon" href="../static/favicon.ico">
         <link rel="stylesheet" href="../static/base.css">
         <link rel="stylesheet" href="../static/yt_cuck.css">
+        {% for row in data[0] %}
+        <link rel="preload" as="video" href="/videos/{{ row['vid_path'] }}" type="video/mp4" />
+        {% endfor %}
     </head>
     <body>
         <ul class="nav_bar">
@@ -108,20 +111,29 @@
                                {% if filters.include_shorts %}checked{% endif %}>
                         Include Shorts
                     </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox"
+                               id="include-deleted"
+                               {% if filters.include_deleted %}checked{% endif %}>
+                        Show Deleted Videos
+                    </label>
                 </div>
             </div>
         </div>
         <div class="grid-container">
             {% for row in data[0] %}
-                <div class="card">
+                <div class="card{% if row['is_deleted'] %} deleted-video{% endif %}">
                     <a href="video/{{ row['id'] }}">
                         <div class="center-div-video">
                             <div style="background-size: cover;
                                         background-position: center;
                                         background-image: url('{{ row['thumb_path'] }}');
-                                        position: relative">
+                                        position: relative{% if row['is_deleted'] %}; opacity: 0.6{% endif %}">
                                 {% if loop.index <= 9 %}<div class="video-number">{{ loop.index }}</div>{% endif %}
-                                <div class="video-duration" style="left: 10px;">{{ row['size'] }}</div>
+                                <div class="video-duration" style="left: 10px;{% if row['is_deleted'] %} background-color: #cc0000; color: white;{% endif %}">{{ row['size'] }}</div>
+                                {% if row['is_deleted'] %}
+                                    <div class="deleted-indicator" style="position: absolute; top: 5px; right: 5px; background: #cc0000; color: white; padding: 2px 6px; font-size: 10px; border-radius: 3px; font-weight: bold;">DELETED</div>
+                                {% endif %}
                                 <div class="progress-bar">
                                     <div class="progress-fill"
                                          style="width: {{ row['progress_percentage'] }}%"></div>

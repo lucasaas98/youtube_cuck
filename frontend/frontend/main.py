@@ -85,6 +85,9 @@ async def index(request: Request):
     include_shorts = (
         request.query_params.get("include_shorts", "true").lower() == "true"
     )
+    include_deleted = (
+        request.query_params.get("include_deleted", "false").lower() == "true"
+    )
 
     # Convert filter_kept string to boolean or None
     kept_filter = None
@@ -101,6 +104,7 @@ async def index(request: Request):
         sort_order=sort_order,
         filter_kept=kept_filter,
         include_shorts=include_shorts,
+        include_deleted=include_deleted,
     )
 
     rss_date = get_rss_date()
@@ -116,6 +120,7 @@ async def index(request: Request):
         "sort_order": sort_order,
         "filter_kept": filter_kept or "",
         "include_shorts": include_shorts,
+        "include_deleted": include_deleted,
     }
 
     data = (
@@ -197,6 +202,9 @@ async def next_page(page, request: Request):
     include_shorts = (
         request.query_params.get("include_shorts", "true").lower() == "true"
     )
+    include_deleted = (
+        request.query_params.get("include_deleted", "false").lower() == "true"
+    )
 
     # Convert filter_kept string to boolean or None
     kept_filter = None
@@ -213,6 +221,7 @@ async def next_page(page, request: Request):
         sort_order=sort_order,
         filter_kept=kept_filter,
         include_shorts=include_shorts,
+        include_deleted=include_deleted,
     )
 
     rss_date = get_rss_date()
@@ -228,6 +237,7 @@ async def next_page(page, request: Request):
         "sort_order": sort_order,
         "filter_kept": filter_kept or "",
         "include_shorts": include_shorts,
+        "include_deleted": include_deleted,
     }
 
     data = (

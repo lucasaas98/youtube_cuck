@@ -69,48 +69,79 @@ class DownloadService:
 
         while self.running:
             try:
+                # Clean up completed futures first - more aggressive cleanup
+                completed_jobs = []
+                for job_id, future in list(self.active_downloads.items()):
+                    if future.done():
+                        completed_jobs.append(job_id)
+                        try:
+                            # Get the result to clear any exception state
+                            future.result()
+                        except Exception as e:
+                            logger.error(f"Job {job_id} completed with error: {e}")
+
+                for job_id in completed_jobs:
+                    if job_id in self.active_downloads:
+                        del self.active_downloads[job_id]
+                        logger.info(f"Cleaned up completed job {job_id}")
+
                 # Check if we can start more downloads
                 active_count = len(self.active_downloads)
                 available_slots = self.max_concurrent_downloads - active_count
 
+                logger.info(f"Active downloads: {active_count}, Available slots: {available_slots}")
+
                 if available_slots <= 0:
+                    logger.info("No available slots, sleeping...")
                     time.sleep(5)
                     continue
 
-                # Get pending jobs first, then retry jobs
-                pending_jobs = get_pending_download_jobs(limit=available_slots)
-                if not pending_jobs:
-                    retry_jobs = get_retry_download_jobs(limit=available_slots)
-                    jobs_to_process = retry_jobs
-                else:
-                    jobs_to_process = pending_jobs
+                # Get both pending and retry jobs, then combine and sort by priority
+                pending_jobs = get_pending_download_jobs(limit=10)  # Get more to have better selection
+                retry_jobs = get_retry_download_jobs(limit=10)
+
+                logger.info(f"Found {len(pending_jobs)} pending jobs, {len(retry_jobs)} retry jobs")
+
+                # Combine and sort all jobs by priority (desc) and creation time
+                all_jobs = pending_jobs + retry_jobs
+                jobs_to_process = sorted(
+                    all_jobs,
+                    key=lambda job: (-job.priority, job.created_at)
+                )[:available_slots]
 
                 if not jobs_to_process:
+                    logger.info("No jobs to process, sleeping...")
                     time.sleep(10)  # Wait longer if no jobs
                     continue
 
+                logger.info(f"Processing {len(jobs_to_process)} jobs")
+
                 # Process available jobs
-                for job in jobs_to_process[:available_slots]:
+                for job in jobs_to_process:
                     if not self.running:
                         break
 
-                    future = self.executor.submit(self._process_download_job, job)
+                    logger.info(f"Submitting job {job.id} (status: {job.status}) for processing")
+                    future = self.executor.submit(self._process_download_job_with_cleanup, job)
                     self.active_downloads[job.id] = future
-
-                    # Clean up completed futures
-                    completed_jobs = []
-                    for job_id, future in self.active_downloads.items():
-                        if future.done():
-                            completed_jobs.append(job_id)
-
-                    for job_id in completed_jobs:
-                        del self.active_downloads[job_id]
 
             except Exception as e:
                 logger.error(f"Error in download queue processor: {e}")
                 time.sleep(5)
 
         logger.info("Download service queue processor stopped")
+
+    def _process_download_job_with_cleanup(self, job):
+        """
+        Wrapper for _process_download_job that ensures cleanup.
+        """
+        try:
+            return self._process_download_job(job)
+        finally:
+            # Ensure this job is removed from active downloads
+            if job.id in self.active_downloads:
+                logger.info(f"Force cleaning up job {job.id} from active downloads")
+                del self.active_downloads[job.id]
 
     def _process_download_job(self, job):
         """
