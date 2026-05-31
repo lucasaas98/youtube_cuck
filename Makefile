@@ -154,7 +154,7 @@ deploy-less:
 
 # prod_vpn
 build-prod-vpn:
-	docker compose -f docker-compose.prod_vpn.yml build yt_frontend yt_backend
+	docker compose -f docker-compose.prod_vpn.yml build yt_frontend yt_backend --no-cache
 	$(MAKE) build-prod-nginx-vpn
 
 build-prod-nginx-vpn:

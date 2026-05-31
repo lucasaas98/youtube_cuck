@@ -30,7 +30,7 @@ body {
     max-width: 100%;
     max-height: calc(100vh - 120px); /* Leave space for nav and info */
     background-color: #000000; /* OLED-friendly pure black background */
-    border-radius: var(--radius-medium);
+    /*border-radius: var(--radius-medium);*/
     box-shadow: var(--shadow-large);
     outline: none;
 }

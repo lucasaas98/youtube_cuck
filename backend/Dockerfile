@@ -11,9 +11,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
-#Plus FFMPEG for youtube-dl
+#Plus FFMPEG and Deno for youtube-dl
 RUN apk update \
-    && apk add ffmpeg 
+    && apk add ffmpeg \
+    && apk add deno 
 
 #Copy the Flask app code to the working directory
 COPY . .

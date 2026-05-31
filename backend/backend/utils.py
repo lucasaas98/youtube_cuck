@@ -246,6 +246,8 @@ def video_type(video_info):
         return "livestream"
     elif video_info["duration"] is not None and video_info["duration"] < 62:
         return "short"
+    elif video_info["duration"] is not None and video_info["duration"] > 10800:
+        return "very_long_video"
     else:
         return "regular video"
 
@@ -300,7 +302,7 @@ def video_download_thread(video, channel):
 
         video_object = None
 
-        if type in ["livestream", "premiere"]:
+        if type in ["livestream", "premiere", "very_long_video"]:
             video_object = YoutubeVideo(
                 vid_url=video["video_url"],
                 thumb_url=video["thumbnail"],
@@ -492,6 +494,7 @@ def download_video(url, filename):
         "quiet": True,
         "overwrites": True,
         "noprogress": True,
+        "extractor_args": {"youtube":{"player_client":["default","-tv_simply"]}},
     }
 
     yt_dlp.utils.std_headers["User-Agent"] = random.choice(user_agents)

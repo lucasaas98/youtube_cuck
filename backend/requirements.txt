@@ -5,7 +5,7 @@ opml
 feedparser
 python-dateutil
 SQLAlchemy
-yt-dlp
+yt-dlp[default]
 mysql-connector-python
 python-dotenv
 uvicorn
