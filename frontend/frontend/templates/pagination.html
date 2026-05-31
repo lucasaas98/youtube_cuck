@@ -1,10 +1,17 @@
 <!-- Pagination Template -->
+{% set pagination_base_url = base_url|default("/") %}
 {% if pagination.total_pages > 1 %}
     <div class="pagination-container">
         <div class="pagination">
             <!-- Previous Button -->
             {% if pagination.has_prev %}
-                {% set prev_url = "/" if pagination.prev_page == 0 else "/page/" + pagination.prev_page|string %}
+                {% if pagination.prev_page == 0 %}
+                    {% set prev_url = pagination_base_url %}
+                {% elif pagination_base_url == "/" %}
+                    {% set prev_url = "/page/" + pagination.prev_page|string %}
+                {% else %}
+                    {% set prev_url = pagination_base_url + "/page/" + pagination.prev_page|string %}
+                {% endif %}
                 {% if current_params.search %}
                     {% set prev_url = prev_url + "?search=" + current_params.search|urlencode %}
                 {% endif %}
@@ -46,7 +53,13 @@
                     {% if page_num == pagination.current_page %}
                         <span class="pagination-btn current">{{ page_num + 1 }}</span>
                     {% else %}
-                        {% set page_url = "/" if page_num == 0 else "/page/" + page_num|string %}
+                        {% if page_num == 0 %}
+                            {% set page_url = pagination_base_url %}
+                        {% elif pagination_base_url == "/" %}
+                            {% set page_url = "/page/" + page_num|string %}
+                        {% else %}
+                            {% set page_url = pagination_base_url + "/page/" + page_num|string %}
+                        {% endif %}
                         {% if current_params.search %}
                             {% set page_url = page_url + "?search=" + current_params.search|urlencode %}
                         {% endif %}
@@ -84,7 +97,13 @@
             </div>
             <!-- Next Button -->
             {% if pagination.has_next %}
-                {% set next_url = "/" if pagination.next_page == 0 else "/page/" + pagination.next_page|string %}
+                {% if pagination.next_page == 0 %}
+                    {% set next_url = pagination_base_url %}
+                {% elif pagination_base_url == "/" %}
+                    {% set next_url = "/page/" + pagination.next_page|string %}
+                {% else %}
+                    {% set next_url = pagination_base_url + "/page/" + pagination.next_page|string %}
+                {% endif %}
                 {% if current_params.search %}
                     {% set next_url = next_url + "?search=" + current_params.search|urlencode %}
                 {% endif %}

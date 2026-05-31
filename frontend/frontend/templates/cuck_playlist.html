@@ -7,9 +7,9 @@
         <title>Youtube Cuck - Playlists</title>
         <meta name="description" content="Bootleg Garbagio Youtube" />
         <meta name="author" content="Repi Gamer" />
-        <link rel="shortcut icon" href="../static/favicon.ico" />
-        <link rel="stylesheet" href="../static/base.css" />
-        <link rel="stylesheet" href="../static/playlist.css" />
+        <link rel="shortcut icon" href="/static/favicon.ico" />
+        <link rel="stylesheet" href="/static/base.css" />
+        <link rel="stylesheet" href="/static/playlist.css" />
     </head>
     <body>
         <ul class="nav_bar">
@@ -20,26 +20,26 @@
             </button>
             <div class="nav-menu" id="nav-menu">
                 <li>
-                    <a href="../">Home</a>
+                    <a href="/">Home</a>
                 </li>
                 <li>
-                    <a href="../shorts">Shorts</a>
+                    <a href="/shorts">Shorts</a>
                 </li>
                 <li>
-                    <a href="../most_recent_video">Continue</a>
+                    <a href="/most_recent_video">Continue</a>
                 </li>
                 <li>
-                    <a href="../most_recent_videos">History</a>
+                    <a href="/most_recent_videos">History</a>
                 </li>
                 <li>
-                    <a href="../subs">Subscriptions</a>
+                    <a href="/subs">Subscriptions</a>
                 </li>
                 <li>
-                    <a class="active" href="../playlist">Playlists</a>
+                    <a class="active" href="/playlist">Playlists</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('downloads') %}class="active"{% endif %}
-                       href="../downloads">Downloads</a>
+                       href="/downloads">Downloads</a>
                 </li>
                 <li class="right">
                     <a id="add">Add Channel</a>
@@ -179,7 +179,7 @@
 
         attachFormSubmitEvent("playlist_form");
     </script>
-    <script src="../static/hamburger_menu.js"></script>
-    <script src="../static/keyboard_controls.js"></script>
+    <script src="/static/hamburger_menu.js"></script>
+    <script src="/static/keyboard_controls.js"></script>
 </body>
 </html>

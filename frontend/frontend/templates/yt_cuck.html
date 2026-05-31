@@ -7,9 +7,9 @@
         <title>Youtube Cuck</title>
         <meta name="description" content="Bootleg Garbagio Youtube">
         <meta name="author" content="Repi Gamer">
-        <link rel="shortcut icon" href="../static/favicon.ico">
-        <link rel="stylesheet" href="../static/base.css">
-        <link rel="stylesheet" href="../static/yt_cuck.css">
+        <link rel="shortcut icon" href="/static/favicon.ico">
+        <link rel="stylesheet" href="/static/base.css">
+        <link rel="stylesheet" href="/static/yt_cuck.css">
         {% for row in data[0] %}
             <link rel="preload"
                   as="video"
@@ -31,27 +31,27 @@
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('shorts') %}class="active"{% endif %}
-                       href="shorts">Shorts</a>
+                       href="/shorts">Shorts</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('most_recent_video') %}class="active"{% endif %}
-                       href="most_recent_video">Continue</a>
+                       href="/most_recent_video">Continue</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('most_recent_videos') %}class="active"{% endif %}
-                       href="most_recent_videos">History</a>
+                       href="/most_recent_videos">History</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('subs') %}class="active"{% endif %}
-                       href="subs">Subscriptions</a>
+                       href="/subs">Subscriptions</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
-                       href="playlist">Playlists</a>
+                       href="/playlist">Playlists</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('downloads') %}class="active"{% endif %}
-                       href="downloads">Downloads</a>
+                       href="/downloads">Downloads</a>
                 </li>
                 <li class="right">
                     <a id="add">Add Channel</a>
@@ -126,7 +126,7 @@
         <div class="grid-container">
             {% for row in data[0] %}
                 <div class="card{% if row['is_deleted'] %} deleted-video{% endif %}">
-                    <a href="video/{{ row['id'] }}">
+                    <a href="/video/{{ row['id'] }}">
                         <div class="center-div-video">
                             <div style="background-size: cover;
                                         background-position: center;
@@ -164,7 +164,7 @@
                         </div>
                         <div class="center-div">
                             <p class="channel_name">
-                                <a class="channel_a" href="channel/{{ row['channel'] }}">{{ row['channel'] }}</a>
+                                <a class="channel_a" href="/channel/{{ row['channel'] }}">{{ row['channel'] }}</a>
                             </p>
                             <p class="views">{{ row['views'] }} views</p>
                         </div>
@@ -197,11 +197,11 @@
         </div>
         <div style="padding-top: 15px;"></div>
         {% include 'pagination.html' %}
-        <script src="../static/add_channel_modal.js"></script>
-        <script src="../static/refresh_rss.js"></script>
-        <script src="../static/keyboard_controls.js"></script>
-        <script src="../static/hamburger_menu.js"></script>
-        <script src="../static/video_filters.js"></script>
-        <script src="../static/mobile_filter_toggle.js"></script>
+        <script src="/static/add_channel_modal.js"></script>
+        <script src="/static/refresh_rss.js"></script>
+        <script src="/static/keyboard_controls.js"></script>
+        <script src="/static/hamburger_menu.js"></script>
+        <script src="/static/video_filters.js"></script>
+        <script src="/static/mobile_filter_toggle.js"></script>
     </body>
 </html>

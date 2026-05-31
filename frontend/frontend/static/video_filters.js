@@ -128,34 +128,18 @@ document.addEventListener("DOMContentLoaded", function () {
             link.addEventListener("click", function (e) {
                 e.preventDefault();
 
-                // Get the page number from the href
                 const href = this.getAttribute("href");
-                let pageNum = 0;
-
-                if (href !== "/") {
-                    const match = href.match(/\/page\/(\d+)/);
-                    if (match) {
-                        pageNum = parseInt(match[1]);
-                    }
-                }
-
-                // Build URL with current filters and new page
-                const url = new URL(window.location.origin + "/");
+                const url = new URL(href, window.location.origin);
 
                 // Preserve current filters
                 const currentParams = new URLSearchParams(
                     window.location.search,
                 );
                 currentParams.forEach((value, key) => {
-                    if (key !== "page") {
+                    if (key !== "page" && !url.searchParams.has(key)) {
                         url.searchParams.set(key, value);
                     }
                 });
-
-                // Add page parameter if not page 0
-                if (pageNum > 0) {
-                    url.searchParams.set("page", pageNum);
-                }
 
                 // Navigate to the new URL
                 window.location.href = url.toString();
