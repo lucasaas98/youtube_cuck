@@ -70,6 +70,28 @@ def timestamp_to_datetime(timestamp):
 
 templates.env.filters["timestamp_to_datetime"] = timestamp_to_datetime
 
+
+def default_video_filters(include_shorts: bool = True) -> dict[str, str | bool]:
+    return {
+        "search": "",
+        "sort_by": "downloaded_at",
+        "sort_order": "desc",
+        "filter_kept": "",
+        "include_shorts": include_shorts,
+        "include_deleted": False,
+    }
+
+
+def default_current_params(include_shorts: bool = True) -> dict[str, str | None]:
+    return {
+        "search": "",
+        "sort_by": "downloaded_at",
+        "sort_order": "desc",
+        "filter_kept": None,
+        "include_shorts": str(include_shorts).lower(),
+    }
+
+
 app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
 
@@ -109,7 +131,7 @@ async def index(request: Request):
     )
 
     rss_date = get_rss_date()
-    (queue_size, queue_fetching) = get_queue_size()
+    queue_size, queue_fetching = get_queue_size()
 
     pagination = calculate_pagination(page, total_count)
     page_range = get_pagination_range(page, pagination.total_pages)
@@ -157,7 +179,7 @@ async def index(request: Request):
 async def get_shorts(request: Request):
     videos, total_count = get_recent_shorts(0)
     rss_date = get_rss_date()
-    (queue_size, queue_fetching) = get_queue_size()
+    queue_size, queue_fetching = get_queue_size()
 
     pagination = calculate_pagination(0, total_count)
     page_range = get_pagination_range(0, pagination.total_pages)
@@ -179,13 +201,8 @@ async def get_shorts(request: Request):
             "pagination": pagination,
             "page_range": page_range,
             "base_url": "/shorts",
-            "current_params": {
-                "search": "",
-                "sort_by": "downloaded_at",
-                "sort_order": "desc",
-                "filter_kept": None,
-                "include_shorts": True,
-            },
+            "filters": default_video_filters(),
+            "current_params": default_current_params(),
         },
     )
 
@@ -226,7 +243,7 @@ async def next_page(page, request: Request):
     )
 
     rss_date = get_rss_date()
-    (queue_size, queue_fetching) = get_queue_size()
+    queue_size, queue_fetching = get_queue_size()
 
     pagination = calculate_pagination(page_num, total_count)
     page_range = get_pagination_range(page_num, pagination.total_pages)
@@ -316,13 +333,7 @@ async def channel_video_watch(request: Request, channel_name: str):
             "pagination": pagination,
             "page_range": page_range,
             "base_url": f"/channel/{channel_name}",
-            "current_params": {
-                "search": "",
-                "sort_by": "downloaded_at",
-                "sort_order": "desc",
-                "filter_kept": None,
-                "include_shorts": True,
-            },
+            "current_params": default_current_params(),
         },
     )
 
@@ -347,13 +358,7 @@ async def channel_video_page(request: Request, channel_name: str, page: int):
             "pagination": pagination,
             "page_range": page_range,
             "base_url": f"/channel/{channel_name}",
-            "current_params": {
-                "search": "",
-                "sort_by": "downloaded_at",
-                "sort_order": "desc",
-                "filter_kept": None,
-                "include_shorts": True,
-            },
+            "current_params": default_current_params(),
         },
     )
 
@@ -363,7 +368,7 @@ async def channel_video_page(request: Request, channel_name: str, page: int):
 async def shorts_page(request: Request, page: int):
     videos, total_count = get_recent_shorts(page)
     rss_date = get_rss_date()
-    (queue_size, queue_fetching) = get_queue_size()
+    queue_size, queue_fetching = get_queue_size()
 
     pagination = calculate_pagination(page, total_count)
     page_range = get_pagination_range(page, pagination.total_pages)
@@ -385,13 +390,7 @@ async def shorts_page(request: Request, page: int):
             "pagination": pagination,
             "page_range": page_range,
             "base_url": "/shorts",
-            "current_params": {
-                "search": "",
-                "sort_by": "downloaded_at",
-                "sort_order": "desc",
-                "filter_kept": None,
-                "include_shorts": True,
-            },
+            "current_params": default_current_params(),
         },
     )
 
@@ -556,13 +555,8 @@ async def most_recent_video_watch(request: Request):
             "is_short": False,
             "pagination": calculate_pagination(0, 0),
             "page_range": [],
-            "current_params": {
-                "search": "",
-                "sort_by": "downloaded_at",
-                "sort_order": "desc",
-                "filter_kept": None,
-                "include_shorts": True,
-            },
+            "filters": default_video_filters(),
+            "current_params": default_current_params(),
         },
     )
 
@@ -578,7 +572,7 @@ async def most_recent_videos_page(request: Request):
         video_data = []
 
     rss_date = get_rss_date()
-    (queue_size, queue_fetching) = get_queue_size()
+    queue_size, queue_fetching = get_queue_size()
 
     # Create pagination info (static for most recent videos)
     pagination = calculate_pagination(0, len(video_data))
@@ -600,13 +594,8 @@ async def most_recent_videos_page(request: Request):
             "is_short": False,
             "pagination": pagination,
             "page_range": page_range,
-            "current_params": {
-                "search": "",
-                "sort_by": "downloaded_at",
-                "sort_order": "desc",
-                "filter_kept": None,
-                "include_shorts": True,
-            },
+            "filters": default_video_filters(),
+            "current_params": default_current_params(),
         },
     )
 
@@ -740,6 +729,7 @@ async def get_playlist_videos_page(request: Request, playlist_name: str):
             "pagination": pagination,
             "page_range": page_range,
             "base_url": f"/playlist/{playlist_name}",
+            "current_params": default_current_params(),
         },
     )
 
@@ -793,6 +783,7 @@ async def get_playlist_videos_page_num(request: Request, playlist_name: str, pag
             "pagination": pagination,
             "page_range": page_range,
             "base_url": f"/playlist/{playlist_name}",
+            "current_params": default_current_params(),
         },
     )
 

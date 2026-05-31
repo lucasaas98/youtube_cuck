@@ -7,8 +7,8 @@
         <title>Youtube Cuck</title>
         <meta name="description" content="Bootleg Garbagio Youtube">
         <meta name="author" content="Repi Gamer">
-        <link rel="shortcut icon" href="../static/favicon.ico">
-        <link rel="stylesheet" href="../static/cuck_video.css">
+        <link rel="shortcut icon" href="/static/favicon.ico">
+        <link rel="stylesheet" href="/static/cuck_video.css">
     </head>
     <body style="background-color:#1E1F1C;">
         <ul class="nav_bar">
@@ -20,31 +20,31 @@
             <div class="nav-menu" id="nav-menu">
                 <li>
                     <a {% if request.url.path.endswith('/') %}class="active"{% endif %}
-                       href="../">Home</a>
+                       href="/">Home</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('shorts') %}class="active"{% endif %}
-                       href="../shorts">Shorts</a>
+                       href="/shorts">Shorts</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('most_recent_video') %}class="active"{% endif %}
-                       href="../most_recent_video">Continue</a>
+                       href="/most_recent_video">Continue</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('most_recent_videos') %}class="active"{% endif %}
-                       href="../most_recent_videos">History</a>
+                       href="/most_recent_videos">History</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('subs') %}class="active"{% endif %}
-                       href="../subs">Subscriptions</a>
+                       href="/subs">Subscriptions</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
-                       href="../playlist">Playlists</a>
+                       href="/playlist">Playlists</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('downloads') %}class="active"{% endif %}
-                       href="../downloads">Downloads</a>
+                       href="/downloads">Downloads</a>
                 </li>
                 <li class="right">
                     <a id="add">Add Channel</a>
@@ -86,7 +86,7 @@
             </div>
             <div class="info">
                 <h4 class="channel_name">
-                    <a class="channel_a" href="../channel/{{ data['channel_name'] }}">{{ data['channel_name'] }}</a>
+                    <a class="channel_a" href="/channel/{{ data['channel_name'] }}">{{ data['channel_name'] }}</a>
                 </h4>
                 <p class="date">{{ data['date'] }}</p>
             </div>
@@ -217,11 +217,11 @@
                 background-color: #444 !important;
             }
         </style>
-        <script src="../static/add_channel_modal.js"></script>
-        <script src="../static/video_player.js"></script>
-        <script src="../static/keep.js"></script>
-        <script src="../static/keyboard_controls.js"></script>
-        <script src="../static/hamburger_menu.js"></script>
+        <script src="/static/add_channel_modal.js"></script>
+        <script src="/static/video_player.js"></script>
+        <script src="/static/keep.js"></script>
+        <script src="/static/keyboard_controls.js"></script>
+        <script src="/static/hamburger_menu.js"></script>
         <script>
             // Playlist functionality
             var playlistModal = document.getElementById("playlistModal");

@@ -7,9 +7,9 @@
         <title>Youtube Cuck</title>
         <meta name="description" content="Bootleg Garbagio Youtube">
         <meta name="author" content="Repi Gamer">
-        <link rel="shortcut icon" href="../static/favicon.ico">
-        <link rel="stylesheet" href="../static/base.css">
-        <link rel="stylesheet" href="../static/playlist.css">
+        <link rel="shortcut icon" href="/static/favicon.ico">
+        <link rel="stylesheet" href="/static/base.css">
+        <link rel="stylesheet" href="/static/playlist.css">
     </head>
     <body>
         <ul class="nav_bar">
@@ -21,31 +21,31 @@
             <div class="nav-menu" id="nav-menu">
                 <li>
                     <a {% if request.url.path.endswith('/') %}class="active"{% endif %}
-                       href="../">Home</a>
+                       href="/">Home</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('shorts') %}class="active"{% endif %}
-                       href="../shorts">Shorts</a>
+                       href="/shorts">Shorts</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('most_recent_video') %}class="active"{% endif %}
-                       href="../most_recent_video">Continue</a>
+                       href="/most_recent_video">Continue</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('most_recent_videos') %}class="active"{% endif %}
-                       href="../most_recent_videos">History</a>
+                       href="/most_recent_videos">History</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('subs') %}class="active"{% endif %}
-                       href="../subs">Subscriptions</a>
+                       href="/subs">Subscriptions</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('playlist') %}class="active"{% endif %}
-                       href="../playlist">Playlists</a>
+                       href="/playlist">Playlists</a>
                 </li>
                 <li>
                     <a {% if request.url.path.endswith('downloads') %}class="active"{% endif %}
-                       href="../downloads">Downloads</a>
+                       href="/downloads">Downloads</a>
                 </li>
                 <li class="right">
                     <a id="add">Add Channel</a>
@@ -54,7 +54,7 @@
         </ul>
         <div class="main-content">
             <div class="playlist-header">
-                <a href="../subs" class="back-btn">← Back to Channels</a>
+                <a href="/subs" class="back-btn">← Back to Channels</a>
                 <h1 class="playlist-title">{{ data[0] }}</h1>
                 <button id="add" class="btn btn-success">Add Channel</button>
             </div>
@@ -63,13 +63,13 @@
                     {% for row in data[1] %}
                         <div class="video-item">
                             <div class="video-thumbnail">
-                                <a href="../video/{{ row['id'] }}">
+                                <a href="/video/{{ row['id'] }}">
                                     {% if row['thumb_path'] and row['thumb_path'] != 'NA' %}
                                         <img src="{{ row['thumb_path'] }}"
                                              alt="{{ row['title'] }}"
-                                             onerror="this.src='../static/no-thumbnail.svg'" />
+                                             onerror="this.src='/static/no-thumbnail.svg'" />
                                     {% else %}
-                                        <img src="../static/no-thumbnail.svg" alt="{{ row['title'] }}" />
+                                        <img src="/static/no-thumbnail.svg" alt="{{ row['title'] }}" />
                                     {% endif %}
                                     {% if row['progress_percentage'] and row['progress_percentage'] > 0 %}
                                         <div class="progress-overlay">
@@ -82,18 +82,18 @@
                                 </a>
                             </div>
                             <div class="video-info">
-                                <a href="../video/{{ row['id'] }}" class="video-title">{{ row['title'] }}</a>
+                                <a href="/video/{{ row['id'] }}" class="video-title">{{ row['title'] }}</a>
                                 <p class="video-channel">{{ row['channel'] }}</p>
                                 {% if row['views'] %}<p class="video-views">{{ row['views'] }} views</p>{% endif %}
                                 {% if row['size'] %}<p class="video-size">{{ row['size'] }}</p>{% endif %}
                             </div>
                             <div class="video-actions">
                                 {% if row['vid_path'] and row['vid_path'] != 'NA' %}
-                                    <a href="../video/{{ row['id'] }}" class="btn btn-primary">
+                                    <a href="/video/{{ row['id'] }}" class="btn btn-primary">
                                         <span class="btn-text">Watch</span>
                                         <span class="btn-icon">▶</span>
                                     </a>
-                                    <a href="../download/{{ row['id'] }}" class="btn btn-success" download>
+                                    <a href="/download/{{ row['id'] }}" class="btn btn-success" download>
                                         <span class="btn-text">Download</span>
                                         <span class="btn-icon">⬇</span>
                                     </a>
@@ -171,9 +171,9 @@
         </div>
         <!-- Pagination -->
         {% include 'pagination.html' %}
-        <script src="../static/add_channel_modal.js"></script>
-        <script src="../static/keyboard_controls.js"></script>
-        <script src="../static/hamburger_menu.js"></script>
+        <script src="/static/add_channel_modal.js"></script>
+        <script src="/static/keyboard_controls.js"></script>
+        <script src="/static/hamburger_menu.js"></script>
         <script>
             // Playlist functionality
             var playlistModal = document.getElementById("playlistModal");
