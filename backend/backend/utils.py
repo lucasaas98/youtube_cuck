@@ -494,7 +494,7 @@ def download_video(url, filename):
         "quiet": True,
         "overwrites": True,
         "noprogress": True,
-        "extractor_args": {"youtube":{"player_client":["default","-tv_simply"]}},
+        "extractor_args": {"youtube": {"player_client": ["default", "-tv_simply"]}},
     }
 
     yt_dlp.utils.std_headers["User-Agent"] = random.choice(user_agents)

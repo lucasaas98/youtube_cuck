@@ -9,3 +9,4 @@ docker-compose.prod_vpn.yml
 # But don't ignore README.md or AGENTS.md files anywhere in the project
 !README.md
 !AGENTS.md
+.omo/
