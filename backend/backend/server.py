@@ -25,6 +25,7 @@ from backend.repo import (
     get_filtered_videos,
     get_playlist_by_name,
     get_playlist_videos,
+    recover_stale_download_jobs,
     remove_channel_from_db,
     remove_video_from_playlist,
     retry_download_job,
@@ -49,6 +50,7 @@ app = FastAPI()
 async def startup_event():
     """Start the download service when the application starts."""
     logger.info("Starting download service and scheduler on application startup...")
+    recover_stale_download_jobs()
     activate_schedule()
     logger.info("Download service and scheduler started successfully")
 

@@ -4,7 +4,7 @@ from time import time
 
 from sqlalchemy import and_, desc, or_, select
 
-from backend.constants import LIVE_DELAY
+from backend.constants import DELAY, LIVE_DELAY
 from backend.engine import session_scope
 from backend.logging import logging
 from backend.models import (
@@ -648,6 +648,52 @@ def update_download_job_status(job_id, status, error_message=None):
     except Exception as error:
         logger.error(f"Failed to update download job status for job {job_id}", error)
         return False
+
+
+def recover_stale_download_jobs():
+    """
+    Reset download jobs orphaned in 'downloading' status by a service restart.
+
+    Only the download service sets 'downloading' and it is single-process, so
+    jobs left in that state at startup were interrupted by a restart. Recent
+    jobs resume as 'pending'; jobs older than DELAY are marked 'failed'.
+
+    :return: Number of jobs recovered
+    """
+    try:
+        with session_scope() as session:
+            cutoff = int(time()) - DELAY
+            resumed = (
+                session.query(DownloadJob)
+                .filter(DownloadJob.status == "downloading")
+                .filter(DownloadJob.created_at >= cutoff)
+                .update(
+                    {"status": "pending", "started_at": None},
+                    synchronize_session=False,
+                )
+            )
+            failed = (
+                session.query(DownloadJob)
+                .filter(DownloadJob.status == "downloading")
+                .filter(DownloadJob.created_at < cutoff)
+                .update(
+                    {
+                        "status": "failed",
+                        "error_message": "Recovered by service restart: job was interrupted mid-download",
+                    },
+                    synchronize_session=False,
+                )
+            )
+            session.commit()
+            if resumed or failed:
+                logger.info(
+                    f"Recovered stale 'downloading' jobs: "
+                    f"{resumed} resumed as pending, {failed} marked failed"
+                )
+            return resumed + failed
+    except Exception as error:
+        logger.error("Failed to recover stale download jobs", error)
+        return 0
 
 
 def retry_download_job(job_id):
