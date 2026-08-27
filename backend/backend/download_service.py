@@ -182,6 +182,8 @@ class DownloadService:
 
             # Extract video info
             video_info = extract_video_info(job.video_url)
+            if video_info is None:
+                raise Exception(f"Failed to extract video info for {job.video_url}")
             video_type_result = video_type(video_info)
 
             # Handle different video types
