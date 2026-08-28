@@ -150,6 +150,11 @@
                 color: #fff;
             }
 
+            .status-cancelled {
+                background: #607D8B;
+                color: #fff;
+            }
+
             .video-title {
                 max-width: 300px;
                 overflow: hidden;
@@ -182,6 +187,25 @@
             }
 
             .retry-btn:disabled {
+                background: #666;
+                cursor: not-allowed;
+            }
+
+            .cancel-btn {
+                background: #f44336;
+                color: #fff;
+                border: none;
+                padding: 4px 8px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.8em;
+            }
+
+            .cancel-btn:hover {
+                background: #d32f2f;
+            }
+
+            .cancel-btn:disabled {
                 background: #666;
                 cursor: not-allowed;
             }
@@ -286,6 +310,10 @@
                     <div class="stat-label">Failed</div>
                 </div>
                 <div class="stat-card">
+                    <div class="stat-number">{{ stats.job_stats.get('cancelled', 0) }}</div>
+                    <div class="stat-label">Cancelled</div>
+                </div>
+                <div class="stat-card">
                     <div class="service-status">
                         <div class="status-indicator {{ 'status-running' if stats.service_status.get('running', False) else 'status-stopped' }}">
                         </div>
@@ -364,7 +392,10 @@
                                     </td>
                                     <td>{{ job.retry_count }}/{{ job.max_retries }}</td>
                                     <td>
-                                        {% if job.status == 'failed' and job.retry_count < job.max_retries %}
+                                        {% if job.status in ['pending', 'downloading', 'retrying'] %}
+                                            <button class="cancel-btn" onclick="cancelJob({{ job.id }})">Cancel</button>
+                                        {% endif %}
+                                        {% if job.status in ['failed', 'cancelled'] and job.retry_count < job.max_retries %}
                                             <button class="retry-btn" onclick="retryJob({{ job.id }})">Retry</button>
                                         {% endif %}
                                     </td>
@@ -447,6 +478,34 @@
                         alert('Failed to retry download');
                         button.disabled = false;
                         button.textContent = 'Retry';
+                    });
+            }
+
+            // Cancel job
+            function cancelJob(jobId) {
+                const button = event.target;
+                button.disabled = true;
+                button.textContent = 'Cancelling...';
+
+                fetch(`/downloads/cancel/${jobId}`, {
+                        method: 'POST'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.text) {
+                            // Give the backend a moment to stop the download before reloading
+                            setTimeout(() => window.location.reload(), 1500);
+                        } else {
+                            alert('Failed to cancel download: ' + (data.error || 'Unknown error'));
+                            button.disabled = false;
+                            button.textContent = 'Cancel';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Failed to cancel download');
+                        button.disabled = false;
+                        button.textContent = 'Cancel';
                     });
             }
 

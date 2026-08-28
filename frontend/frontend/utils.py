@@ -422,6 +422,19 @@ def retry_download_job(job_id):
 
 
 @log_decorator
+def cancel_download_job(job_id):
+    """Cancel an active download job."""
+    try:
+        response = requests.post(
+            f"http://{BACKEND_URL}:{BACKEND_PORT}/api/downloads/cancel/{job_id}"
+        )
+        return response.status_code == 200, response.json()
+    except Exception as e:
+        logger.error(f"Error cancelling download job: {e}")
+        return False, {"error": "Failed to cancel download"}
+
+
+@log_decorator
 def queue_video_download(video_id):
     """Queue a video for download."""
     try:

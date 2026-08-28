@@ -35,6 +35,7 @@ from frontend.repo import (
 from frontend.utils import (
     Progress,
     calculate_pagination,
+    cancel_download_job,
     get_all_channels,
     get_download_jobs,
     get_download_stats,
@@ -886,6 +887,7 @@ async def downloads_page(request: Request, page: int = 0, status: str = None):
                     "completed",
                     "failed",
                     "retrying",
+                    "cancelled",
                 ],
             },
         )
@@ -906,6 +908,7 @@ async def downloads_page(request: Request, page: int = 0, status: str = None):
                     "completed",
                     "failed",
                     "retrying",
+                    "cancelled",
                 ],
                 "error": "Failed to load download data",
             },
@@ -928,6 +931,17 @@ async def retry_download_frontend(job_id: int):
         return {"text": "Download job marked for retry!"}
     else:
         return {"error": response.get("error", "Failed to retry download")}, 400
+
+
+@log_decorator
+@app.post("/downloads/cancel/{job_id}")
+async def cancel_download_frontend(job_id: int):
+    """Cancel an active download job."""
+    success, response = cancel_download_job(job_id)
+    if success:
+        return {"text": "Download job cancelled!"}
+    else:
+        return {"error": response.get("error", "Failed to cancel download")}, 400
 
 
 @log_decorator
