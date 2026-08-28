@@ -24,10 +24,12 @@ def upgrade() -> None:
     op.add_column(
         "youtube_video", sa.Column("downloaded_at", sa.Integer(), nullable=True)
     )
-    op.execute("""
+    op.execute(
+        """
         UPDATE youtube_video
         SET downloaded_at = inserted_at
-    """)
+    """
+    )
     # ### end Alembic commands ###
 
 
