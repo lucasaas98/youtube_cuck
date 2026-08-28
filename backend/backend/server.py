@@ -7,6 +7,7 @@ from fastapi import FastAPI
 
 from backend.download_service import (
     get_download_service,
+    request_job_cancel,
     start_download_service,
     stop_download_service,
 )
@@ -20,6 +21,7 @@ from backend.repo import (
     delete_old_download_jobs,
     delete_playlist,
     get_all_playlists,
+    get_download_job_by_id,
     get_download_job_stats,
     get_download_jobs_paginated,
     get_filtered_videos,
@@ -29,6 +31,7 @@ from backend.repo import (
     remove_channel_from_db,
     remove_video_from_playlist,
     retry_download_job,
+    update_download_job_status,
 )
 from backend.utils import (
     download_and_keep,
@@ -464,6 +467,25 @@ def retry_download(job_id: int):
         return {"text": message}
     else:
         return {"error": message}, 400
+
+
+@log_decorator
+@app.post("/api/downloads/cancel/{job_id}")
+def cancel_download(job_id: int):
+    """Cancel an active download job."""
+    job = get_download_job_by_id(job_id)
+    if not job:
+        return {"error": "Download job not found"}, 404
+
+    if job.status in ("pending", "retrying"):
+        update_download_job_status(job_id, "cancelled", "Cancelled by user")
+        return {"text": "Download job cancelled!"}
+
+    if job.status == "downloading":
+        request_job_cancel(job_id)
+        return {"text": "Cancelling download job!"}
+
+    return {"error": f"Download job is not active (status: {job.status})"}, 400
 
 
 @log_decorator

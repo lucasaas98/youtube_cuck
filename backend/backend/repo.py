@@ -617,6 +617,21 @@ def get_retry_download_jobs(limit=10):
         return []
 
 
+def get_download_job_by_id(job_id):
+    """
+    Get a single download job by id.
+
+    :param job_id: ID of the download job
+    :return: DownloadJob instance or None
+    """
+    try:
+        with session_scope() as session:
+            return session.query(DownloadJob).filter(DownloadJob.id == job_id).first()
+    except Exception as error:
+        logger.error(f"Failed to get download job {job_id}", error)
+        return None
+
+
 def update_download_job_status(job_id, status, error_message=None):
     """
     Update the status of a download job.
@@ -636,7 +651,7 @@ def update_download_job_status(job_id, status, error_message=None):
 
             if status == "downloading":
                 job.started_at = int(time())
-            elif status in ["completed", "failed"]:
+            elif status in ["completed", "failed", "cancelled"]:
                 job.completed_at = int(time())
 
             if error_message:
@@ -737,7 +752,14 @@ def get_download_job_stats():
             stats = {}
 
             # Count jobs by status
-            for status in ["pending", "downloading", "completed", "failed", "retrying"]:
+            for status in [
+                "pending",
+                "downloading",
+                "completed",
+                "failed",
+                "retrying",
+                "cancelled",
+            ]:
                 count = (
                     session.query(DownloadJob)
                     .filter(DownloadJob.status == status)
@@ -799,7 +821,7 @@ def delete_old_download_jobs(days_old=30):
                 session.query(DownloadJob)
                 .filter(
                     and_(
-                        DownloadJob.status.in_(["completed", "failed"]),
+                        DownloadJob.status.in_(["completed", "failed", "cancelled"]),
                         DownloadJob.created_at < cutoff_time,
                     )
                 )

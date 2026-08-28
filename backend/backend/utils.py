@@ -3,10 +3,12 @@ import json
 import logging as _logging
 import os
 import random
+import shutil
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from subprocess import DEVNULL, check_output
+from glob import glob
+from subprocess import DEVNULL, PIPE, Popen, check_output
 from time import time
 
 import dateutil.parser as date_parser
@@ -14,7 +16,6 @@ import feedparser
 import opml
 import requests
 import yt_dlp
-from yt_dlp.utils import DownloadError
 
 from backend.constants import DELAY, REMOVAL_DELAY
 from backend.engine import session_scope
@@ -38,6 +39,61 @@ logger.setLevel(_logging.INFO)
 
 video_executor = ThreadPoolExecutor(max_workers=1)
 update_count_executor = ThreadPoolExecutor(max_workers=32)
+
+YTDLP_BIN = shutil.which("yt-dlp") or "yt-dlp"
+
+_active_download_processes = {}
+_processes_lock = threading.Lock()
+
+
+def _run_tracked(command, job_id=None):
+    """
+    Run a yt-dlp command as a subprocess registered for cancellation.
+
+    :param command: yt-dlp command line as a list
+    :param job_id: Download job id used as the registration key
+    :return: Tuple of (returncode, stdout bytes, stderr bytes)
+    """
+    process = Popen(command, stdout=PIPE, stderr=PIPE)
+    if job_id is not None:
+        with _processes_lock:
+            _active_download_processes[job_id] = process
+    try:
+        stdout, stderr = process.communicate()
+    finally:
+        if job_id is not None:
+            with _processes_lock:
+                _active_download_processes.pop(job_id, None)
+    return process.returncode, stdout, stderr
+
+
+def terminate_active_download(job_id):
+    """
+    Terminate the yt-dlp subprocess currently running for a download job.
+
+    :param job_id: Download job id
+    :return: True if a process was terminated, False otherwise
+    """
+    with _processes_lock:
+        process = _active_download_processes.get(job_id)
+    if process is None:
+        return False
+    try:
+        process.terminate()
+        return True
+    except Exception as error:
+        logger.error(f"Failed to terminate download process for job {job_id}", error)
+        return False
+
+
+def remove_partial_video_files(file_name):
+    """Delete the .part files yt-dlp leaves behind for an interrupted download."""
+    for part_file in glob(f"{DATA_FOLDER}/videos/{file_name}*.part"):
+        try:
+            os.remove(part_file)
+            logger.info(f"Removed partial file: {part_file}")
+        except Exception as error:
+            logger.error(f"Failed to remove partial file: {part_file}", error)
 
 
 def log_decorator(func):
@@ -253,19 +309,17 @@ def video_type(video_info):
 
 
 @log_decorator
-def extract_video_info(video_url):
+def extract_video_info(video_url, job_id=None):
     """
-    Extracts video information from a given YouTube video URL using the youtube-dl library.
+    Extracts video information for a given YouTube video URL using yt-dlp.
 
-    Args:
-        video_url (str): The URL of the YouTube video to extract information from.
+    Runs yt-dlp as a subprocess so that a stuck extraction can be terminated
+    from another thread via terminate_active_download.
 
-    Returns:
-        tuple: A tuple containing a boolean indicating whether the extraction was successful and the extracted video information.
-               If the extraction was unsuccessful, the boolean value will be False and the video information will be None.
+    :param video_url: The URL of the YouTube video
+    :param job_id: Download job id, used to register the process for cancellation
+    :return: The extracted video information dict, or None on failure
     """
-    options = {}
-
     user_agents = [
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.10 Safari/605.1.1",
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.3",
@@ -274,13 +328,24 @@ def extract_video_info(video_url):
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.",
     ]
 
-    yt_dlp.utils.std_headers["User-Agent"] = random.choice(user_agents)
+    command = [
+        YTDLP_BIN,
+        "--dump-single-json",
+        "--user-agent",
+        random.choice(user_agents),
+        video_url,
+    ]
 
     try:
-        with yt_dlp.YoutubeDL(options) as ydl:
-            video_info = ydl.extract_info(video_url, download=False)
-            return video_info
-    except DownloadError as error:
+        returncode, stdout, stderr = _run_tracked(command, job_id)
+        if returncode != 0:
+            logger.error(
+                f"Failed to extract video info for {video_url}: "
+                f"{stderr.decode(errors='replace')[-500:]}"
+            )
+            return None
+        return json.loads(stdout)
+    except Exception as error:
         logger.error(f"Failed to extract video info for {video_url}", error)
         return None
 
@@ -479,7 +544,18 @@ def get_video_size(video_path):
 
 
 @log_decorator
-def download_video(url, filename):
+def download_video(url, filename, job_id=None):
+    """
+    Download a video with the yt-dlp CLI in a subprocess.
+
+    A subprocess can be terminated mid-download (see terminate_active_download),
+    which is not possible with the in-process yt-dlp Python API.
+
+    :param url: URL of the video to download
+    :param filename: File name (without extension) to download to
+    :param job_id: Download job id, used to register the process for cancellation
+    :return: yt-dlp exit code (0 on success)
+    """
     user_agents = [
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.10 Safari/605.1.1",
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.3",
@@ -488,22 +564,30 @@ def download_video(url, filename):
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.",
     ]
 
-    options = {
-        "format": "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]",
-        "outtmpl": f"{DATA_FOLDER}/videos/{filename}.mp4",
-        "quiet": True,
-        "overwrites": True,
-        "noprogress": True,
-        "extractor_args": {"youtube": {"player_client": ["default", "-tv_simply"]}},
-    }
-
-    yt_dlp.utils.std_headers["User-Agent"] = random.choice(user_agents)
+    command = [
+        YTDLP_BIN,
+        "--format",
+        "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]",
+        "--output",
+        f"{DATA_FOLDER}/videos/{filename}.mp4",
+        "--quiet",
+        "--no-progress",
+        "--force-overwrites",
+        "--extractor-args",
+        "youtube:player_client=default,-tv_simply",
+        "--user-agent",
+        random.choice(user_agents),
+        url,
+    ]
 
     try:
-        with yt_dlp.YoutubeDL(options) as ydl:
-            return ydl.download([url])
-    except yt_dlp.utils.ExtractorError as error:
-        logger.error("Video got fucking deleted, wtfffff", error)
+        returncode, _, stderr = _run_tracked(command, job_id)
+        if returncode != 0:
+            logger.error(
+                f"Failed to fetch new video {filename} at {url} with yt-dlp: "
+                f"{stderr.decode(errors='replace')[-500:]}"
+            )
+        return returncode
     except Exception as error:
         logger.error(
             f"Failed to fetch new video {filename} at {url} with yt-dlp", error

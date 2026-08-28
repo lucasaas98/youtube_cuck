@@ -19,11 +19,33 @@ from backend.utils import (
     download_video,
     extract_video_info,
     get_video_size,
+    remove_partial_video_files,
+    terminate_active_download,
     video_type,
 )
 
 logger = logging.getLogger(__name__)
 logger.setLevel(_logging.INFO)
+
+_cancel_requested = set()
+
+
+def request_job_cancel(job_id):
+    """
+    Request cancellation of a running download job.
+
+    Flags the job so the worker thread stops at the next checkpoint and
+    terminates its yt-dlp subprocess, if one is currently registered.
+
+    :param job_id: Download job id to cancel
+    """
+    _cancel_requested.add(job_id)
+    terminate_active_download(job_id)
+
+
+def _mark_job_cancelled(job):
+    remove_partial_video_files(job.video_url.split("=")[-1])
+    update_download_job_status(job.id, "cancelled", "Cancelled by user")
 
 
 class DownloadService:
@@ -147,6 +169,7 @@ class DownloadService:
         try:
             return self._process_download_job(job)
         finally:
+            _cancel_requested.discard(job.id)
             # Ensure this job is removed from active downloads
             if job.id in self.active_downloads:
                 logger.info(f"Force cleaning up job {job.id} from active downloads")
@@ -163,6 +186,11 @@ class DownloadService:
         try:
             # Mark job as downloading
             update_download_job_status(job.id, "downloading")
+
+            if job.id in _cancel_requested:
+                _mark_job_cancelled(job)
+                logger.info(f"Cancelled download job {job.id} before starting")
+                return
 
             # Parse video data
             video_data = json.loads(job.video_data) if job.video_data else {}
@@ -181,9 +209,15 @@ class DownloadService:
                 return
 
             # Extract video info
-            video_info = extract_video_info(job.video_url)
+            video_info = extract_video_info(job.video_url, job_id=job.id)
             if video_info is None:
                 raise Exception(f"Failed to extract video info for {job.video_url}")
+
+            if job.id in _cancel_requested:
+                _mark_job_cancelled(job)
+                logger.info(f"Cancelled download job {job.id} after info extraction")
+                return
+
             video_type_result = video_type(video_info)
 
             # Handle different video types
@@ -198,9 +232,17 @@ class DownloadService:
             )
 
         except Exception as e:
-            error_message = str(e)
-            logger.error(f"Failed to process download job {job.id}: {error_message}")
-            update_download_job_status(job.id, "failed", error_message)
+            if job.id in _cancel_requested:
+                _mark_job_cancelled(job)
+                logger.info(
+                    f"Cancelled download job {job.id} for video: {job.video_title}"
+                )
+            else:
+                error_message = str(e)
+                logger.error(
+                    f"Failed to process download job {job.id}: {error_message}"
+                )
+                update_download_job_status(job.id, "failed", error_message)
 
     def _check_existing_video(self, video_url):
         """Check if video already exists in database."""
@@ -257,7 +299,7 @@ class DownloadService:
             file_name = job.video_url.split("=")[1]
 
             # Download video
-            download_result = download_video(job.video_url, file_name)
+            download_result = download_video(job.video_url, file_name, job_id=job.id)
             if download_result != 0:
                 raise Exception(f"YT_DLP failed to download video {job.video_url}")
 
