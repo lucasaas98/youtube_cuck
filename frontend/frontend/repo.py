@@ -201,13 +201,13 @@ def most_recent_video():
         return []
 
 
-def most_recent_videos():
+def most_recent_videos(limit=35):
     try:
         with session_scope() as session:
             data = (
                 session.query(MostRecentVideo)
                 .order_by(MostRecentVideo.updated_at.desc())
-                .limit(35)
+                .limit(limit)
                 .all()
             )
             if data:

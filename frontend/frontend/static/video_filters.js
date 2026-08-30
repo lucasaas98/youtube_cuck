@@ -66,6 +66,12 @@ document.addEventListener("DOMContentLoaded", function () {
         url.searchParams.set("include_shorts", includeShortsCheckbox.checked);
         url.searchParams.set("include_deleted", includeDeletedCheckbox.checked);
 
+        // Preserve page size selection
+        const perPage = new URLSearchParams(window.location.search).get("per_page");
+        if (perPage) {
+            url.searchParams.set("per_page", perPage);
+        }
+
         // Always reset to page 0 when filters change
         url.searchParams.delete("page");
 

@@ -249,7 +249,7 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
     padding: 20px;
-    max-width: 1200px;
+    max-width: 2000px;
     margin: 0 auto;
 }
 
@@ -272,7 +272,7 @@ body {
 
 .center-div-video div {
     width: 100%;
-    height: 157px;
+    aspect-ratio: 16 / 9;
     background-size: cover;
     background-position: center;
     position: relative;
@@ -810,9 +810,6 @@ li a:hover {
         order: -1 !important;
     }
 
-    .center-div-video div {
-        height: 140px;
-    }
 
     h3 {
         font-size: 14px;
@@ -843,9 +840,6 @@ li a:hover {
         height: 2px;
     }
 
-    .center-div-video div {
-        height: 180px;
-    }
 
     .center-div {
         flex-direction: column;

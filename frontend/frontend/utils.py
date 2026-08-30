@@ -6,6 +6,7 @@ import threading
 import feedparser
 import opml
 import requests
+from fastapi import Request
 from pydantic import BaseModel
 
 from frontend.env_vars import BACKEND_PORT, BACKEND_URL, DATA_FOLDER
@@ -175,6 +176,20 @@ class PaginationInfo(BaseModel):
     has_next: bool
     prev_page: int | None = None
     next_page: int | None = None
+
+
+DEFAULT_PER_PAGE = 35
+MAX_PER_PAGE = 200
+
+
+def get_per_page(request: Request) -> int:
+    """Parse and clamp the per_page query parameter."""
+    raw = request.query_params.get("per_page")
+    try:
+        per_page = int(raw)
+    except (TypeError, ValueError):
+        return DEFAULT_PER_PAGE
+    return max(1, min(per_page, MAX_PER_PAGE))
 
 
 @log_decorator
