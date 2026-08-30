@@ -659,6 +659,21 @@ def unkeep(video_id):
             )
 
 
+def pick_channel_avatar(info):
+    """
+    Pick the channel avatar URL from a flat channel extraction.
+
+    Flat channel tabs expose banners and the avatar inside the
+    'thumbnails' list; avatar entries carry an id containing 'avatar'.
+    """
+    if not isinstance(info, dict):
+        return ""
+    for thumb in reversed(info.get("thumbnails") or []):
+        if "avatar" in str(thumb.get("id", "")) and thumb.get("url"):
+            return str(thumb["url"])
+    return ""
+
+
 def preview_channel_info(channel_input):
     """
     Preview channel information using yt-dlp and RSS feeds without adding it.
@@ -692,7 +707,9 @@ def preview_channel_info(channel_input):
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             try:
-                info = ydl.extract_info(channel_url, download=False)
+                info = ydl.extract_info(
+                    channel_url.rstrip("/") + "/about", download=False
+                )
 
                 if not info:
                     return {
@@ -725,8 +742,16 @@ def preview_channel_info(channel_input):
                         else channel_url
                     ),
                     "subscriber_count": (
-                        int(info.get("subscriber_count", 0))
-                        if isinstance(info, dict) and info.get("subscriber_count")
+                        int(
+                            info.get("subscriber_count")
+                            or info.get("channel_follower_count")
+                            or 0
+                        )
+                        if isinstance(info, dict)
+                        and (
+                            info.get("subscriber_count")
+                            or info.get("channel_follower_count")
+                        )
                         else 0
                     ),
                     "video_count": (
@@ -739,11 +764,7 @@ def preview_channel_info(channel_input):
                         if isinstance(info, dict) and info.get("description")
                         else ""
                     ),
-                    "thumbnail": (
-                        str(info.get("thumbnail", ""))
-                        if isinstance(info, dict) and info.get("thumbnail")
-                        else ""
-                    ),
+                    "thumbnail": pick_channel_avatar(info),
                     "feed_url": (
                         f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
                         if channel_id

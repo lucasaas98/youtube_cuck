@@ -10,10 +10,11 @@ from sqlalchemy import select
 from backend.engine import session_scope
 from backend.models import Channel
 from backend.repo import download_channel_avatar
+from backend.utils import pick_channel_avatar
 
 
 def extract_channel_info(channel_id):
-    url = f"https://www.youtube.com/channel/{channel_id}"
+    url = f"https://www.youtube.com/channel/{channel_id}/about"
     opts = {"quiet": True, "no_warnings": True, "extract_flat": True}
     with yt_dlp.YoutubeDL(opts) as ydl:
         return ydl.extract_info(url, download=False) or {}
@@ -37,7 +38,7 @@ def backfill():
             label = channel.channel_name or channel.channel_id
             try:
                 info = extract_channel_info(channel.channel_id)
-                avatar_url = info.get("thumbnail") or ""
+                avatar_url = pick_channel_avatar(info)
                 description = info.get("description") or ""
                 updated = []
 
