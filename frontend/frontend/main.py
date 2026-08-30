@@ -18,6 +18,7 @@ from frontend.repo import (
     create_playlist,
     delete_playlist,
     get_all_playlists,
+    get_channel_cards,
     get_channel_videos,
     get_filtered_videos,
     get_playlist_by_name,
@@ -36,7 +37,6 @@ from frontend.utils import (
     Progress,
     calculate_pagination,
     cancel_download_job,
-    get_all_channels,
     get_download_jobs,
     get_download_stats,
     get_pagination_range,
@@ -414,14 +414,10 @@ async def shorts_page(request: Request, page: int):
 @log_decorator
 @app.get("/subs", response_class=HTMLResponse)
 async def get_subs(request: Request):
-    data = get_all_channels()
-    sorted_by_lowercase_name = [
-        {"title": x[0], "id": x[1]}
-        for x in sorted(data, key=lambda tup: tup[0].strip().lower())
-    ]
+    data = get_channel_cards()
 
     return templates.TemplateResponse(
-        "cuck_subs.html", {"request": request, "data": sorted_by_lowercase_name}
+        "cuck_subs.html", {"request": request, "data": data}
     )
 
 
@@ -493,6 +489,8 @@ async def add_channel_confirmed(
     channel_url: Annotated[str, Form()],
     channel_name: Annotated[str, Form()],
     response: Response,
+    avatar_url: Annotated[str, Form()] = "",
+    description: Annotated[str, Form()] = "",
 ):
     """
     Add a confirmed channel to the system.
@@ -512,6 +510,8 @@ async def add_channel_confirmed(
                 "channel_id": channel_id,
                 "channel_url": channel_url,
                 "channel_name": channel_name,
+                "avatar_url": avatar_url,
+                "description": description,
             },
             timeout=30,
         )

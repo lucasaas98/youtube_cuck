@@ -234,44 +234,87 @@ li a:hover {
     text-decoration: none;
 }
 
-#channels {
-    font-family: var(--font-family);
-    border-collapse: collapse;
-    width: 100%;
-    margin: 20px 0;
-    background-color: var(--bg-card);
+.subs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    max-width: 2000px;
+    margin: 0 auto;
 }
 
-#channels td,
-#channels th {
+.channel-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background-color: var(--card-bg);
     border: 1px solid var(--border-dark);
-    padding: 12px 8px;
-    text-align: left;
+    border-radius: var(--radius-small);
+    text-decoration: none;
+    transition: all var(--transition-fast);
 }
 
-#channels tr:nth-child(even) {
-    background-color: rgba(255, 255, 255, 0.1);
+.channel-card:hover {
+    background-color: var(--card-bg-hover);
+    border-color: var(--primary-color);
 }
 
-#channels tr:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+.channel-avatar {
+    flex-shrink: 0;
+    position: relative;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-#channels th {
-    padding-top: 12px;
-    padding-bottom: 12px;
-    text-align: left;
-    background-color: var(--primary-color);
+.channel-avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-letter {
+    font-size: 28px;
+    font-weight: 600;
     color: var(--text-primary);
-    font-weight: bold;
 }
 
-#channels td {
-    color: var(--text-primary);
+.channel-info {
+    min-width: 0;
+    flex: 1;
 }
 
-.channel {
+.channel-card-name {
     color: var(--text-primary);
+    font-size: 15px;
+    margin: 0 0 4px;
+    word-break: break-word;
+}
+
+.channel-card-meta {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin: 0 0 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.channel-card-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .right {
@@ -333,21 +376,10 @@ li a:hover {
         max-height: 300px;
     }
 
-    #channels {
-        font-size: 14px;
-        margin: 15px 0;
-    }
-
-    #channels td,
-    #channels th {
-        padding: 8px 6px;
-    }
-
-    /* Make table scrollable on mobile */
-    .table-container {
-        overflow-x: auto;
-        margin: 15px;
-        border-radius: 8px;
+    .subs-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 15px;
     }
 }
 
@@ -390,58 +422,6 @@ li a:hover {
         min-height: 40px;
     }
 
-    #channels {
-        font-size: 12px;
-    }
-
-    #channels td,
-    #channels th {
-        padding: 6px 4px;
-    }
-
-    /* Stack table cells vertically on very small screens */
-    #channels,
-    #channels thead,
-    #channels tbody,
-    #channels th,
-    #channels td,
-    #channels tr {
-        display: block;
-    }
-
-    #channels thead tr {
-        position: absolute;
-        top: -9999px;
-        left: -9999px;
-    }
-
-    #channels tr {
-        border: 1px solid var(--border-light);
-        margin-bottom: 10px;
-        padding: 10px;
-        border-radius: 8px;
-        background-color: var(--bg-card);
-    }
-
-    #channels td {
-        border: none;
-        border-bottom: 1px solid var(--border-secondary);
-        position: relative;
-        padding-left: 50% !important;
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
-
-    #channels td:before {
-        content: attr(data-label) ": ";
-        position: absolute;
-        left: 6px;
-        width: 45%;
-        padding-right: 10px;
-        white-space: nowrap;
-        font-weight: bold;
-        color: var(--primary-color);
-    }
 }
 
 /* Touch-friendly improvements */
@@ -461,10 +441,8 @@ li a:hover {
         justify-content: center;
     }
 
-    #channels td,
-    #channels th {
+    .channel-card {
         min-height: 44px;
-        padding: 12px 8px;
     }
 }
 

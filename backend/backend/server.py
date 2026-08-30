@@ -230,7 +230,13 @@ def preview_channel(channel_input: str):
 
 @log_decorator
 @app.post("/api/add_channel")
-def add_channel_to_system(channel_id: str, channel_url: str, channel_name: str):
+def add_channel_to_system(
+    channel_id: str,
+    channel_url: str,
+    channel_name: str,
+    avatar_url: str = "",
+    description: str = "",
+):
     """
     Add a channel to both the database and OPML subscription file.
     """
@@ -238,9 +244,8 @@ def add_channel_to_system(channel_id: str, channel_url: str, channel_name: str):
     from xml.dom import minidom
 
     try:
-        # First add to database
         db_success, db_message = add_channel_to_db(
-            channel_id, channel_url, channel_name
+            channel_id, channel_url, channel_name, avatar_url, description
         )
         if not db_success:
             return {"success": False, "error": db_message}, 400

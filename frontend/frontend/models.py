@@ -65,3 +65,15 @@ class MostRecentVideo(Base):
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
     vid_id = Column(Integer, unique=True)
     updated_at = Column(Integer)
+
+
+class Channel(Base):
+    __tablename__ = "channel"
+    id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
+    channel_id = Column(String(255), unique=True)
+    channel_url = Column(String(255), unique=True)
+    channel_name = Column(String(255))
+    keep = Column(Boolean)
+    inserted_at = Column(Integer)
+    avatar_path = Column(String(255))
+    description = Column(Text)

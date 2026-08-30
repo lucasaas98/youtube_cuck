@@ -76,6 +76,8 @@ class Channel(Base):
     channel_name = Column(String(255))
     keep = Column(Boolean, default=False)
     inserted_at = Column(Integer)
+    avatar_path = Column(String(255))
+    description = Column(Text)
 
 
 class DownloadJob(Base):

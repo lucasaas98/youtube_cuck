@@ -7,6 +7,7 @@ from sqlalchemy import desc, func, or_
 from frontend.engine import session_scope
 from frontend.logging import logging
 from frontend.models import (
+    Channel,
     MostRecentVideo,
     Playlist,
     PlaylistVideo,
@@ -449,3 +450,28 @@ def get_filtered_videos(
     except Exception as error:
         logger.warn("Failed to get filtered videos", error)
         return [], 0
+
+
+def get_channel_cards():
+    try:
+        with session_scope() as session:
+            counts = dict(
+                session.query(YoutubeVideo.channel, func.count(YoutubeVideo.id))
+                .filter(YoutubeVideo.vid_path != "NA")
+                .group_by(YoutubeVideo.channel)
+                .all()
+            )
+            channels = session.query(Channel).order_by(Channel.channel_name).all()
+            return [
+                {
+                    "name": channel.channel_name or channel.channel_id,
+                    "channel_id": channel.channel_id,
+                    "avatar_path": channel.avatar_path,
+                    "description": channel.description,
+                    "video_count": counts.get(channel.channel_name, 0),
+                }
+                for channel in channels
+            ]
+    except Exception as error:
+        logger.warn("Failed to select channels from channel table", error)
+        return []

@@ -51,21 +51,24 @@
                 </li>
             </div>
         </ul>
-        <div class="table-container">
-            <table id="channels">
-                <tr>
-                    <th>Channel Name</th>
-                    <th>Channel ID</th>
-                </tr>
-                {% for row in data %}
-                    <tr>
-                        <td data-label="Channel Name">
-                            <a class="channel" href="/channel/{{ row['title'] }}">{{ row['title'] }}</a>
-                        </td>
-                        <td data-label="Channel ID">{{ row['id'] }}</td>
-                    </tr>
-                {% endfor %}
-            </table>
+        <div class="subs-grid">
+            {% for channel in data %}
+                <a class="channel-card" href="/channel/{{ channel.name }}">
+                    <div class="channel-avatar">
+                        <span class="avatar-letter">{{ channel.name[:1]|upper }}</span>
+                        {% if channel.avatar_path %}
+                            <img src="/channel_avatars/{{ channel.avatar_path }}"
+                                 alt=""
+                                 onerror="this.remove()">
+                        {% endif %}
+                    </div>
+                    <div class="channel-info">
+                        <h3 class="channel-card-name">{{ channel.name }}</h3>
+                        <p class="channel-card-meta">{{ channel.video_count }} videos</p>
+                        {% if channel.description %}<p class="channel-card-desc">{{ channel.description }}</p>{% endif %}
+                    </div>
+                </a>
+            {% endfor %}
         </div>
         <div class="grid-container">
             <div id="myModal" class="modal">

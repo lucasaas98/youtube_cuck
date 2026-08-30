@@ -1,11 +1,14 @@
 import json
 import logging as _logging
+import os
 from time import time
 
+import requests
 from sqlalchemy import and_, desc, or_, select
 
 from backend.constants import DELAY, LIVE_DELAY
 from backend.engine import session_scope
+from backend.env_vars import DATA_FOLDER
 from backend.logging import logging
 from backend.models import (
     Channel,
@@ -357,16 +360,24 @@ def remove_video_from_playlist(playlist_name, video_url):
         return False, "Failed to remove video from playlist"
 
 
-def add_channel_to_db(channel_id, channel_url, channel_name):
+def add_channel_to_db(
+    channel_id, channel_url, channel_name, avatar_url="", description=""
+):
     """
     Add a channel to the database.
 
     :param channel_id: YouTube channel ID
     :param channel_url: Channel URL
     :param channel_name: Channel display name
+    :param avatar_url: Optional avatar image URL to download locally
+    :param description: Optional channel description
     :return: Tuple of (success, message)
     """
     try:
+        avatar_path = None
+        if avatar_url:
+            avatar_path = download_channel_avatar(avatar_url, channel_id)
+
         with session_scope() as session:
             # Check if channel already exists
             existing = session.execute(
@@ -382,6 +393,8 @@ def add_channel_to_db(channel_id, channel_url, channel_name):
                 channel_name=channel_name,
                 keep=False,
                 inserted_at=int(time()),
+                avatar_path=avatar_path,
+                description=description or None,
             )
             session.add(new_channel)
             session.commit()
@@ -389,6 +402,28 @@ def add_channel_to_db(channel_id, channel_url, channel_name):
     except Exception as error:
         logger.error(f"Failed to add channel {channel_name} to database", error)
         return False, "Failed to add channel to database"
+
+
+def download_channel_avatar(url, channel_id):
+    """
+    Download a channel avatar into the channel_avatars folder.
+
+    :param url: Avatar image URL
+    :param channel_id: YouTube channel ID, used as the filename stem
+    :return: Relative filename on success, None on failure
+    """
+    filename = f"{channel_id}.jpg"
+    folder = f"{DATA_FOLDER}/channel_avatars"
+    try:
+        os.makedirs(folder, exist_ok=True)
+        r = requests.get(url, timeout=15)
+        r.raise_for_status()
+        with open(f"{folder}/{filename}", "wb") as f:
+            f.write(r.content)
+        return filename
+    except Exception as error:
+        logger.error(f"Failed to download avatar for channel {channel_id}: {error}")
+        return None
 
 
 def get_channel_by_id(channel_id):

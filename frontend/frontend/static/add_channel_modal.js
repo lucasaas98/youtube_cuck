@@ -183,6 +183,8 @@ confirmAddBtn.onclick = function () {
     formData.append("channel_id", currentChannelData.channel_id);
     formData.append("channel_url", currentChannelData.channel_url);
     formData.append("channel_name", currentChannelData.channel_name);
+    formData.append("avatar_url", currentChannelData.thumbnail || "");
+    formData.append("description", currentChannelData.description || "");
 
     var request = new XMLHttpRequest();
     request.open("POST", "../api/add_channel_confirmed", true);

@@ -4,12 +4,11 @@ import logging as _logging
 import threading
 
 import feedparser
-import opml
 import requests
 from fastapi import Request
 from pydantic import BaseModel
 
-from frontend.env_vars import BACKEND_PORT, BACKEND_URL, DATA_FOLDER
+from frontend.env_vars import BACKEND_PORT, BACKEND_URL
 from frontend.logging import logging
 
 logger = logging.getLogger(__name__)
@@ -72,19 +71,6 @@ def get_queue_size():
 @log_decorator
 def place_value(number):
     return "{:,}".format(number)
-
-
-@log_decorator
-def get_all_channels():
-    data = open(f"{DATA_FOLDER}/subscription_manager", "r")
-
-    nested = opml.parse(data)
-
-    all_channels = list()
-    for channel in nested[0]:
-        real_id = channel.xmlUrl.split("=")[1]
-        all_channels.append((channel.title, real_id))
-    return all_channels
 
 
 @log_decorator
