@@ -319,6 +319,18 @@ h3 {
     font-size: 14px;
     margin: 0;
     flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.channel-avatar-sm {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
 }
 
 .channel_a {

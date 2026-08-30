@@ -475,3 +475,17 @@ def get_channel_cards():
     except Exception as error:
         logger.warn("Failed to select channels from channel table", error)
         return []
+
+
+def get_channel_avatar_map():
+    try:
+        with session_scope() as session:
+            rows = (
+                session.query(Channel.channel_name, Channel.avatar_path)
+                .filter(Channel.avatar_path.isnot(None))
+                .all()
+            )
+            return {name: avatar for name, avatar in rows if name}
+    except Exception as error:
+        logger.warn("Failed to select channel avatars from channel table", error)
+        return {}

@@ -164,6 +164,13 @@
                         </div>
                         <div class="center-div">
                             <p class="channel_name">
+                                {% set channel_avatar = channel_avatars.get(row['channel']) %}
+                                {% if channel_avatar %}
+                                    <img class="channel-avatar-sm"
+                                         src="/channel_avatars/{{ channel_avatar }}"
+                                         alt=""
+                                         onerror="this.remove()">
+                                {% endif %}
                                 <a class="channel_a" href="/channel/{{ row['channel'] }}">{{ row['channel'] }}</a>
                             </p>
                             <p class="views">{{ row['views'] }} views</p>

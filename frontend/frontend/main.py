@@ -18,6 +18,7 @@ from frontend.repo import (
     create_playlist,
     delete_playlist,
     get_all_playlists,
+    get_channel_avatar_map,
     get_channel_cards,
     get_channel_videos,
     get_filtered_videos,
@@ -164,6 +165,7 @@ async def index(request: Request):
         "yt_cuck.html",
         {
             "request": request,
+            "channel_avatars": get_channel_avatar_map(),
             "data": data,
             "is_short": False,
             "pagination": pagination,
@@ -204,6 +206,7 @@ async def get_shorts(request: Request):
         "yt_cuck.html",
         {
             "request": request,
+            "channel_avatars": get_channel_avatar_map(),
             "data": data,
             "is_short": True,
             "pagination": pagination,
@@ -280,6 +283,7 @@ async def next_page(page, request: Request):
         "yt_cuck.html",
         {
             "request": request,
+            "channel_avatars": get_channel_avatar_map(),
             "data": data,
             "is_short": False,
             "pagination": pagination,
@@ -401,6 +405,7 @@ async def shorts_page(request: Request, page: int):
         "yt_cuck_page.html",
         {
             "request": request,
+            "channel_avatars": get_channel_avatar_map(),
             "data": data,
             "is_short": True,
             "pagination": pagination,
@@ -567,6 +572,7 @@ async def most_recent_video_watch(request: Request):
         "yt_cuck.html",
         {
             "request": request,
+            "channel_avatars": get_channel_avatar_map(),
             "data": ([], 0, "", 0, False),
             "is_short": False,
             "pagination": calculate_pagination(0, 0),
@@ -607,6 +613,7 @@ async def most_recent_videos_page(request: Request):
         "yt_cuck.html",
         {
             "request": request,
+            "channel_avatars": get_channel_avatar_map(),
             "data": data,
             "is_short": False,
             "pagination": pagination,
