@@ -23,7 +23,7 @@ def sync():
     nested = opml.parse(open(f"{DATA_FOLDER}/subscription_manager"))[0]
     opml_channels = {}
     for entry in nested:
-        channel_id = entry.xmlUrl.split("=")[1]
+        channel_id = entry.xmlUrl.split("=")[1].strip()
         opml_channels[channel_id] = entry.title
 
     with session_scope() as session:
