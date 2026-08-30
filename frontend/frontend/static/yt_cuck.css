@@ -11,7 +11,7 @@ body {
     background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border-primary);
     padding: var(--spacing-lg);
-    max-width: 1200px;
+    max-width: 2000px;
     margin: 0 auto;
 }
 
@@ -207,10 +207,22 @@ body {
     }
 
     .filter-content {
-        display: block !important;
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--spacing-md);
         max-height: none !important;
         opacity: 1 !important;
         transform: none !important;
+    }
+
+    .search-section {
+        flex: 1 1 360px;
+        margin-bottom: 0;
+    }
+
+    .filter-section {
+        flex: 0 1 auto;
     }
 }
 

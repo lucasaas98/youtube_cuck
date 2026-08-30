@@ -43,7 +43,7 @@
                         {% set prev_url = prev_url + "?include_shorts=" + current_params.include_shorts|urlencode %}
                     {% endif %}
                 {% endif %}
-                {% if current_params.per_page and current_params.per_page != 35 %}
+                {% if current_params.per_page and current_params.per_page != 60 %}
                     {% if "?" in prev_url %}
                         {% set prev_url = prev_url + "&per_page=" + current_params.per_page|string %}
                     {% else %}
@@ -98,7 +98,7 @@
                                 {% set page_url = page_url + "?include_shorts=" + current_params.include_shorts|urlencode %}
                             {% endif %}
                         {% endif %}
-                        {% if current_params.per_page and current_params.per_page != 35 %}
+                        {% if current_params.per_page and current_params.per_page != 60 %}
                             {% if "?" in page_url %}
                                 {% set page_url = page_url + "&per_page=" + current_params.per_page|string %}
                             {% else %}
@@ -142,7 +142,7 @@
                         {% set next_url = next_url + "?filter_kept=" + current_params.filter_kept|urlencode %}
                     {% endif %}
                 {% endif %}
-                {% if current_params.per_page and current_params.per_page != 35 %}
+                {% if current_params.per_page and current_params.per_page != 60 %}
                     {% if "?" in next_url %}
                         {% set next_url = next_url + "&per_page=" + current_params.per_page|string %}
                     {% else %}
@@ -170,9 +170,9 @@
                 <select id="per-page-select"
                         class="per-page-select"
                         data-current-page="{{ pagination.current_page }}"
-                        data-current-per-page="{{ current_params.per_page or 35 }}">
-                    {% for size in [24, 35, 48, 72, 96] %}
-                        {% if (current_params.per_page or 35) == size %}
+                        data-current-per-page="{{ current_params.per_page or 60 }}">
+                    {% for size in [60, 120, 180, 240] %}
+                        {% if (current_params.per_page or 60) == size %}
                             <option value="{{ size }}" selected>{{ size }}</option>
                         {% else %}
                             <option value="{{ size }}">{{ size }}</option>
@@ -188,7 +188,7 @@
             if (!select) return;
             select.addEventListener("change", function() {
                 var newPerPage = parseInt(select.value, 10);
-                var oldPerPage = parseInt(select.getAttribute("data-current-per-page"), 10) || 35;
+                var oldPerPage = parseInt(select.getAttribute("data-current-per-page"), 10) || 60;
                 var currentPage = parseInt(select.getAttribute("data-current-page"), 10) || 0;
                 // Keep browsing position: first visible item stays roughly the same
                 var newPage = Math.floor((currentPage * oldPerPage) / newPerPage);

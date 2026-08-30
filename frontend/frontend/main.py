@@ -85,7 +85,7 @@ def default_video_filters(include_shorts: bool = True) -> dict[str, str | bool]:
 
 
 def default_current_params(
-    include_shorts: bool = True, per_page: int = 35
+    include_shorts: bool = True, per_page: int = 60
 ) -> dict[str, str | int | None]:
     return {
         "search": "",

@@ -48,7 +48,7 @@ def get_video_by_youtube_id(identifier):
         return []
 
 
-def get_channel_videos(channel_name, page=0, items_per_page=35):
+def get_channel_videos(channel_name, page=0, items_per_page=60):
     try:
         with session_scope() as session:
             # Get total count
@@ -77,7 +77,7 @@ def get_channel_videos(channel_name, page=0, items_per_page=35):
         return [], 0
 
 
-def get_recent_videos(page, items_per_page=35):
+def get_recent_videos(page, items_per_page=60):
     try:
         with session_scope() as session:
             # Get total count
@@ -102,7 +102,7 @@ def get_recent_videos(page, items_per_page=35):
         return [], 0
 
 
-def get_recent_shorts(page, items_per_page=35):
+def get_recent_shorts(page, items_per_page=60):
     try:
         with session_scope() as session:
             # Get total count
@@ -201,7 +201,7 @@ def most_recent_video():
         return []
 
 
-def most_recent_videos(limit=35):
+def most_recent_videos(limit=60):
     try:
         with session_scope() as session:
             data = (
@@ -243,7 +243,7 @@ def get_playlist_by_name(playlist_name):
         return None
 
 
-def get_playlist_videos(playlist_name, page=0, items_per_page=35):
+def get_playlist_videos(playlist_name, page=0, items_per_page=60):
     try:
         with session_scope() as session:
             # Get total count
@@ -373,7 +373,7 @@ def remove_video_from_playlist(playlist_name, video_url):
 
 def get_filtered_videos(
     page=0,
-    items_per_page=35,
+    items_per_page=60,
     search_query=None,
     sort_by="downloaded_at",
     sort_order="desc",

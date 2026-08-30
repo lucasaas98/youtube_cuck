@@ -178,8 +178,8 @@ class PaginationInfo(BaseModel):
     next_page: int | None = None
 
 
-DEFAULT_PER_PAGE = 35
-MAX_PER_PAGE = 200
+DEFAULT_PER_PAGE = 60
+MAX_PER_PAGE = 240
 
 
 def get_per_page(request: Request) -> int:
@@ -194,7 +194,7 @@ def get_per_page(request: Request) -> int:
 
 @log_decorator
 def calculate_pagination(
-    current_page: int, total_items: int, items_per_page: int = 35
+    current_page: int, total_items: int, items_per_page: int = 60
 ) -> PaginationInfo:
     """Calculate pagination metadata"""
     total_pages = max(1, (total_items + items_per_page - 1) // items_per_page)
@@ -269,7 +269,7 @@ def preview_channel_info_frontend(channel_input):
 @log_decorator
 def get_filtered_videos_from_backend(
     page=0,
-    items_per_page=35,
+    items_per_page=60,
     search_query=None,
     sort_by="downloaded_at",
     sort_order="desc",
