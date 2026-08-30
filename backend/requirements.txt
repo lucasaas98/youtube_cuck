@@ -10,7 +10,7 @@ mysql-connector-python
 python-dotenv
 uvicorn
 alembic
-black
-isort
-djlint
-flake8
+black==25.1.0
+isort==6.0.1
+djlint==1.36.4
+flake8==7.3.0
